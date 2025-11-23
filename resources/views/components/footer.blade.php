@@ -28,12 +28,6 @@
 </head>
 <body>
 
-    <!-- Main Content for context (optional, remove in final implementation) -->
-    <!-- Blok konten utama sekarang mewarisi warna silver kebiruan dari BODY -->
-    <div class="h-[60vh] flex items-center justify-center">
-        <p class="text-xl text-gray-500">Konten Halaman Anda di sini</p>
-    </div>
-
     <!-- START: Footer Component -->
     <!-- DIUBAH: Menggunakan warna KUSTOM Tailwind [bg-[#e8f0f5]] yang lebih terlihat. -->
     <footer class="bg-[#e8f0f5] pt-16 pb-8 border-t border-gray-200">
