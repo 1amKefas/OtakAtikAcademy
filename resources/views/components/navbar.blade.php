@@ -1,13 +1,10 @@
 <!-- Navbar with Profile Dropdown and Notifications -->
 <nav class="bg-white shadow-md fixed w-full top-0 z-50">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <!-- Logo -->
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                <span class="text-white font-bold text-lg">O</span>
-            </div>
-            <span class="text-xl font-bold text-gray-800">OtakAtik</span>
-        </div>
+        <!-- Logo (UPDATED: Image Only) -->
+        <a href="/" class="flex items-center">
+            <img src="/images/logo_OtakAtik.png" alt="OtakAtik Academy" class="h-12 w-auto object-contain">
+        </a>
         
         <!-- Menu -->
         <div class="hidden md:flex items-center gap-8">
