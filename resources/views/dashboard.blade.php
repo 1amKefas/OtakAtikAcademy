@@ -161,32 +161,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12 px-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div>
-                    <h3 class="text-xl font-bold mb-4">OtakAtik Academy</h3>
-                    <p class="text-gray-400">Platform pembelajaran online terpercaya untuk pelajar Indonesia</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-4">Navigasi</h3>
-                    <ul class="text-gray-400 space-y-2">
-                        <li><a href="/course" class="hover:text-white transition">Course</a></li>
-                        <li><a href="/dashboard" class="hover:text-white transition">Dashboard</a></li>
-                        <li><a href="#" class="hover:text-white transition">Tentang Kami</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-4">Hubungi Kami</h3>
-                    <p class="text-gray-400">Email: info@otakatik.com</p>
-                    <p class="text-gray-400">WhatsApp: +62 (0) 000-000-0000</p>
-                </div>
-            </div>
-            <div class="border-t border-gray-700 pt-8 text-center">
-                <p class="text-gray-500">&copy; 2025 OtakAtik Academy. Semua hak cipta dilindungi.</p>
-            </div>
-        </div>
-    </footer>
+   
 </div>
 @endsection
