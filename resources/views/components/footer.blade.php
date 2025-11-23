@@ -1,92 +1,154 @@
-<footer class="bg-white border-t border-gray-200 pt-12 pb-8">
-    <div class="container mx-auto px-4 md:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-            <div class="space-y-4">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-xl">O</span>
-                    </div>
-                    <span class="text-2xl font-bold text-gray-800">OtakAtik</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-4">
-                    Platform belajar online terdepan untuk mengasah skill dan meraih masa depan cerah.
-                </p>
-                <div class="flex space-x-4">
-                    <a href="#" class="text-gray-500 hover:text-orange-500 transition-colors p-2 bg-gray-100 rounded-full">
-                        <i class="fab fa-facebook-f w-5 h-5"></i>
-                    </a>
-                    <a href="#" class="text-gray-500 hover:text-orange-500 transition-colors p-2 bg-gray-100 rounded-full">
-                        <i class="fab fa-linkedin-in w-5 h-5"></i>
-                    </a>
-                    <a href="#" class="text-gray-500 hover:text-orange-500 transition-colors p-2 bg-gray-100 rounded-full">
-                        <i class="fab fa-twitter w-5 h-5"></i>
-                    </a>
-                    <a href="#" class="text-gray-500 hover:text-orange-500 transition-colors p-2 bg-gray-100 rounded-full">
-                        <i class="fab fa-youtube w-5 h-5"></i>
-                    </a>
-                    <a href="#" class="text-gray-500 hover:text-orange-500 transition-colors p-2 bg-gray-100 rounded-full">
-                        <i class="fab fa-instagram w-5 h-5"></i>
-                    </a>
-                </div>
-            </div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Desain Responsif</title>
+    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN for social media icons --><script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Latar belakang BODY tetap silver kebiruan (lebih gelap dari footer) */
+            background-color: #eef4f7;
+        }
+        .footer-link {
+            @apply text-gray-700 hover:text-blue-600 transition duration-150;
+        }
+        /* Custom class for the logos to blend in */
+        .logo-blend {
+            /* Remove default styling for the placeholder links */
+            @apply !border-none !bg-transparent !p-0 flex-shrink-0; 
+        }
+        .logo-blend img {
+            @apply h-auto object-contain; /* Adjust height and maintain aspect ratio */
+        }
+    </style>
+</head>
+<body>
 
-            <div>
-                <h3 class="font-bold text-gray-800 mb-4">OtakAtik</h3>
-                <ul class="space-y-3">
-                    <li><a href="/about" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">About Us</a></li>
-                    <li><a href="/careers" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Careers</a></li>
-                    <li><a href="/news" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">News & Blog</a></li>
-                    <li><a href="/partners" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Partnerships</a></li>
-                    <li><a href="/contact" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Contact Us</a></li>
-                </ul>
-            </div>
-
-            <div>
-                <h3 class="font-bold text-gray-800 mb-4">Community</h3>
-                <ul class="space-y-3">
-                    <li><a href="/blog" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Blog</a></li>
-                    <li><a href="/forum" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Forum Diskusi</a></li>
-                    <li><a href="/events" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Events & Webinars</a></li>
-                    <li><a href="/mentorship" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Mentorship Program</a></li>
-                    <li><a href="/tech-support" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Tech Support</a></li>
-                </ul>
-            </div>
-
-           <div>
-                <h3 class="font-bold text-gray-800 mb-4">More</h3>
-                <ul class="space-y-3 mb-8">
-                    <li><a href="/terms" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Terms & Conditions</a></li>
-                    <li><a href="/privacy" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Privacy Policy</a></li>
-                    <li><a href="/faq" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">FAQ & Help</a></li>
-                    <li><a href="/sitemap" class="text-sm text-gray-600 hover:text-orange-500 hover:underline transition-colors">Sitemap</a></li>
-                </ul>
-
-               <div>
-                    <h3 class="font-bold text-gray-800 mb-4">Sponsored By</h3>
-                    <div class="flex items-center gap-4">
-                        <div class="group">
-                            <img src="/images/logo-pnj.png" 
-                                 alt="Politeknik Negeri Jakarta" 
-                                 class="h-16 w-auto object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300">
-                        </div>
-                        
-                        <div class="group">
-                            <img src="/images/logo-tik.png" 
-                                 alt="Jurusan TIK" 
-                                 class="h-14 w-auto object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300">
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-2">Politeknik Negeri Jakarta</p>
-            </div>
-
-        <div class="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p class="text-sm text-gray-500 text-center md:text-left mb-4 md:mb-0">
-                &copy; {{ date('Y') }} OtakAtik Academy Inc. All rights reserved.
-            </p>
-            <div class="flex space-x-6">
-                <a href="#" class="text-sm text-gray-500 hover:text-orange-500 transition-colors">Privacy Policy</a>
-                <a href="#" class="text-sm text-gray-500 hover:text-orange-500 transition-colors">Terms of Service</a>
-            </div>
-        </div>
+    <!-- Main Content for context (optional, remove in final implementation) -->
+    <!-- Blok konten utama sekarang mewarisi warna silver kebiruan dari BODY -->
+    <div class="h-[60vh] flex items-center justify-center">
+        <p class="text-xl text-gray-500">Konten Halaman Anda di sini</p>
     </div>
-</footer>
+
+    <!-- START: Footer Component -->
+    <!-- DIUBAH: Menggunakan warna KUSTOM Tailwind [bg-[#e8f0f5]] yang lebih terlihat. -->
+    <footer class="bg-[#e8f0f5] pt-16 pb-8 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <!-- Link Columns Section --><div class="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
+                
+                <!-- Column 1: OtakAtik Academy --><div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">OtakAtik Academy</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="footer-link">Tentang</a></li>
+                        <li><a href="#" class="footer-link">Apa yang kita tawarkan</a></li>
+                        <li><a href="#" class="footer-link">Kepemimpinan</a></li>
+                        <li><a href="#" class="footer-link">Karier</a></li>
+                        <li><a href="#" class="footer-link">Katalog</a></li>
+                        <li><a href="#" class="footer-link">OtakAtik Plus</a></li>
+                        <li><a href="#" class="footer-link">Sertifikat Profesional</a></li>
+                        <li><a href="#" class="footer-link">Sertifikat MasterTrack®</a></li>
+                        <li><a href="#" class="footer-link">Gelar</a></li>
+                        <li><a href="#" class="footer-link">Untuk Perusahaan</a></li>
+                        <li><a href="#" class="footer-link">Untuk Pemerintahan</a></li>
+                        <li><a href="#" class="footer-link">Untuk Kampus</a></li>
+                        <li><a href="#" class="footer-link">Menjadi Mitra</a></li>
+                        <li><a href="#" class="footer-link">Dampak sosial</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 2: Komunitas --><div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Komunitas</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="footer-link">Pembelajar</a></li>
+                        <li><a href="#" class="footer-link">Mitra</a></li>
+                        <li><a href="#" class="footer-link">Tester Beta</a></li>
+                        <li><a href="#" class="footer-link">Blog</a></li>
+                        <li><a href="#" class="footer-link">Podcast OtakAtik</a></li>
+                        <li><a href="#" class="footer-link">Blog teknologi</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Lebih banyak --><div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Lebih banyak</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="footer-link">Tekan</a></li>
+                        <li><a href="#" class="footer-link">Investor</a></li>
+                        <li><a href="#" class="footer-link">Istilah</a></li>
+                        <li><a href="#" class="footer-link">Privasi</a></li>
+                        <li><a href="#" class="footer-link">Bantuan</a></li>
+                        <li><a href="#" class="footer-link">Aksesibilitas</a></li>
+                        <li><a href="#" class="footer-link">Kontak</a></li>
+                        <li><a href="#" class="footer-link">Artikel</a></li>
+                        <li><a href="#" class="footer-link">Direktori</a></li>
+                        <li><a href="#" class="footer-link">Afiliasi</a></li>
+                        <li><a href="#" class="footer-link">Pernyataan tentang Perbudakan Modern</a></li>
+                        <li><a href="#" class="footer-link">Kelola preferensi cookie</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 4: Sponsored By (Logos) --><div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Sponsored By</h3>
+                    <div class="flex flex-wrap items-center gap-4"> <!-- Use flex and gap for side-by-side --><!-- Logo PNJ --><a href="#" target="_blank" rel="noopener noreferrer" class="logo-blend w-auto h-12">
+                            <img 
+                                src="images/logo_PNJ.png" 
+                                alt="Logo PNJ" 
+                                class="h-full max-w-full"
+                            >
+                        </a>
+                        
+                        <!-- Logo TIK --><a href="#" target="_blank" rel="noopener noreferrer" class="logo-blend w-auto h-12">
+                            <img 
+                                src="images/logo_TIK.png" 
+                                alt="Logo TIK" 
+                                class="h-full max-w-full"
+                            >
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Separator Line --><hr class="my-10 border-gray-200">
+
+            <!-- Copyright and Social Media Section --><div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+                
+                <!-- Copyright --><p class="text-sm text-gray-500 order-2 md:order-1">
+                    © 2025 Politeknik Negeri Jakarta Inc. Hak cipta dilindungi.
+                </p>
+
+                <!-- Social Media Icons --><div class="flex space-x-4 order-1 md:order-2">
+                    <a href="#" class="text-gray-500 hover:text-gray-900 transition duration-150" aria-label="Facebook">
+                        <i data-lucide="facebook" class="w-6 h-6"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 transition duration-150" aria-label="LinkedIn">
+                        <i data-lucide="linkedin" class="w-6 h-6"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 transition duration-150" aria-label="Twitter">
+                        <i data-lucide="twitter" class="w-6 h-6"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 transition duration-150" aria-label="Instagram">
+                        <i data-lucide="instagram" class="w-6 h-6"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 transition duration-150" aria-label="Youtube">
+                        <i data-lucide="youtube" class="w-6 h-6"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 transition duration-150" aria-label="Ganti Bahasa">
+                        <i data-lucide="globe" class="w-6 h-6"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+    <!-- END: Footer Component --><!-- Script to initialize Lucide icons --><script>
+        // Initialize Lucide icons after the DOM is loaded
+        lucide.createIcons();
+    </script>
+</body>
+</html>
