@@ -1,7 +1,5 @@
 {
   "version": 2,
-  "framework": "laravel",
-  "buildCommand": "rm -rf bootstrap/cache/* vendor composer.lock && composer install && npm run build",
   "functions": {
     "api/*.php": {
       "runtime": "vercel-php@0.7.2"
