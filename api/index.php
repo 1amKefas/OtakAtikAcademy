@@ -1,18 +1,18 @@
 <?php
 
-// Laravel public path
+use Illuminate\Http\Request;
+
 define('LARAVEL_START', microtime(true));
 
+// 1. Load Composer
 require __DIR__ . '/../vendor/autoload.php';
 
+// 2. Boot Laravel (Pake struktur baru bootstrap/app.php)
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+// 3. FIX VERCEL (Storage Read-Only)
+// Wajib banget buat Laravel di serverless biar gak error permission
+$app->useStoragePath('/tmp/storage');
 
-$response = $kernel->handle(
-    $request = Illuminate\Http\Request::capture()
-);
-
-$response->send();
-
-$kernel->terminate($request, $response);
+// 4. Handle Request (Cara Modern Laravel 11/12)
+$app->handleRequest(Request::capture());
