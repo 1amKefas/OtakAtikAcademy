@@ -28,6 +28,8 @@
         </div>
     @endauth
 
+    @include('components.footer')
+
     @stack('scripts')
 </body>
 </html>
