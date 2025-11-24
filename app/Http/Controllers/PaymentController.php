@@ -39,7 +39,8 @@ class PaymentController extends Controller
                 ->with('info', 'You are already enrolled in this course.');
         }
         
-        $finalPrice = $course->price;
+        // selalu kirimkan harga sebagai integer tanpa format ribuan/desimal
+        $finalPrice = (int) round($this->normalizeMoney($course->price));
         
         return view('checkout', [
             'course' => $course,
@@ -75,6 +76,10 @@ public function processPayment(Request $request, $courseId)
         // Create order ID
         $orderId = Payment::generateOrderId();
 
+        // normalisasikan dan cast ke integer (simpan tanpa desimal)
+        $priceToSave = (int) round($this->normalizeMoney($course->price));
+        $finalToSave = (int) round($this->normalizeMoney($finalPrice));
+
         // Create registration record
         $registration = CourseRegistration::create([
             'user_id' => $user->id,
@@ -84,8 +89,8 @@ public function processPayment(Request $request, $courseId)
             'ttl' => $user->date_of_birth ? $user->date_of_birth->format('d F Y') : 'Tidak tersedia',
             'tempat_tinggal' => $user->location ?? 'Tidak tersedia', 
             'gender' => 'Laki-laki',
-            'price' => $course->price,
-            'final_price' => $finalPrice,
+            'price' => $priceToSave,
+            'final_price' => $finalToSave,
             'discount_code' => $request->voucher_code,
             'payment_method' => $request->payment_method,
             'status' => $isInstructor ? 'paid' : 'pending',
@@ -97,7 +102,7 @@ public function processPayment(Request $request, $courseId)
             'user_id' => $user->id,
             'course_id' => $course->id,
             'order_id' => $orderId,
-            'gross_amount' => $finalPrice,
+            'gross_amount' => $finalToSave,
             'payment_type' => $request->payment_method,
             'transaction_status' => $isInstructor ? 'settlement' : 'pending',
             'status_message' => $isInstructor ? 'Free access for instructor' : 'Waiting for payment'
@@ -119,7 +124,7 @@ public function processPayment(Request $request, $courseId)
         $transactionDetails = [
             'transaction_details' => [
                 'order_id' => $orderId,
-                'gross_amount' => (int) $finalPrice,
+                'gross_amount' => $finalToSave,
             ],
             'customer_details' => [
                 'first_name' => $user->name,
@@ -128,7 +133,7 @@ public function processPayment(Request $request, $courseId)
             'item_details' => [
                 [
                     'id' => $course->id,
-                    'price' => (int) $finalPrice,
+                    'price' => $finalToSave,
                     'quantity' => 1,
                     'name' => $course->title,
                 ]
@@ -268,13 +273,14 @@ public function processPayment(Request $request, $courseId)
      */
     private function calculateFinalPrice(Course $course, $voucherCode = null)
     {
-        $finalPrice = $course->price;
+        // gunakan nilai numerik dari price untuk menghitung diskon
+        $base = $this->normalizeMoney($course->price);
+        $finalPrice = $base;
 
         if ($voucherCode) {
-            // Check if voucher matches course's discount code
             if ($voucherCode === $course->discount_code && $course->discount_percent > 0) {
-                $discountAmount = $course->price * ($course->discount_percent / 100);
-                $finalPrice = $course->price - $discountAmount;
+                $discountAmount = $base * ($course->discount_percent / 100);
+                $finalPrice = $base - $discountAmount;
             }
         }
 
@@ -310,5 +316,24 @@ public function processPayment(Request $request, $courseId)
             'valid' => false,
             'message' => 'Invalid voucher code'
         ], 400);
+    }
+
+    /**
+     * Normalize money string to float.
+     * Accepts formats like "300.000,00", "300000.00", "Rp 300.000", or numeric.
+     */
+    private function normalizeMoney($val)
+    {
+        if ($val === null) return 0.0;
+        if (is_numeric($val)) return (float) $val;
+        $s = (string) $val;
+        $s = preg_replace('/[^\d\.,-]/', '', $s);
+        if (strpos($s, '.') !== false && strpos($s, ',') !== false) {
+            $s = str_replace('.', '', $s);
+            $s = str_replace(',', '.', $s);
+        } else {
+            $s = str_replace(',', '.', $s);
+        }
+        return floatval($s);
     }
 }

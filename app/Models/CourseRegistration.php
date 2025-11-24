@@ -11,6 +11,8 @@ class CourseRegistration extends Model
 {
     use HasFactory; // Hapus: , SoftDeletes
 
+    protected $table = 'course_registrations';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -19,6 +21,7 @@ class CourseRegistration extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'order_id',
         'nama_lengkap',
         'ttl',
         'tempat_tinggal',
@@ -26,18 +29,19 @@ class CourseRegistration extends Model
         'price',
         'final_price',
         'discount_code',
+        'payment_method',
         'status',
         'progress',
-        'enrolled_at',
-        'completed_at'
+        'paid_at',
+        'enrolled_at'
     ];
 
+    // pastikan Eloquent me-cast harga sebagai integer
     protected $casts = [
-        'price' => 'decimal:2',
-        'final_price' => 'decimal:2',
-        'progress' => 'decimal:2',
+        'price' => 'integer',
+        'final_price' => 'integer',
+        'paid_at' => 'datetime',
         'enrolled_at' => 'datetime',
-        'completed_at' => 'datetime'
     ];
 
     /**
