@@ -2,35 +2,38 @@
 
 use Illuminate\Http\Request;
 
-// 1. Definisikan waktu mulai (Penting buat Laravel)
 define('LARAVEL_START', microtime(true));
 
-// 2. Cek Autoload
+// Cek Autoload
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require __DIR__ . '/../vendor/autoload.php';
 } else {
-    // Fallback kalau vendor ada di level atas (kadang struktur vercel beda)
     require __DIR__ . '/vendor/autoload.php';
 }
 
-// 3. Booting App
+// Bootstrap App
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-// --- 🔥 VERCEL FIXES (JANGAN DIHAPUS) 🔥 ---
+/*
+|--------------------------------------------------------------------------
+| VERCEL FIXES (Robust Version)
+|--------------------------------------------------------------------------
+|
+| Kita pindahkan storage dan bootstrap cache ke /tmp (writable),
+| TAPI kita juga harus copy file cache yang sudah ada biar config kebaca.
+|
+*/
 
-// A. Pindahin STORAGE ke /tmp (Biar bisa upload/log)
 $app->useStoragePath('/tmp/storage');
-
-// B. Pindahin BOOTSTRAP CACHE ke /tmp (INI SOLUSI ERROR 500 LU!)
 $app->useBootstrapPath('/tmp/bootstrap');
 
-// C. Bikin struktur folder manual di /tmp karena server Vercel itu kosong
+// Buat struktur folder di /tmp
 $dirs = [
     '/tmp/storage/framework/views',
     '/tmp/storage/framework/cache/data',
     '/tmp/storage/framework/sessions',
     '/tmp/storage/logs',
-    '/tmp/bootstrap/cache', // <--- Folder sakti penyelamat error
+    '/tmp/bootstrap/cache',
 ];
 
 foreach ($dirs as $dir) {
@@ -38,7 +41,16 @@ foreach ($dirs as $dir) {
         mkdir($dir, 0777, true);
     }
 }
-// ---------------------------------------------
 
-// 4. Jalanin Request
+// COPY file cache dari folder asli ke /tmp (PENTING!)
+// Ini mencegah error "Target class [view] does not exist" karena config tidak terbaca
+$files = glob(__DIR__ . '/../bootstrap/cache/*.php');
+foreach ($files as $file) {
+    $dest = '/tmp/bootstrap/cache/' . basename($file);
+    if (!file_exists($dest)) {
+        copy($file, $dest);
+    }
+}
+
+// Jalankan Request
 $app->handleRequest(Request::capture());

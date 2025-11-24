@@ -26,9 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 2. TAMBAHKAN BLOK INI DI PALING ATAS METHOD BOOT
-        if (config('app.env') === 'production') {
-            URL::forceScheme('https');
+        
         // Custom route macro for instructor routes
         Route::macro('instructor', function ($prefix = 'instructor') {
             return Route::prefix($prefix)
