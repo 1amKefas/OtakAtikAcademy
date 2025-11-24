@@ -195,8 +195,7 @@
                 <p class="text-lg font-bold text-blue-600 mt-2">Rp{{ number_format($course->price, 0, ',', '.') }}</p>
             </div>
 
-            <form action="{{ route('checkout.show', $course->id) }}" method="POST">
-                @csrf
+            <form action="{{ route('checkout.show', $course->id) }}" method="GET">
                 <input type="hidden" name="course_id" id="course_id">
                 
                 <!-- Discount Code Section -->
