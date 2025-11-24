@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\URL;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\CourseRegistration;
@@ -25,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 2. TAMBAHKAN BLOK INI DI PALING ATAS METHOD BOOT
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
         // Custom route macro for instructor routes
         Route::macro('instructor', function ($prefix = 'instructor') {
             return Route::prefix($prefix)
