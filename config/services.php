@@ -37,8 +37,7 @@ return [
 
     'midtrans' => [
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
-        'server_key' => 'AKAN_DIISI_SERVER_KEY_PRODUCTION_HARD_CODED',
-+       'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'server_key' => env('Mid-server-jhaxzHFfOckv_vbyvON-Iepz'),
         'client_key' => env('Mid-client-qMWzxicCLepaNRer'),
     ],
 
