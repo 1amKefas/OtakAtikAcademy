@@ -37,8 +37,8 @@ return [
 
     'midtrans' => [
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
-        'server_key' => env('Mid-server-jhaxzHFfOckv_vbyvON-Iepz'),
-        'client_key' => env('Mid-client-qMWzxicCLepaNRer'),
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
     ],
 
 ];
