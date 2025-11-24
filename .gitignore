@@ -24,3 +24,7 @@ Thumbs.db
 
 .vercel
 /bootstrap/cache/*.php
+/bootstrap/cache/config.php
+/bootstrap/cache/routes.php
+/bootstrap/cache/packages.php
+/bootstrap/cache/services.php
