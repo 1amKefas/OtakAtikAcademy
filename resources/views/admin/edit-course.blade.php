@@ -8,6 +8,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-50">
+
+    @if(session('success'))
+    <div id="alert-success" class="fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3 transition-opacity duration-500">
+        <i class="fas fa-check-circle text-xl"></i>
+        <div>
+            <h4 class="font-bold">Berhasil!</h4>
+            <p class="text-sm">{{ session('success') }}</p>
+        </div>
+        <button onclick="document.getElementById('alert-success').remove()" class="ml-4 text-white hover:text-gray-200">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    @endif
+
+    @if ($errors->any())
+    <div id="alert-error" class="fixed top-6 right-6 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3">
+        <i class="fas fa-exclamation-circle text-xl"></i>
+        <div>
+            <h4 class="font-bold">Gagal Menyimpan</h4>
+            <ul class="text-sm list-disc pl-4">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        <button onclick="document.getElementById('alert-error').remove()" class="ml-4 text-white hover:text-gray-200">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    @endif
+
     <div class="min-h-screen p-6">
         <div class="max-w-4xl mx-auto">
             <div class="bg-white rounded-2xl shadow-lg p-6">
@@ -25,21 +56,32 @@
                     <div class="space-y-6">
                         <!-- Course Thumbnail -->
                         <div class="md:col-span-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
-                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center relative hover:bg-gray-50 transition-colors h-48 flex flex-col items-center justify-center overflow-hidden">
-                                <input type="file" name="image" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" onchange="previewImage(this)">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Thumbnail Course</label>
+                            
+                            <div class="border-2 border-dashed border-gray-300 rounded-xl p-2 text-center relative hover:bg-gray-50 transition-colors h-64 flex flex-col items-center justify-center overflow-hidden group">
                                 
-                                @if($course->image_url)
-                                    <img id="imagePreview" src="{{ $course->image_url }}" class="absolute inset-0 w-full h-full object-cover rounded-md" />
-                                @else
-                                    <img id="imagePreview" class="hidden absolute inset-0 w-full h-full object-cover rounded-md" />
-                                    <div id="placeholder" class="text-gray-400">
-                                        <i class="fas fa-image text-3xl mb-2"></i>
-                                        <p class="text-xs">Ganti Gambar</p>
+                                <input type="file" name="image" id="imageInput" 
+                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                                       accept="image/*" 
+                                       onchange="previewImage(this)">
+                                
+                                <img id="imagePreview" 
+                                     src="{{ $course->image_url ?? '' }}" 
+                                     class="{{ $course->image_url ? '' : 'hidden' }} absolute inset-0 w-full h-full object-cover rounded-lg z-10 transition-transform group-hover:scale-105 duration-300" 
+                                     alt="Preview">
+
+                                <div id="placeholder" class="{{ $course->image_url ? 'hidden' : '' }} flex flex-col items-center justify-center text-gray-400 z-0 pointer-events-none">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                        <i class="fas fa-cloud-upload-alt text-2xl text-blue-500"></i>
                                     </div>
-                                @endif
+                                    <p class="text-sm font-medium text-gray-600">Upload Thumbnail</p>
+                                    <p class="text-xs text-gray-400 mt-1">JPG/PNG, Max 2MB</p>
+                                </div>
+
+                                <div id="changeText" class="{{ $course->image_url ? '' : 'hidden' }} absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Klik untuk ubah gambar
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-2 text-center">Klik gambar untuk mengubah</p>
                         </div>
                         <!-- Course Title -->
                         <div>
@@ -162,6 +204,26 @@
     </div>
 
     <script>
+        function previewImage(input) {
+            const imgPreview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('placeholder');
+            const changeText = document.getElementById('changeText');
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    // Update source gambar
+                    imgPreview.src = e.target.result;
+                    
+                    // Tampilkan gambar, sembunyikan placeholder
+                    imgPreview.classList.remove('hidden');
+                    changeText.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }    
+
         function toggleInstructorField(type) {
             const instructorField = document.getElementById('instructorField');
             if (type === 'Hybrid' || type === 'Tatap Muka') {
@@ -173,6 +235,15 @@
                 instructorField.querySelector('select').value = '';
             }
         }
+
+        // Auto hide success alert after 5 seconds
+        setTimeout(() => {
+            const alert = document.getElementById('alert-success');
+            if(alert) {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 5000);
     </script>
 </body>
 </html>
