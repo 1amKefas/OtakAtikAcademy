@@ -98,6 +98,18 @@
                         Sign In
                     </button>
 
+                    <!-- Login with Google -->
+                    <div class="relative flex py-5 items-center">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">Or continue with</span>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+
+                    <a href="{{ route('auth.google') }}" class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="h-5 w-5 mr-2" alt="Google">
+                        Sign in with Google
+                    </a>
+
                     <!-- Register Link -->
                     <div class="text-center mt-6">
                         <p class="text-sm text-gray-600">
