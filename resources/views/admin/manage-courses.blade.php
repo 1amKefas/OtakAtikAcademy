@@ -17,6 +17,11 @@
             background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
         }
         
+        /* Badges */
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .status-active { background: #d1fae5; color: #065f46; }
+        .status-inactive { background: #fee2e2; color: #dc2626; }
+
         .status-badge {
             padding: 4px 12px;
             border-radius: 20px;
@@ -32,16 +37,29 @@
             font-size: 12px;
             font-weight: 600;
         }
+        .type-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .type-full-online { background: #dbeafe; color: #1e40af; }
         .type-hybrid { background: #fef3c7; color: #d97706; }
         .type-tatap-muka { background: #d1fae5; color: #065f46; }
         
+        /* Fixed Card Styling */
         .course-card {
+            height: 480px; /* Fixed Height Total */
+            display: flex;
+            flex-direction: column;
             transition: all 0.3s ease;
         }
-        .course-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        .course-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .course-image-container { height: 180px; overflow: hidden; position: relative; }
+        .course-image { width: 100%; height: 100%; object-fit: cover; }
+        .course-content { flex: 1; display: flex; flex-direction: column; padding: 1.25rem; }
+        .course-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Batasi 3 baris */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 4.5em; /* Fallback height */
         }
     </style>
 </head>
@@ -143,6 +161,19 @@
                         <form action="{{ route('admin.courses.create') }}" method="POST">
                             @csrf
                             <div class="space-y-4">
+                                <!-- Course Thumbnail -->
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-2 block">Thumbnail Course</label>
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors relative">
+                                        <input type="file" name="image" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onchange="previewImage(this)">
+                                        <div id="imagePreviewPlaceholder">
+                                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                            <p class="text-xs text-gray-500">Klik atau drag gambar ke sini</p>
+                                            <p class="text-[10px] text-gray-400 mt-1">Max: 2MB (JPG/PNG)</p>
+                                        </div>
+                                        <img id="imagePreview" class="hidden w-full h-32 object-cover rounded-md mx-auto" />
+                                    </div>
+                                </div>
                                 <!-- Course Title -->
                                 <div>
                                     <label class="text-sm font-medium text-gray-700 mb-2 block">Judul Course</label>
@@ -498,6 +529,18 @@
         instructorField.querySelector('select').required = false;
         instructorField.querySelector('select').value = '';
     }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreview').classList.remove('hidden');
+                document.getElementById('imagePreviewPlaceholder').classList.add('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 }
 
         // Initialize form based on current selection
@@ -509,5 +552,6 @@
         });
     </script>
 
+   
 </body>
 </html>

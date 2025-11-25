@@ -10,6 +10,7 @@ use App\Models\CourseRegistration;
 use App\Models\Refund;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage; 
 
 class AdminController extends Controller
 {
@@ -440,7 +441,8 @@ class AdminController extends Controller
             'duration_days' => 'required|integer|min:1|max:365',
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' // Validasi gambar
         ]);
 
         $courseData = [
@@ -458,6 +460,12 @@ class AdminController extends Controller
             'current_enrollment' => 0,
             'is_active' => $validated['is_active'] ?? true,
         ];
+
+        // Handle Image Upload
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('courses', 'public');
+            $courseData['image_url'] = '/storage/' . $path;
+        }
 
         // Handle instructor - Full Online tidak butuh instructor
         if ($validated['type'] === 'Full Online') {
@@ -507,8 +515,21 @@ class AdminController extends Controller
             'duration_days' => 'required|integer|min:1|max:365',
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' // Validasi gambar
         ]);
+
+        // Handle Image Upload
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama jika ada (optional, good practice)
+            if ($course->image_url) {
+                $oldPath = str_replace('/storage/', '', $course->image_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            
+            $path = $request->file('image')->store('courses', 'public');
+            $validated['image_url'] = '/storage/' . $path;
+        }
 
         // Handle instructor
         if ($validated['type'] === 'Full Online') {

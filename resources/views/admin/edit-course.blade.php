@@ -23,6 +23,24 @@
                     @method('PUT')
                     
                     <div class="space-y-6">
+                        <!-- Course Thumbnail -->
+                        <div class="md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center relative hover:bg-gray-50 transition-colors h-48 flex flex-col items-center justify-center overflow-hidden">
+                                <input type="file" name="image" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" onchange="previewImage(this)">
+                                
+                                @if($course->image_url)
+                                    <img id="imagePreview" src="{{ $course->image_url }}" class="absolute inset-0 w-full h-full object-cover rounded-md" />
+                                @else
+                                    <img id="imagePreview" class="hidden absolute inset-0 w-full h-full object-cover rounded-md" />
+                                    <div id="placeholder" class="text-gray-400">
+                                        <i class="fas fa-image text-3xl mb-2"></i>
+                                        <p class="text-xs">Ganti Gambar</p>
+                                    </div>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 text-center">Klik gambar untuk mengubah</p>
+                        </div>
                         <!-- Course Title -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Judul Course</label>
