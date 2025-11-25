@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CourseController;
@@ -11,6 +13,33 @@ use App\Http\Controllers\RefundController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\NotificationController;
+
+// --- GOOGLE AUTH ROUTES ---
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+// --- EMAIL VERIFICATION ROUTES ---
+Route::get('/email/verify', function () {
+    return view('auth.verify-email'); // Anda perlu membuat view ini
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/dashboard')->with('success', 'Email berhasil diverifikasi!');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Link verifikasi telah dikirim ulang!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// --- UPDATE MIDDLEWARE GROUP ---
+// Tambahkan 'verified' ke middleware group dashboard user
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Route User Course, Profile, dll masukan di sini
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // ... pindahkan route user lain ke sini
+});
 
 // Public Routes
 Route::get('/', function () {
