@@ -7,24 +7,38 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Auth\Events\Registered; // Penting untuk verifikasi email
-use Laravel\Socialite\Facades\Socialite; // Penting untuk Google
+use Illuminate\Auth\Events\Registered;
+use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    // ... showLogin dan showRegister TETAP SAMA ...
+    /**
+     * Show login page
+     */
+    public function showLogin()
+    {
+        return view('auth.login');
+    }
 
     /**
-     * Handle user registration
+     * Show register page
+     */
+    public function showRegister()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Handle user registration (Manual)
      */
     public function register(Request $request)
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255', // Sesuaikan name field di view (name atau username)
+                'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8|confirmed', // Tambahkan confirmed jika ada field confirm password
+                'password' => 'required|string|min:8|confirmed',
             ]);
 
             Log::info('Registration attempt', ['email' => $validated['email']]);
@@ -33,17 +47,17 @@ class AuthController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'is_admin' => false,      // Default User
-                'is_instructor' => false, // Default User
+                'is_admin' => false,
+                'is_instructor' => false,
             ]);
 
-            // [PENTING] Kirim email verifikasi
+            // Kirim email verifikasi
             event(new Registered($user));
 
-            // [UBAH] Jangan langsung login (Auth::login($user)).
-            // Arahkan user ke halaman pemberitahuan untuk cek email.
-            
-            return redirect()->route('verification.notice')->with('success', 'Registrasi berhasil! Silakan cek email Anda (termasuk folder spam) untuk memverifikasi akun sebelum login.');
+            Log::info('User created successfully, waiting for verification', ['user_id' => $user->id]);
+
+            // Redirect ke halaman pemberitahuan cek email
+            return redirect()->route('verification.notice')->with('success', 'Registrasi berhasil! Silakan cek email Anda untuk memverifikasi akun.');
             
         } catch (\Exception $e) {
             Log::error('Registration failed', ['error' => $e->getMessage()]);
@@ -61,11 +75,10 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // Cek kredensial
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // [PENTING] Cek apakah email sudah diverifikasi
+            // Cek apakah email sudah diverifikasi
             if (!$user->hasVerifiedEmail()) {
                 Auth::logout();
                 return back()->withErrors([
@@ -75,11 +88,12 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
             
+            // Redirect sesuai role
             if ($user->is_admin) {
-                return redirect()->intended('/admin/dashboard');
+                return redirect()->intended('/admin/dashboard')->with('success', '👋 Welcome back, Admin ' . $user->name . '!');
             }
             
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/dashboard')->with('success', ' Welcome back, ' . $user->name . '!');
         }
 
         return back()->withErrors([
@@ -87,7 +101,17 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
-    // ... logout TETAP SAMA ...
+    /**
+     * Handle user logout
+     */
+    public function logout(Request $request)
+    {
+        $userName = Auth::user()?->name ?? 'User';
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/login')->with('success', '👋 Goodbye, ' . $userName . '! You have been logged out successfully.');
+    }
 
     /**
      * Redirect ke Google
@@ -103,32 +127,35 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
+            // Mengambil user dari Google
             $googleUser = Socialite::driver('google')->user();
             
-            // Cek apakah user dengan email ini sudah ada
+            // Cari user berdasarkan email
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if(!$user) {
-                // Jika user baru, buat akun
+                // Jika user belum ada, buat baru
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'password' => Hash::make(Str::random(16)), // Password acak
-                    'email_verified_at' => now(), // Otomatis verifikasi karena dari Google
+                    'password' => Hash::make(Str::random(16)), // Password random
+                    'email_verified_at' => now(), // Otomatis verified
                     'profile_picture' => $googleUser->getAvatar(),
+                    'is_admin' => false,
+                    'is_instructor' => false,
                 ]);
             } else {
-                // Jika user sudah ada, update google_id jika belum ada
+                // Jika user sudah ada, update google_id dan set verified
                 if (empty($user->google_id)) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
-                        // Jika email sama tapi belum verifikasi manual, kita anggap verified karena login via Google
-                        'email_verified_at' => $user->email_verified_at ?? now(), 
+                        'email_verified_at' => $user->email_verified_at ?? now(),
                     ]);
                 }
             }
 
+            // Login user
             Auth::login($user);
             return redirect('/dashboard');
 
