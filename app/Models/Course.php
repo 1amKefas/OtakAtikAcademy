@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Course extends Model
 {
@@ -21,6 +23,7 @@ class Course extends Model
         'type',
         'instructor_id',
         'price',
+        'thumbnail',
         'discount_code',
         'discount_percent',
         'min_quota',
@@ -36,6 +39,21 @@ class Course extends Model
         'reschedule_reason',
         'quota_not_met'
     ];
+
+    /**
+     * Helper untuk mendapatkan URL thumbnail atau default
+     */
+    public function getThumbnailUrlAttribute()
+    {
+        if ($this->thumbnail && file_exists(public_path('storage/' . $this->thumbnail))) {
+            return asset('storage/' . $this->thumbnail);
+        }
+        
+        // Gambar default berdasarkan kategori atau random jika tidak ada gambar
+        // Kamu bisa ganti URL ini dengan gambar placeholder lokal kamu
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->title) . '&background=random&size=400'; 
+        // Atau gunakan placeholder statis: return asset('images/course-placeholder.jpg');
+    }
 
     protected $casts = [
         'price' => 'decimal:2',

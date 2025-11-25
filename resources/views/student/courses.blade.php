@@ -1,111 +1,101 @@
 @extends('layouts.app')
 
-@section('title', 'Kursus Saya')
-
 @section('content')
-<div class="bg-white">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-8">
-        <div class="max-w-7xl mx-auto">
-            <h1 class="text-3xl font-bold mb-2">Kursus Saya</h1>
-            <p class="text-blue-100">Kelola dan lihat semua kursus yang Anda daftar</p>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-6 py-8">
-        @if ($courses->isEmpty())
-            <div class="text-center py-12">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                <h3 class="mt-2 text-lg font-medium text-gray-900">Anda belum mendaftar kursus</h3>
-                <p class="mt-1 text-gray-500">Jelajahi dan daftar kursus yang tersedia sekarang</p>
-                <div class="mt-6">
-                    <a href="{{ route('courses.index') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                        Jelajahi Kursus
-                    </a>
-                </div>
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Kursus Saya</h1>
+                <p class="mt-1 text-sm text-gray-500">Lanjutkan pembelajaran Anda dan tingkatkan skill.</p>
             </div>
-        @else
-            <!-- Courses Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach ($courses as $registration)
-                    @if ($registration->course)
-                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                            <!-- Course Image -->
-                            <div class="h-48 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                                @if ($registration->course->image_url)
-                                    <img src="{{ $registration->course->image_url }}" alt="{{ $registration->course->title }}" class="w-full h-full object-cover">
-                                @else
-                                    <div class="text-white text-center">
-                                        <svg class="mx-auto h-16 w-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747 0-6.002-4.5-10.747-10-10.747z"></path>
-                                        </svg>
-                                    </div>
-                                @endif
-                            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{{ route('course.show') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                    <i class="fas fa-plus mr-2"></i> Jelajahi Kursus Baru
+                </a>
+            </div>
+        </div>
 
-                            <!-- Course Info -->
-                            <div class="p-6">
-                                <div class="flex items-start justify-between mb-2">
-                                    <h3 class="text-lg font-bold text-gray-900 flex-1">{{ $registration->course->title }}</h3>
-                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $registration->status === 'paid' ? 'bg-green-100 text-green-800' : ($registration->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ ucfirst($registration->status) }}
+        <!-- Filter Tabs -->
+        <div class="border-b border-gray-200 mb-8">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <a href="#" class="border-orange-500 text-orange-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    Semua Kursus ({{ $registrations->count() }})
+                </a>
+                <!-- Future: Add Active/Completed tabs -->
+            </nav>
+        </div>
+
+        @if($registrations->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($registrations as $registration)
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col h-full">
+                        <!-- Course Image -->
+                        <div class="relative h-48 w-full bg-gray-200">
+                            <img src="{{ $registration->course->thumbnail_url }}" alt="{{ $registration->course->title }}" class="w-full h-full object-cover">
+                            <div class="absolute top-0 right-0 mt-2 mr-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/90 text-gray-800 shadow backdrop-blur-sm">
+                                    {{ $registration->progress ?? 0 }}% Selesai
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-5 flex-1 flex flex-col">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-md">
+                                        {{ ucfirst($registration->course->category) }}
                                     </span>
                                 </div>
-
-                                <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $registration->course->description }}</p>
-
-                                <!-- Course Meta -->
-                                <div class="space-y-2 mb-4 text-sm">
-                                    <div class="flex items-center text-gray-700">
-                                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        {{ $registration->course->duration_days }} hari
+                                
+                                <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]">
+                                    <a href="{{ route('student.course-detail', $registration->id) }}" class="hover:text-orange-600 transition-colors">
+                                        {{ $registration->course->title }}
+                                    </a>
+                                </h3>
+                                
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                                        {{ $registration->course->instructor->initial ?? 'I' }}
                                     </div>
-                                    <div class="flex items-center text-gray-700">
-                                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                        </svg>
-                                        {{ $registration->course->currentEnrollment ?? 0 }} peserta
-                                    </div>
-                                    <div class="flex items-center text-gray-700">
-                                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                        </svg>
-                                        {{ $registration->course->type }}
-                                    </div>
+                                    <span class="ml-2 text-xs text-gray-500">{{ $registration->course->instructor->name ?? 'Instructor' }}</span>
                                 </div>
+                            </div>
 
-                                <!-- Progress Bar -->
-                                <div class="mb-4">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-xs font-semibold text-gray-700">Progress</span>
-                                        <span class="text-xs font-semibold text-gray-700">{{ $registration->progress ?? 0 }}%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: {{ $registration->progress ?? 0 }}%"></div>
-                                    </div>
+                            <!-- Progress Bar -->
+                            <div class="mt-4">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>Progres Belajar</span>
+                                    <span class="font-medium text-gray-900">{{ $registration->progress ?? 0 }}%</span>
                                 </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-orange-500 h-2 rounded-full transition-all duration-500 ease-out" style="width: {{ $registration->progress ?? 0 }}%"></div>
+                                </div>
+                            </div>
 
-                                <!-- Action Button -->
-                                <a href="{{ route('student.course.detail', $registration->id) }}" class="block w-full text-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                                    Lihat Detail
+                            <div class="mt-5 pt-4 border-t border-gray-50">
+                                <a href="{{ route('student.course-detail', $registration->id) }}" class="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-orange-700 bg-orange-100 hover:bg-orange-200 transition-colors">
+                                    Lanjutkan Belajar
                                 </a>
                             </div>
                         </div>
-                    @endif
+                    </div>
                 @endforeach
             </div>
-
-            <!-- Pagination -->
-            @if ($courses->hasPages())
-                <div class="mt-8">
-                    {{ $courses->links() }}
+        @else
+            <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+                <div class="mx-auto h-24 w-24 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-graduation-cap text-3xl text-orange-600"></i>
                 </div>
-            @endif
+                <h3 class="text-lg font-medium text-gray-900">Belum ada kursus yang diikuti</h3>
+                <p class="mt-2 text-gray-500 max-w-sm mx-auto">Anda belum mendaftar di kursus manapun. Mulai perjalanan belajar Anda sekarang!</p>
+                <div class="mt-6">
+                    <a href="{{ route('course.show') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 transition-colors">
+                        Cari Kursus
+                    </a>
+                </div>
+            </div>
         @endif
     </div>
 </div>
