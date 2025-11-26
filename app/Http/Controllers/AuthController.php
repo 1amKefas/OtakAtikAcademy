@@ -159,11 +159,15 @@ class AuthController extends Controller
                 \Log::info('Existing user found', ['user_id' => $user->id]);
                 // Jika user sudah ada, update google_id dan set verified
                 if (empty($user->google_id)) {
+                    \Log::info('Updating user with google_id');
                     $user->update([
                         'google_id' => $googleUser->getId(),
                         'email_verified_at' => $user->email_verified_at ?? now(),
+                        'profile_picture' => $googleUser->getAvatar(), // Update picture juga
                     ]);
                     \Log::info('User updated with google_id');
+                } else {
+                    \Log::info('User already has google_id linked');
                 }
             }
 
