@@ -12,10 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Drop unique constraint on email
+            // Drop unique constraint on email to allow duplicate emails
+            // (one for manual signup, one for Google OAuth with same email)
             $table->dropUnique(['email']);
-            // Add composite unique on email + google_id (allows duplicate emails with different google_ids)
-            $table->unique(['email', 'google_id'], 'users_email_google_unique');
         });
     }
 
@@ -25,8 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Revert back
-            $table->dropUnique('users_email_google_unique');
+            // Revert back to unique email
             $table->unique(['email']);
         });
     }
