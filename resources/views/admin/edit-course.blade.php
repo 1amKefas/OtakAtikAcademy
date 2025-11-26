@@ -49,7 +49,7 @@
                     </a>
                 </div>
 
-                <form action="{{ route('admin.courses.update', $course->id) }}" method="POST">
+                <form action="{{ route('admin.courses.update', $course->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     
