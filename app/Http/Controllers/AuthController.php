@@ -127,13 +127,22 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
+            \Log::info('Google Callback - Starting');
+            
             // Mengambil user dari Google
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            
+            \Log::info('Google User Retrieved', [
+                'email' => $googleUser->getEmail(),
+                'name' => $googleUser->getName(),
+                'id' => $googleUser->getId(),
+            ]);
             
             // Cari user berdasarkan email
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if(!$user) {
+                \Log::info('Creating new user from Google');
                 // Jika user belum ada, buat baru
                 $user = User::create([
                     'name' => $googleUser->getName(),
@@ -145,23 +154,33 @@ class AuthController extends Controller
                     'is_admin' => false,
                     'is_instructor' => false,
                 ]);
+                \Log::info('New user created', ['user_id' => $user->id, 'email' => $user->email]);
             } else {
+                \Log::info('Existing user found', ['user_id' => $user->id]);
                 // Jika user sudah ada, update google_id dan set verified
                 if (empty($user->google_id)) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
                         'email_verified_at' => $user->email_verified_at ?? now(),
                     ]);
+                    \Log::info('User updated with google_id');
                 }
             }
 
             // Login user
             Auth::login($user);
+            \Log::info('User logged in successfully', ['user_id' => $user->id]);
             return redirect('/dashboard');
 
         } catch (\Exception $e) {
-            Log::error('Google Login Error: ' . $e->getMessage());
-            return redirect('/login')->withErrors(['error' => 'Gagal login dengan Google. Silakan coba lagi.']);
+            \Log::error('Google Login Error', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect('/login')->withErrors(['error' => 'Gagal login dengan Google. Silakan coba lagi. Error: ' . $e->getMessage()]);
         }
     }
 }
