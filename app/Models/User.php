@@ -229,4 +229,47 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query->where('is_instructor', true);
     }
+
+    /**
+     * Send the email verification notification.
+     * Custom implementation untuk mengirim verification link ke correct domain
+     */
+    public function sendEmailVerificationNotification()
+    {
+        // Determine the correct base URL for verification link
+        // Priority: APP_URL (custom domain) > VERCEL_URL (Vercel preview) > APP_URL fallback
+        $baseUrl = rtrim(config('app.url'), '/');
+        
+        // If APP_URL is still localhost atau example.com di production, use Vercel URL
+        if ((env('APP_ENV') === 'production' || env('APP_ENV') === 'staging') 
+            && (strpos($baseUrl, 'localhost') !== false || strpos($baseUrl, 'example.com') !== false)) {
+            if (env('VERCEL_URL')) {
+                $baseUrl = 'https://' . env('VERCEL_URL');
+            }
+        }
+
+        // Generate verification URL dengan proper base URL
+        $verificationUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'verification.verify',
+            \Illuminate\Support\Carbon::now()->addMinutes(60), // 60 minutes expiration
+            [
+                'id' => $this->getKey(),
+                'hash' => sha1($this->email),
+            ]
+        );
+        
+        // Replace base URL to ensure consistency
+        $verificationUrl = preg_replace(
+            '~^https?://[^/]+~',
+            $baseUrl,
+            $verificationUrl
+        );
+
+        \Illuminate\Support\Facades\Mail::send([], [], function (\Illuminate\Mail\Message $message) use ($verificationUrl) {
+            $message->from(env('MAIL_FROM_ADDRESS', 'noreply@otakatik-academy.com'), env('MAIL_FROM_NAME', 'OtakAtik Academy'))
+                ->to($this->email, $this->name)
+                ->subject('Verify Your Email Address')
+                ->html(view('emails.verify-email', ['name' => $this->name, 'verificationUrl' => $verificationUrl])->render());
+        });
+    }
 }

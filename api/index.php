@@ -16,41 +16,55 @@ $app = require_once __DIR__ . '/../bootstrap/app.php';
 
 /*
 |--------------------------------------------------------------------------
-| VERCEL FIXES (Robust Version)
+| VERCEL FIXES (Enhanced Error Handling)
 |--------------------------------------------------------------------------
 |
-| Kita pindahkan storage dan bootstrap cache ke /tmp (writable),
-| TAPI kita juga harus copy file cache yang sudah ada biar config kebaca.
+| Pindahkan storage dan bootstrap cache ke /tmp (writable),
+| Copy file cache yang sudah ada biar config kebaca
 |
 */
 
-$app->useStoragePath('/tmp/storage');
-$app->useBootstrapPath('/tmp/bootstrap');
+try {
+    $app->useStoragePath('/tmp/storage');
+    $app->useBootstrapPath('/tmp/bootstrap');
 
-// Buat struktur folder di /tmp
-$dirs = [
-    '/tmp/storage/framework/views',
-    '/tmp/storage/framework/cache/data',
-    '/tmp/storage/framework/sessions',
-    '/tmp/storage/logs',
-    '/tmp/bootstrap/cache',
-];
+    // Buat struktur folder di /tmp
+    $dirs = [
+        '/tmp/storage/framework/views',
+        '/tmp/storage/framework/cache/data',
+        '/tmp/storage/framework/sessions',
+        '/tmp/storage/logs',
+        '/tmp/bootstrap/cache',
+    ];
 
-foreach ($dirs as $dir) {
-    if (!is_dir($dir)) {
-        mkdir($dir, 0777, true);
+    foreach ($dirs as $dir) {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
     }
+
+    // COPY file cache dari folder asli ke /tmp (PENTING!)
+    $files = @glob(__DIR__ . '/../bootstrap/cache/*.php');
+    if ($files) {
+        foreach ($files as $file) {
+            $dest = '/tmp/bootstrap/cache/' . basename($file);
+            if (!file_exists($dest)) {
+                @copy($file, $dest);
+            }
+        }
+    }
+} catch (Exception $e) {
+    error_log("Vercel cache setup error: " . $e->getMessage());
 }
 
-// COPY file cache dari folder asli ke /tmp (PENTING!)
-// Ini mencegah error "Target class [view] does not exist" karena config tidak terbaca
-$files = glob(__DIR__ . '/../bootstrap/cache/*.php');
-foreach ($files as $file) {
-    $dest = '/tmp/bootstrap/cache/' . basename($file);
-    if (!file_exists($dest)) {
-        copy($file, $dest);
-    }
+// Jalankan Request dengan error handling
+try {
+    $app->handleRequest(Request::capture());
+} catch (Exception $e) {
+    error_log("Fatal error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Internal Server Error',
+        'message' => 'An error occurred while processing your request'
+    ]);
 }
-
-// Jalankan Request
-$app->handleRequest(Request::capture());

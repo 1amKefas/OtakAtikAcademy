@@ -24,8 +24,12 @@ Route::get('/email/verify', function () {
 })->middleware('auth')->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    if ($request->user()->hasVerifiedEmail()) {
+        return redirect('/dashboard')->with('success', 'Email sudah diverifikasi sebelumnya!');
+    }
+    
     $request->fulfill();
-    return redirect('/dashboard')->with('success', 'Email berhasil diverifikasi!');
+    return redirect('/dashboard')->with('success', 'Email berhasil diverifikasi! Selamat datang di OtakAtik Academy.');
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
