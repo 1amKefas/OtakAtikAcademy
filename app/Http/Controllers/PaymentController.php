@@ -61,6 +61,19 @@ public function processPayment(Request $request, $courseId)
     $course = Course::where('is_active', true)->findOrFail($courseId);
     $user = Auth::user();
 
+    // --- [UPDATE] CEK APAKAH SUDAH TERDAFTAR (STATUS PAID) ---
+    $alreadyEnrolled = CourseRegistration::where('user_id', $user->id)
+        ->where('course_id', $course->id)
+        ->where('status', 'paid')
+        ->exists();
+    
+    if ($alreadyEnrolled) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda sudah memiliki course ini!'
+            ], 400);
+        }
+
     DB::beginTransaction();
     try {
         // Check if user is instructor AND payment method is instructor_free

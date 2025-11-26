@@ -92,6 +92,16 @@ class CourseController extends Controller
             'discount_code' => 'nullable|string|max:50',
         ]);
 
+        // --- [UPDATE] CEK DUPLIKASI COURSE ---
+        $existingRegistration = CourseRegistration::where('user_id', Auth::id())
+            ->where('course_id', $validated['course_id'])
+            ->where('status', 'paid') // Cek status Paid
+            ->exists();
+
+        if ($existingRegistration) {
+            return back()->withErrors(['error' => 'Anda sudah terdaftar di course ini dan tidak dapat membelinya lagi.']);
+        }
+
         $course = Course::findOrFail($validated['course_id']);
         
         // Check if course has available slots
