@@ -18,6 +18,16 @@ use App\Http\Controllers\NotificationController;
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
+// TEMPORARY DEBUG ROUTE - DELETE AFTER TESTING
+Route::get('/debug/delete-user/{email}', function ($email) {
+    if (env('APP_ENV') !== 'production' && env('APP_DEBUG')) {
+        $deleted = \App\Models\User::where('email', $email)->delete();
+        return response()->json(['deleted' => $deleted . ' user(s)']);
+    }
+    abort(403);
+});
+// END TEMPORARY DEBUG ROUTE
+
 // --- EMAIL VERIFICATION ROUTES ---
 Route::get('/email/verify', function () {
     return view('auth.verify-email'); // Anda perlu membuat view ini
