@@ -43,4 +43,5 @@ return [
     'email_verified' => 'Email verified successfully!',
     'update_success' => 'Updated successfully!',
     'delete_success' => 'Deleted successfully!',
+    'manage_preferences' => 'Manage your preferences and account settings',
 ];

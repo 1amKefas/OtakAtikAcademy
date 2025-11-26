@@ -43,4 +43,5 @@ return [
     'email_verified' => 'Email berhasil diverifikasi!',
     'update_success' => 'Berhasil diperbarui!',
     'delete_success' => 'Berhasil dihapus!',
+    'manage_preferences' => 'Kelola preferensi dan pengaturan akun Anda',
 ];

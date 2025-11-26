@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Settings')
+@section('title', __('settings.settings'))
 
 @section('content')
 <div class="bg-white">
     <!-- Header -->
     <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-8">
         <div class="max-w-4xl mx-auto">
-            <h1 class="text-3xl font-bold mb-2"><i class="fas fa-cog mr-2"></i>Settings</h1>
-            <p class="text-purple-100">Manage your preferences and account settings</p>
+            <h1 class="text-3xl font-bold mb-2"><i class="fas fa-cog mr-2"></i>{{ __('settings.settings') }}</h1>
+            <p class="text-purple-100">{{ __('messages.manage_preferences') }}</p>
         </div>
     </div>
 
@@ -24,7 +24,7 @@
 
         @if($errors->any())
             <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <p class="text-red-800 font-semibold mb-2">Error:</p>
+                <p class="text-red-800 font-semibold mb-2">{{ __('messages.error') }}:</p>
                 <ul class="text-red-700 text-sm space-y-1">
                     @foreach($errors->all() as $error)
                         <li>• {{ $error }}</li>
@@ -37,26 +37,26 @@
         <div class="flex border-b border-gray-200 mb-8 gap-4 overflow-x-auto">
             <button onclick="switchTab('notifications')" id="tab-notifications" 
                     class="tab-button active px-4 py-3 font-medium text-purple-600 border-b-2 border-purple-600 whitespace-nowrap flex items-center gap-2">
-                <i class="fas fa-bell text-purple-600"></i> Notifications
+                <i class="fas fa-bell text-purple-600"></i> {{ __('settings.notifications') }}
             </button>
             <button onclick="switchTab('language')" id="tab-language"
                     class="tab-button px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent whitespace-nowrap hover:text-gray-800 flex items-center gap-2">
-                <i class="fas fa-globe text-gray-600"></i> Language
+                <i class="fas fa-globe text-gray-600"></i> {{ __('settings.language_preferences') }}
             </button>
             <button onclick="switchTab('privacy')" id="tab-privacy"
                     class="tab-button px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent whitespace-nowrap hover:text-gray-800 flex items-center gap-2">
-                <i class="fas fa-shield-alt text-gray-600"></i> Privacy & Visibility
+                <i class="fas fa-shield-alt text-gray-600"></i> {{ __('settings.privacy') }}
             </button>
             <button onclick="switchTab('account')" id="tab-account"
                     class="tab-button px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent whitespace-nowrap hover:text-gray-800 flex items-center gap-2">
-                <i class="fas fa-cog text-gray-600"></i> Account & Security
+                <i class="fas fa-cog text-gray-600"></i> {{ __('settings.account_security') }}
             </button>
         </div>
 
         <!-- Notifications Tab -->
         <div id="notifications-tab" class="tab-content">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Notification Preferences</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ __('settings.email_notifications') }}</h2>
                 
                 <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
                     @csrf
@@ -230,7 +230,7 @@
         <!-- Privacy Tab -->
         <div id="privacy-tab" class="tab-content hidden">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Privacy & Visibility</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ __('settings.privacy') }}</h2>
                 
                 <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
                     @csrf
@@ -287,7 +287,7 @@
                     </div>
 
                     <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
-                        💾 Save Privacy Settings
+                        💾 {{ __('messages.save') }}
                     </button>
                 </form>
             </div>
@@ -296,7 +296,7 @@
         <!-- Account Tab -->
         <div id="account-tab" class="tab-content hidden">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Account & Security</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ __('settings.account_security') }}</h2>
                 
                 <!-- Change Password Section -->
                 <div class="border-b border-gray-200 pb-8 mb-8">
