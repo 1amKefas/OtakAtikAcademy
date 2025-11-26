@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
             'admin' => App\Http\Middleware\AdminMiddleware::class,
             'instructor' => App\Http\Middleware\InstructorMiddleware::class, // TAMBAH INI!
+            'setlocale' => App\Http\Middleware\SetLocale::class,
         ]);
 
         $middleware->web(append: [
@@ -38,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Illuminate\View\Middleware\ShareErrorsFromSession::class,
             Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             Illuminate\Routing\Middleware\SubstituteBindings::class,
+            App\Http\Middleware\SetLocale::class,
         ]);
 
         $middleware->api(prepend: [

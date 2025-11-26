@@ -39,6 +39,10 @@
                     class="tab-button active px-4 py-3 font-medium text-purple-600 border-b-2 border-purple-600 whitespace-nowrap flex items-center gap-2">
                 <i class="fas fa-bell text-purple-600"></i> Notifications
             </button>
+            <button onclick="switchTab('language')" id="tab-language"
+                    class="tab-button px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent whitespace-nowrap hover:text-gray-800 flex items-center gap-2">
+                <i class="fas fa-globe text-gray-600"></i> Language
+            </button>
             <button onclick="switchTab('privacy')" id="tab-privacy"
                     class="tab-button px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent whitespace-nowrap hover:text-gray-800 flex items-center gap-2">
                 <i class="fas fa-shield-alt text-gray-600"></i> Privacy & Visibility
@@ -167,6 +171,57 @@
 
                     <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all mt-6">
                         💾 Save Notification Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Language Tab -->
+        <div id="language-tab" class="tab-content hidden">
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ __('settings.language_preferences') }}</h2>
+                <p class="text-gray-600 mb-6">{{ __('settings.select_language') }}</p>
+                
+                <form action="{{ route('settings.locale.update') }}" method="POST" class="space-y-6">
+                    @csrf
+
+                    <!-- English Option -->
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all" 
+                           id="locale-en" style="border-color: {{ $user->locale === 'en' ? '#9333EA' : '#E5E7EB' }}; background-color: {{ $user->locale === 'en' ? '#F3E8FF' : 'white' }};">
+                        <input type="radio" name="locale" value="en" class="w-5 h-5 text-purple-600 cursor-pointer" 
+                               onchange="updateLocalePreview()" {{ $user->locale === 'en' ? 'checked' : '' }}>
+                        <div class="ml-4">
+                            <p class="font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="fas fa-language"></i> {{ __('settings.english') }}
+                            </p>
+                            <p class="text-sm text-gray-600">English</p>
+                        </div>
+                        <i class="fas fa-check ml-auto text-purple-600" style="display: {{ $user->locale === 'en' ? 'block' : 'none' }};"></i>
+                    </label>
+
+                    <!-- Indonesian Option -->
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all" 
+                           id="locale-id" style="border-color: {{ $user->locale === 'id' ? '#9333EA' : '#E5E7EB' }}; background-color: {{ $user->locale === 'id' ? '#F3E8FF' : 'white' }};">
+                        <input type="radio" name="locale" value="id" class="w-5 h-5 text-purple-600 cursor-pointer" 
+                               onchange="updateLocalePreview()" {{ $user->locale === 'id' ? 'checked' : '' }}>
+                        <div class="ml-4">
+                            <p class="font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="fas fa-language"></i> {{ __('settings.indonesian') }}
+                            </p>
+                            <p class="text-sm text-gray-600">Bahasa Indonesia</p>
+                        </div>
+                        <i class="fas fa-check ml-auto text-purple-600" style="display: {{ $user->locale === 'id' ? 'block' : 'none' }};"></i>
+                    </label>
+
+                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            {{ __('settings.language_will_refresh') }}
+                        </p>
+                    </div>
+
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
+                        <i class="fas fa-save mr-2"></i>{{ __('messages.save') }}
                     </button>
                 </form>
             </div>
@@ -336,6 +391,30 @@
         // Add active class to clicked button
         document.getElementById('tab-' + tabName).classList.remove('text-gray-600', 'border-transparent');
         document.getElementById('tab-' + tabName).classList.add('text-purple-600', 'border-purple-600');
+    }
+
+    function updateLocalePreview() {
+        const enLabel = document.getElementById('locale-en');
+        const idLabel = document.getElementById('locale-id');
+        const selectedLocale = document.querySelector('input[name="locale"]:checked').value;
+
+        // Reset styles
+        document.querySelectorAll('input[name="locale"]').forEach(radio => {
+            const label = radio.closest('label');
+            const icon = label.querySelector('i.fa-check');
+            icon.style.display = 'none';
+        });
+
+        // Update selected style
+        if (selectedLocale === 'en') {
+            enLabel.style.borderColor = '#9333EA';
+            enLabel.style.backgroundColor = '#F3E8FF';
+            enLabel.querySelector('i.fa-check').style.display = 'block';
+        } else {
+            idLabel.style.borderColor = '#9333EA';
+            idLabel.style.backgroundColor = '#F3E8FF';
+            idLabel.querySelector('i.fa-check').style.display = 'block';
+        }
     }
 </script>
 @endsection

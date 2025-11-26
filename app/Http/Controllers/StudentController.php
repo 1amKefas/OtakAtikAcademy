@@ -334,4 +334,22 @@ class StudentController extends Controller
             ->route('settings')
             ->with('success', 'Password berhasil diubah');
     }
+
+    /**
+     * Update user language preference
+     */
+    public function updateLocale(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'locale' => 'required|in:en,id',
+        ]);
+
+        Auth::user()->update([
+            'locale' => $request->input('locale'),
+        ]);
+
+        return redirect()
+            ->route('settings')
+            ->with('success', __('settings.language_changed'));
+    }
 }

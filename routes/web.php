@@ -110,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings', [StudentController::class, 'settings'])->name('settings');
     Route::post('/settings/update', [StudentController::class, 'updateSettings'])->name('settings.update');
     Route::post('/settings/password', [StudentController::class, 'updatePassword'])->name('settings.password.update');
+    Route::post('/settings/locale', [StudentController::class, 'updateLocale'])->name('settings.locale.update');
 });
 
 // Payment Routes
