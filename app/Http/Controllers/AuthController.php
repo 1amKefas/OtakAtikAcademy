@@ -132,60 +132,44 @@ class AuthController extends Controller
             // Mengambil user dari Google
             $googleUser = Socialite::driver('google')->stateless()->user();
             
-            $email = $googleUser->getEmail();
             $googleId = $googleUser->getId();
+            $email = $googleUser->getEmail();
             
             \Log::info('Google User Retrieved', ['email' => $email, 'google_id' => $googleId]);
             
-            // Check if user exists with this google_id first
+            // Check if user exists with this google_id (most reliable)
             $user = User::where('google_id', $googleId)->first();
             
             if ($user) {
                 \Log::info('User found by google_id', ['user_id' => $user->id]);
             } else {
-                // Try to find by email
-                $user = User::where('email', $email)->first();
+                // If not found by google_id, create NEW user for this Google account
+                // DO NOT link to manual signup - keep them separate!
+                \Log::info('Creating new user from Google OAuth', ['email' => $email]);
                 
-                if ($user) {
-                    \Log::info('User found by email, updating google_id', ['user_id' => $user->id]);
-                    // Link Google account to existing user
-                    $user->update([
-                        'google_id' => $googleId,
-                        'profile_picture' => $googleUser->getAvatar(),
-                        'email_verified_at' => $user->email_verified_at ?? now(),
-                    ]);
-                } else {
-                    \Log::info('Creating new user from Google', ['email' => $email]);
-                    // Create new user
-                    $user = User::create([
-                        'name' => $googleUser->getName(),
-                        'email' => $email,
-                        'google_id' => $googleId,
-                        'password' => Hash::make(Str::random(16)),
-                        'email_verified_at' => now(),
-                        'profile_picture' => $googleUser->getAvatar(),
-                        'is_admin' => false,
-                        'is_instructor' => false,
-                    ]);
-                    \Log::info('New user created', ['user_id' => $user->id]);
-                }
-            }
-
-            // Ensure email is verified for Google users
-            if (!$user->email_verified_at) {
-                $user->markEmailAsVerified();
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $email,
+                    'google_id' => $googleId,
+                    'password' => Hash::make(Str::random(16)),
+                    'email_verified_at' => now(), // Google email is pre-verified
+                    'profile_picture' => $googleUser->getAvatar(),
+                    'is_admin' => false,
+                    'is_instructor' => false,
+                ]);
+                
+                \Log::info('New Google user created', ['user_id' => $user->id, 'email' => $email]);
             }
 
             // Login user
             Auth::login($user);
-            \Log::info('User logged in', ['user_id' => $user->id]);
+            \Log::info('User logged in via Google', ['user_id' => $user->id]);
             return redirect('/dashboard');
 
         } catch (\Exception $e) {
             \Log::error('Google Login Error', [
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
-                'file' => $e->getFile() . ':' . $e->getLine(),
             ]);
             return redirect('/login')->withErrors(['error' => 'Gagal login dengan Google. Silakan coba lagi.']);
         }
