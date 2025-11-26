@@ -635,18 +635,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12 px-6">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="flex items-center justify-center gap-2 mb-4">
-                <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                    <span class="text-white font-bold text-xl">O</span>
-                </div>
-                <span class="text-2xl font-bold">OtakAtik Academy - Instructor Portal</span>
-            </div>
-            <p class="text-gray-400 mb-4">Empowering Educators, Inspiring Students</p>
-            <p class="text-gray-500 text-sm">&copy; 2025 OtakAtik Academy. All rights reserved.</p>
-        </div>
-    </footer>
+    @include('components.footer')
 
     <script>
         // Tab functionality
