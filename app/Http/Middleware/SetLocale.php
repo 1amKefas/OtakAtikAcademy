@@ -17,13 +17,19 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next)
     {
-        // If user is authenticated, set locale from user preference
+        // Try to get locale from authenticated user's database preference
         if (auth()->check()) {
-            $locale = auth()->user()->locale ?? 'en';
+            try {
+                $locale = auth()->user()->locale ?? session('locale', 'en');
+            } catch (\Exception $e) {
+                // If column doesn't exist yet, fall back to session
+                $locale = session('locale', 'en');
+            }
             App::setLocale($locale);
         } else {
-            // Default to 'en' for guests
-            App::setLocale('en');
+            // Default to 'en' for guests, check session
+            $locale = session('locale', 'en');
+            App::setLocale($locale);
         }
 
         return $next($request);

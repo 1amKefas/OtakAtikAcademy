@@ -350,9 +350,20 @@ class StudentController extends Controller
                 return redirect()->route('login')->with('error', 'Please login first');
             }
 
-            $user->update([
-                'locale' => $request->input('locale'),
-            ]);
+            $locale = $request->input('locale');
+            
+            // Try to save to database (will work once migration runs)
+            try {
+                $user->update([
+                    'locale' => $locale,
+                ]);
+            } catch (\Exception $e) {
+                // If column doesn't exist yet, just save to session
+                \Log::warning('Could not update database locale: ' . $e->getMessage());
+            }
+            
+            // Also save to session as fallback
+            session(['locale' => $locale]);
 
             return redirect()
                 ->route('settings')
