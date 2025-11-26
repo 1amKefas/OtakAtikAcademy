@@ -1,4 +1,6 @@
-    <!DOCTYPE html>
+@extends('layouts.app')
+
+<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -20,7 +22,6 @@
     </head>
     <body class="bg-gray-50">
         
-        @include('components.navbar')
 
         <!-- Purchase History Section -->
         <section class="pt-32 pb-20 px-6">
@@ -152,20 +153,6 @@
                 @endif
             </div>
         </section>
-
-        <!-- Footer -->
-        <footer class="bg-gray-800 text-white py-12 px-6">
-            <div class="max-w-7xl mx-auto text-center">
-                <div class="flex items-center justify-center gap-2 mb-4">
-                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-xl">O</span>
-                    </div>
-                    <span class="text-2xl font-bold">OtakAtik Academy</span>
-                </div>
-                <p class="text-gray-400 mb-4">Membentuk Generasi Cerdas dan Berprestasi</p>
-                <p class="text-gray-500 text-sm">&copy; 2025 OtakAtik Academy. All rights reserved.</p>
-            </div>
-        </footer>
 
     </body>
     </html>
