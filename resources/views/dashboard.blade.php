@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - OtakAtik Academy')
+@section('title', 'OtakAtik Academy')
 
 @section('content')
 <div class="w-full bg-white">
