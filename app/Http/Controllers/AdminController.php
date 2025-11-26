@@ -315,12 +315,47 @@ class AdminController extends Controller
      */
     public function refund()
     {
+        // 1. Ambil Data Refund (Gunakan Model Refund, bukan CourseRegistration)
+        $refundRequests = Refund::with(['user', 'course']) // Pastikan relasi 'course' ada di model Refund
+            ->latest()
+            ->get();
+
+        // 2. Hitung Statistik untuk $refundStats
+        $refundStats = [
+            'total_refunds' => Refund::count(),
+            'pending_refunds' => Refund::where('status', 'pending')->count(),
+            'processed_refunds' => Refund::where('status', 'approved')->count(),
+            'rejected_refunds' => Refund::where('status', 'rejected')->count(),
+            'total_refund_amount' => Refund::where('status', 'approved')->sum('amount'),
+            
+            // Hitung Refund Rate (Persentase refund approved dibanding total registrasi)
+            'refund_rate' => 0, 
+            'avg_processing_time' => 0
+        ];
+
+        // Hitung Rate (Cegah pembagian dengan nol)
+        $totalRegistrations = CourseRegistration::count();
+        if ($totalRegistrations > 0) {
+            $refundStats['refund_rate'] = round(($refundStats['processed_refunds'] / $totalRegistrations) * 100, 2);
+        }
+
+        // Hitung Rata-rata Waktu Proses (Opsional, simple logic)
+        $processedRefunds = Refund::whereNotNull('processed_at')->get();
+        if ($processedRefunds->count() > 0) {
+            $totalDays = 0;
+            foreach ($processedRefunds as $ref) {
+                // Asumsi ada kolom created_at dan processed_at
+                $totalDays += $ref->created_at->diffInDays($ref->processed_at);
+            }
+            $refundStats['avg_processing_time'] = round($totalDays / $processedRefunds->count(), 1);
+        }
+
         $refundRequests = CourseRegistration::where('status', 'cancelled')
             ->with(['user', 'course'])
             ->latest()
             ->get();
 
-        return view('admin.refund', compact('refundRequests'));
+        return view('admin.refund', compact('refundRequests', 'refundStats'));
     }
 
     /**

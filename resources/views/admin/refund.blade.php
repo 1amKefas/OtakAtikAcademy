@@ -234,8 +234,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-900">{{ $refund->course->course }}</div>
-                                        <div class="text-xs text-gray-500">{{ $refund->course->sub_course1 }}</div>
+                                       <div class="text-sm text-gray-900">{{ $refund->course->title ?? 'Course Title' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">Rp{{ number_format($refund->amount, 0, ',', '.') }}</div>
