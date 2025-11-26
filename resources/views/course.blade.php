@@ -1,85 +1,91 @@
 @extends('layouts.app')
 
-@section('title', 'Our Courses - OtakAtik Academy')
+@section('title', 'Katalog Course - OtakAtik Academy')
 
 @section('content')
-<section class="pt-32 pb-20 px-6">
+<section class="pt-32 pb-20 px-6 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Our Courses</h1>
-            <p class="text-gray-600 text-lg">Pilih course yang sesuai dengan kebutuhan belajar Anda</p>
+        <div class="text-center mb-16">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Eksplorasi Skill Baru</h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto">Tingkatkan karirmu dengan course terbaik dari para ahli di industri.</p>
         </div>
 
         @if($courses->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($courses as $course)
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all">
-                    <!-- Course Header -->
-                    <div class="h-32 bg-gradient-to-r from-blue-500 to-purple-600 relative flex items-center justify-center">
-                        <h3 class="text-xl font-bold text-white text-center px-4">{{ $course->title }}</h3>
-                    </div>
+                <div class="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full border border-gray-100 group overflow-hidden">
                     
-                    <!-- Course Content -->
-                    <div class="p-6">
-                        <!-- Type and Status -->
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="px-4 py-1 rounded-full text-xs font-semibold"
-                                @class([
-                                    'bg-blue-100 text-blue-800' => $course->type === 'Full Online',
-                                    'bg-yellow-100 text-yellow-800' => $course->type === 'Hybrid',
-                                    'bg-green-100 text-green-800' => $course->type === 'Tatap Muka',
-                                ])>
-                                {{ $course->type }}
-                            </span>
-                            @if($course->is_active)
-                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                                    Available
-                                </span>
-                            @else
-                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
-                                    Not Available
-                                </span>
-                            @endif
-                        </div>
-                        
-                        <!-- Description -->
-                        <p class="text-gray-700 mb-4">{{ $course->description }}</p>
-                        
-                        <!-- Availability Status -->
-                        @if($course->has_available_slots)
-                            <div class="flex items-center gap-2 text-green-600 mb-4">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="font-medium text-sm">Masih tersedia</span>
-                            </div>
+                    <div class="relative h-48 overflow-hidden bg-gray-200">
+                        @if($course->image_url)
+                            <img src="{{ $course->image_url }}" alt="{{ $course->title }}" 
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                         @else
-                            <div class="flex items-center gap-2 text-red-600 mb-4">
-                                <i class="fas fa-times-circle"></i>
-                                <span class="font-medium text-sm">Kuota penuh</span>
+                            <div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
+                                <i class="fas fa-graduation-cap text-white text-5xl opacity-20 transform -rotate-12"></i>
                             </div>
                         @endif
-                        
-                        <!-- Price -->
-                        <div class="mb-6">
-                            <span class="text-2xl font-bold text-gray-800">
-                                {{ $course->formatted_price ?? 'Hubungi Admin' }}
+
+                        <div class="absolute top-3 left-3 flex gap-2">
+                            <span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-white/95 text-gray-800 shadow-sm backdrop-blur-sm">
+                                {{ $course->type }}
                             </span>
                         </div>
+                    </div>
+                    
+                    <div class="p-5 flex flex-col flex-1">
                         
-                        <!-- Action Buttons -->
-                        <div class="flex gap-2">
-                            <a href="{{ route('course.show.detail', $course->id) }}" 
-                               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-center py-3 px-4 rounded-lg transition-all font-medium">
-                                <i class="fas fa-eye mr-2"></i> Lihat Detail
-                            </a>
+                        <div class="flex items-center gap-2 mb-3">
+                            @if($course->instructor)
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode($course->instructor->name) }}&background=random&color=fff" class="w-6 h-6 rounded-full border border-white shadow-sm">
+                                <span class="text-xs font-semibold text-gray-500 truncate">{{ $course->instructor->name }}</span>
+                            @else
+                                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] text-blue-600 font-bold">OA</div>
+                                <span class="text-xs font-semibold text-gray-500">OtakAtik Team</span>
+                            @endif
+                        </div>
+
+                        <h3 class="text-lg font-bold text-gray-900 leading-snug mb-2 line-clamp-2 min-h-[3.5rem]" title="{{ $course->title }}">
+                            {{ $course->title }}
+                        </h3>
+                        
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                            {{ $course->description }}
+                        </p>
+                        
+                        <div class="flex items-center gap-3 text-xs text-gray-500 mb-4 mt-auto">
+                            <div class="flex items-center text-yellow-500">
+                                <i class="fas fa-star text-[10px] mr-1"></i>
+                                <span class="font-bold text-gray-700">4.8</span>
+                                <span class="text-gray-400 ml-1">(120)</span>
+                            </div>
+                            <span class="text-gray-300">|</span>
+                            <span class="flex items-center">
+                                <i class="far fa-clock mr-1"></i> {{ $course->duration_days }} Hari
+                            </span>
+                        </div>
+
+                        <hr class="border-gray-100 mb-4">
+
+                        <div class="flex items-center justify-between">
+                            <div>
+                                @if($course->discount_percent > 0)
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] text-gray-400 line-through">Rp {{ number_format($course->price, 0, ',', '.') }}</span>
+                                        <span class="text-base font-bold text-gray-900">Rp {{ number_format($course->price * (1 - $course->discount_percent/100), 0, ',', '.') }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-base font-bold text-gray-900">Rp {{ number_format($course->price, 0, ',', '.') }}</span>
+                                @endif
+                            </div>
+                            
                             @if($course->is_active && $course->has_available_slots)
-                                <a href="{{ route('checkout.show', $course->id) }}" 
-                                   class="bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg transition-all font-medium">
-                                    <i class="fas fa-shopping-cart mr-2"></i> Daftar
+                                <a href="{{ route('course.show.detail', $course->id) }}" 
+                                   class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm hover:shadow-md">
+                                    Detail <i class="fas fa-arrow-right ml-1 text-xs"></i>
                                 </a>
                             @else
-                                <button disabled 
-                                        class="bg-gray-400 text-white py-3 px-4 rounded-lg font-medium cursor-not-allowed">
-                                    <i class="fas fa-clock mr-2"></i> Tidak Tersedia
+                                <button disabled class="bg-gray-100 text-gray-400 text-sm font-semibold py-2 px-4 rounded-lg cursor-not-allowed">
+                                    Penuh
                                 </button>
                             @endif
                         </div>
@@ -88,23 +94,12 @@
                 @endforeach
             </div>
         @else
-            <!-- Empty State -->
-            <div class="text-center py-32 bg-white rounded-2xl shadow-lg">
-                <div class="max-w-md mx-auto">
-                    <!-- Icon with gradient background -->
-                    <div class="w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                        <span class="text-6xl">📚</span>
-                    </div>
-                    
-                    <!-- Content -->
-                    <h3 class="text-3xl font-bold text-gray-800 mb-3">Belum Ada Course Tersedia</h3>
-                    <p class="text-gray-600 text-base mb-8">Saat ini belum ada course yang aktif. Silakan cek kembali nanti atau hubungi admin kami.</p>
-                    
-                    <!-- CTA Buttons -->
-                    <a href="/" class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all font-medium mb-4">
-                        <i class="fas fa-home mr-2"></i> Kembali ke Beranda
-                    </a>
+            <div class="text-center py-24">
+                <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-3xl text-blue-300"></i>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Belum ada course ditemukan</h3>
+                <p class="text-gray-500">Coba cari dengan kata kunci lain atau kembali lagi nanti.</p>
             </div>
         @endif
     </div>
