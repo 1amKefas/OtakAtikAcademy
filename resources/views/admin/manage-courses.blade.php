@@ -21,8 +21,10 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-gray-50 h-screen overflow-hidden"> <div class="flex h-full">
-        <div class="sidebar w-64 text-white flex flex-col flex-shrink-0">
+<body class="bg-gray-50 h-screen overflow-hidden">
+    
+    <div class="flex h-full">
+        <div class="sidebar w-64 text-white flex flex-col flex-shrink-0 hidden lg:flex">
             <div class="p-6 border-b border-gray-700">
                 <h1 class="text-2xl font-bold text-white">OtakAtik<span class="text-blue-400">Admin</span></h1>
             </div>
@@ -38,8 +40,8 @@
             </nav>
             <div class="p-4 border-t border-gray-700">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center"><span class="text-white font-bold text-sm">{{ substr(Auth::user()->name, 0, 1) }}</span></div>
-                    <div class="flex-1 min-w-0"><p class="text-sm font-medium text-white truncate">{{ Auth::user()->name }}</p><p class="text-xs text-gray-400 truncate">Administrator</p></div>
+                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center"><span class="text-white font-bold text-sm">{{ substr(Auth::user()->name ?? 'A', 0, 1) }}</span></div>
+                    <div class="flex-1 min-w-0"><p class="text-sm font-medium text-white truncate">{{ Auth::user()->name ?? 'Admin' }}</p><p class="text-xs text-gray-400 truncate">Administrator</p></div>
                 </div>
                 <form action="/logout" method="POST" class="mt-4">
                     @csrf
@@ -56,7 +58,6 @@
                         <p class="text-gray-600">Buat dan kelola course yang tersedia di platform</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm text-gray-600">Total: {{ $courses->total() }} courses</p>
                         <p class="text-sm font-medium text-gray-800">{{ date('d M Y') }}</p>
                     </div>
                 </div>
@@ -64,7 +65,7 @@
 
             <main class="flex-1 flex overflow-hidden bg-gray-50">
                 
-                <div class="w-5/12 h-full overflow-y-auto p-6 border-r border-gray-200 bg-white custom-scrollbar">
+                <div class="w-full lg:w-5/12 h-full overflow-y-auto p-6 border-r border-gray-200 bg-white custom-scrollbar">
                     <div class="max-w-xl mx-auto">
                         <h3 class="text-xl font-bold text-gray-800 mb-6 sticky top-0 bg-white z-10 py-2 border-b border-transparent">
                             <i class="fas fa-plus-circle text-blue-600 mr-2"></i> Tambah Course Baru
@@ -178,14 +179,14 @@
                                 </div>
                                 
                                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                                    <i class="fas fa-save"></i> Tambah Course
+                                    <i class="fas fa-save"></i> Simpan Course
                                 </button>
                             </div>
                         </form>
                         <div class="h-10"></div> </div>
                 </div>
 
-                <div class="w-7/12 h-full bg-gray-50 flex flex-col">
+                <div class="w-full lg:w-7/12 h-full bg-gray-50 flex flex-col">
                     <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                             <div class="p-5 border-b border-gray-200 bg-white sticky top-0 z-10 flex justify-between items-center">
@@ -269,8 +270,49 @@
                         <div class="mt-4 px-2">
                             {{ $courses->links() }}
                         </div>
-                        <div class="h-10"></div>
-                    </div>
+
+                        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 pb-10">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm opacity-90">Total Courses</p>
+                                        <p class="text-3xl font-bold mt-2">{{ \App\Models\Course::count() }}</p>
+                                    </div>
+                                    <i class="fas fa-book-open text-2xl opacity-80"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm opacity-90">Active Courses</p>
+                                        <p class="text-3xl font-bold mt-2">{{ \App\Models\Course::where('is_active', true)->count() }}</p>
+                                    </div>
+                                    <i class="fas fa-eye text-2xl opacity-80"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-r from-gray-500 to-gray-600 rounded-2xl p-6 text-white shadow-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm opacity-90">Inactive Courses</p>
+                                        <p class="text-3xl font-bold mt-2">{{ \App\Models\Course::where('is_active', false)->count() }}</p>
+                                    </div>
+                                    <i class="fas fa-eye-slash text-2xl opacity-80"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm opacity-90">Total Instructors</p>
+                                        <p class="text-3xl font-bold mt-2">{{ $instructors->count() }}</p>
+                                    </div>
+                                    <i class="fas fa-chalkboard-teacher text-2xl opacity-80"></i>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
                 </div>
             </main>
         </div>
