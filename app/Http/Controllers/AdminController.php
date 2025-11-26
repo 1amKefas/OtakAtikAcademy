@@ -417,7 +417,7 @@ class AdminController extends Controller
      */
     public function manageCourses()
     {
-        $courses = Course::with('instructor')->latest()->get();
+        $courses = Course::with('instructor')->latest()->paginate(20);
         $instructors = User::where('is_instructor', true)->get();
         
         return view('admin.manage-courses', compact('courses', 'instructors'));
