@@ -26,6 +26,7 @@ return [
     'help' => 'Help',
     'notifications' => 'Notifications',
     'achievements' => 'Achievements',
+    'view_all' => 'View All',
     
     // Common Actions
     'sign_up' => 'Sign Up',

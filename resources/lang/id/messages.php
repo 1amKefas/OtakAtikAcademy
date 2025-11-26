@@ -26,6 +26,7 @@ return [
     'help' => 'Bantuan',
     'notifications' => 'Notifikasi',
     'achievements' => 'Pencapaian',
+    'view_all' => 'Lihat Semua',
     
     // Common Actions
     'sign_up' => 'Daftar',

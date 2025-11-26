@@ -340,16 +340,28 @@ class StudentController extends Controller
      */
     public function updateLocale(\Illuminate\Http\Request $request)
     {
-        $request->validate([
-            'locale' => 'required|in:en,id',
-        ]);
+        try {
+            $request->validate([
+                'locale' => 'required|in:en,id',
+            ]);
 
-        Auth::user()->update([
-            'locale' => $request->input('locale'),
-        ]);
+            $user = Auth::user();
+            if (!$user) {
+                return redirect()->route('login')->with('error', 'Please login first');
+            }
 
-        return redirect()
-            ->route('settings')
-            ->with('success', __('settings.language_changed'));
+            $user->update([
+                'locale' => $request->input('locale'),
+            ]);
+
+            return redirect()
+                ->route('settings')
+                ->with('success', __('settings.language_changed'));
+        } catch (\Exception $e) {
+            \Log::error('Language update error: ' . $e->getMessage());
+            return redirect()
+                ->route('settings')
+                ->with('error', 'Failed to update language preference');
+        }
     }
 }

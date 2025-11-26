@@ -8,9 +8,9 @@
         
         <!-- Menu -->
         <div class="hidden md:flex items-center gap-8">
-            <a href="/dashboard" class="text-gray-700 hover:text-orange-500 font-medium transition">About Us</a>
-            <a href="/course" class="text-gray-700 hover:text-orange-500 font-medium transition">Our Course</a>
-            <a href="/my-courses" class="text-gray-700 hover:text-orange-500 font-medium transition">My Courses</a>
+            <a href="/dashboard" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.home') }}</a>
+            <a href="/course" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.courses') }}</a>
+            <a href="/my-courses" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.my_courses') }}</a>
             <a href="/purchase-history" class="text-gray-700 hover:text-orange-500 font-medium transition">History</a>
         </div>
         
@@ -41,7 +41,7 @@
                 @if(Auth::check())
                 <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
                     <div class="p-4 border-b border-gray-200">
-                        <h3 class="font-semibold text-gray-800">Notifications</h3>
+                        <h3 class="font-semibold text-gray-800">{{ __('messages.notifications') }}</h3>
                     </div>
                     <div class="divide-y divide-gray-100">
                         @forelse($unreadNotifications->take(5) as $notification)
@@ -94,7 +94,7 @@
                         @endforelse
                     </div>
                     <div class="p-3 border-t border-gray-200 text-center">
-                        <a href="{{ route('notifications.index') }}" class="text-sm text-orange-500 hover:text-orange-600 font-medium">View All Notifications</a>
+                        <a href="{{ route('notifications.index') }}" class="text-sm text-orange-500 hover:text-orange-600 font-medium">{{ __('messages.view_all') }}</a>
                     </div>
                 </div>
                 @endif
@@ -126,19 +126,19 @@
                     <!-- Menu Items -->
                     <div class="py-2">
                         <a href="/profile" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>My Profile</span>
+                            <span>{{ __('messages.profile') }}</span>
                         </a>
                         <a href="/purchase-history" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
                             <span>Purchase History</span>
                         </a>
                         <a href="/settings" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>Settings</span>
+                            <span>{{ __('messages.settings') }}</span>
                         </a>
                         <a href="/achievements" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>Achievements</span>
+                            <span>{{ __('messages.achievements') }}</span>
                         </a>
                         <a href="/help" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>Help Center</span>
+                            <span>{{ __('messages.help') }}</span>
                         </a>
                     </div>
                     
@@ -147,7 +147,7 @@
                         <form action="/logout" method="POST" class="block">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition">
-                                <span>Logout</span>
+                                <span>{{ __('messages.logout') }}</span>
                             </button>
                         </form>
                     </div>
