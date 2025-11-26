@@ -276,20 +276,82 @@ class AdminController extends Controller
     /**
      * Show financial analytics page
      */
+    /**
+     * Show financial analytics page (Optimized)
+     */
     public function financial()
     {
-        $revenueData = [
-            'total_revenue' => CourseRegistration::where('status', 'paid')->sum('final_price'),
-            'monthly_revenue' => CourseRegistration::where('status', 'paid')
-                ->where('created_at', '>=', now()->subDays(30))
-                ->sum('final_price'),
-            'total_registrations' => CourseRegistration::where('status', 'paid')->count(),
-            'average_ticket' => CourseRegistration::where('status', 'paid')->avg('final_price'),
+        // 1. Financial Stats (Pakai Aggregate DB biar cepat)
+        $currentMonth = now()->month;
+        $lastMonth = now()->subMonth()->month;
+
+        $totalRevenue = CourseRegistration::where('status', 'paid')->sum('final_price');
+        
+        $currentMonthRevenue = CourseRegistration::where('status', 'paid')
+            ->whereMonth('created_at', $currentMonth)
+            ->sum('final_price');
+            
+        $lastMonthRevenue = CourseRegistration::where('status', 'paid')
+            ->whereMonth('created_at', $lastMonth)
+            ->sum('final_price');
+
+        // Hitung Growth (hindari division by zero)
+        $growth = 0;
+        if ($lastMonthRevenue > 0) {
+            $growth = (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100;
+        } elseif ($currentMonthRevenue > 0) {
+            $growth = 100; // Kalau bulan lalu 0 dan bulan ini ada, growth 100%
+        }
+
+        $financialStats = [
+            'total_revenue' => $totalRevenue,
+            'monthly_growth' => round($growth, 1),
+            'average_order_value' => CourseRegistration::where('status', 'paid')->avg('final_price') ?? 0,
+            'pending_revenue' => CourseRegistration::where('status', 'pending')->sum('final_price'),
         ];
 
-        return view('admin.financial', compact('revenueData'));
-    }
+        // 2. Recent Transactions (Limit 10 & Eager Loading biar gak N+1 Query)
+        $recentTransactions = CourseRegistration::with('user', 'course')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function($reg) {
+                // Mapping data biar sesuai dengan View
+                return (object) [
+                    'id' => $reg->order_id ?? $reg->id,
+                    'user' => $reg->user,
+                    'course' => $reg->course ? $reg->course->title : 'Course Deleted',
+                    'price' => $reg->final_price,
+                    'status' => $reg->status,
+                    'created_at' => $reg->created_at
+                ];
+            });
 
+        // 3. Revenue by Course (Group by Query - Sangat Cepat)
+        $revenueByCourse = DB::table('course_registrations')
+            ->join('courses', 'course_registrations.course_id', '=', 'courses.id')
+            ->select('courses.title as course', DB::raw('SUM(course_registrations.final_price) as total_revenue'))
+            ->where('course_registrations.status', 'paid')
+            ->groupBy('courses.id', 'courses.title')
+            ->orderByDesc('total_revenue')
+            ->limit(5)
+            ->get();
+
+        // 4. Payment Status Count
+        $paymentStats = [
+            'paid' => CourseRegistration::where('status', 'paid')->count(),
+            'pending' => CourseRegistration::where('status', 'pending')->count(),
+            'cancelled' => CourseRegistration::where('status', 'cancelled')->count(),
+        ];
+
+        // Kirim semua variabel yang dibutuhkan View
+        return view('admin.financial', compact(
+            'financialStats', 
+            'recentTransactions', 
+            'revenueByCourse', 
+            'paymentStats'
+        ));
+    }
     /**
      * Show analytics page
      */
