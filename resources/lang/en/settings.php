@@ -7,7 +7,7 @@ return [
     'language_preferences' => 'Language Preferences',
     'notifications' => 'Notifications',
     'privacy' => 'Privacy',
-    'billing' => 'Billing',
+    'billing' => 'Payments',
     
     // Account & Security Section
     'profile_information' => 'Profile Information',
@@ -23,6 +23,10 @@ return [
     'confirm_new_password' => 'Confirm New Password',
     'change_password' => 'Change Password',
     'password_updated' => 'Password updated successfully!',
+    'enter_current_password' => 'Enter your current password',
+    'enter_new_password' => 'Enter a new password (min 8 characters)',
+    'confirm_new_password_text' => 'Confirm your new password',
+    'update_password' => 'Update Password',
     
     // Language Settings
     'preferred_language' => 'Preferred Language',
@@ -34,12 +38,37 @@ return [
     
     // Notification Settings
     'email_notifications' => 'Email Notifications',
-    'assignment_posted' => 'Notify when assignment posted',
-    'deadline_reminder' => 'Notify about deadline reminders',
-    'quiz_posted' => 'Notify when quiz posted',
-    'material_posted' => 'Notify when material posted',
-    'forum_reply' => 'Notify about forum replies',
-    'submission_graded' => 'Notify when submission graded',
+    'assignment_posted' => 'New Assignment Posted',
+    'assignment_posted_desc' => 'Get notified when instructor posts new assignments',
+    'deadline_reminder' => 'Deadline Reminders',
+    'deadline_reminder_desc' => 'Remind me 1 day before assignment/quiz deadlines',
+    'quiz_posted' => 'New Quiz Posted',
+    'quiz_posted_desc' => 'Get notified when instructor creates new quizzes',
+    'material_posted' => 'New Material Uploaded',
+    'material_posted_desc' => 'Get notified when instructor uploads course materials',
+    'forum_reply' => 'Forum Replies',
+    'forum_reply_desc' => 'Get notified when someone replies to your forum post',
+    'submission_graded' => 'Submission Graded',
+    'submission_graded_desc' => 'Get notified when your assignment/quiz is graded',
+    'save_notification_settings' => 'Save Notification Settings',
+    
+    // Privacy Settings
+    'profile_visibility' => 'Profile Visibility',
+    'private_profile' => 'Private Profile',
+    'private_profile_desc' => 'Your profile is only visible to you',
+    'public_profile' => 'Public Profile',
+    'public_profile_desc' => 'Your profile is visible to other students',
+    'show_achievements' => 'Show Achievements',
+    'show_achievements_desc' => 'Display your completed certificates and badges',
+    'allow_direct_messages' => 'Allow Direct Messages',
+    'allow_direct_messages_desc' => 'Let other students send you direct messages',
+    'save_privacy_settings' => 'Save Privacy Settings',
+    
+    // Account Information
+    'account_information' => 'Account Information',
+    'account_created' => 'Account Created',
+    'last_updated' => 'Last Updated',
+    'change_email_contact' => 'To change your email address, please contact support@otakatik.com',
     
     // Delete Account
     'danger_zone' => 'Danger Zone',

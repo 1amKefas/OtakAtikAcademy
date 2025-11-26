@@ -68,8 +68,8 @@
                                 <i class="fas fa-clipboard-list text-blue-600 text-xl"></i>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-800">New Assignment Posted</p>
-                                <p class="text-sm text-gray-600">Get notified when instructor posts new assignments</p>
+                                <p class="font-semibold text-gray-800">{{ __('settings.assignment_posted') }}</p>
+                                <p class="text-sm text-gray-600">{{ __('settings.assignment_posted_desc') }}</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -86,8 +86,8 @@
                                 <i class="fas fa-hourglass-end text-red-600 text-xl"></i>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-800">Deadline Reminders</p>
-                                <p class="text-sm text-gray-600">Remind me 1 day before assignment/quiz deadlines</p>
+                                <p class="font-semibold text-gray-800">{{ __('settings.deadline_reminder') }}</p>
+                                <p class="text-sm text-gray-600">{{ __('settings.deadline_reminder_desc') }}</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -104,8 +104,8 @@
                                 <i class="fas fa-question-circle text-purple-600 text-xl"></i>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-800">New Quiz Posted</p>
-                                <p class="text-sm text-gray-600">Get notified when instructor creates new quizzes</p>
+                                <p class="font-semibold text-gray-800">{{ __('settings.quiz_posted') }}</p>
+                                <p class="text-sm text-gray-600">{{ __('settings.quiz_posted_desc') }}</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -122,8 +122,8 @@
                                 <i class="fas fa-book text-green-600 text-xl"></i>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-800">New Material Uploaded</p>
-                                <p class="text-sm text-gray-600">Get notified when instructor uploads course materials</p>
+                                <p class="font-semibold text-gray-800">{{ __('settings.material_posted') }}</p>
+                                <p class="text-sm text-gray-600">{{ __('settings.material_posted_desc') }}</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -140,8 +140,8 @@
                                 <i class="fas fa-comments text-cyan-600 text-xl"></i>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-800">Forum Replies</p>
-                                <p class="text-sm text-gray-600">Get notified when someone replies to your forum post</p>
+                                <p class="font-semibold text-gray-800">{{ __('settings.forum_reply') }}</p>
+                                <p class="text-sm text-gray-600">{{ __('settings.forum_reply_desc') }}</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -158,8 +158,8 @@
                                 <i class="fas fa-check-circle text-teal-600 text-xl"></i>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-800">Submission Graded</p>
-                                <p class="text-sm text-gray-600">Get notified when your assignment/quiz is graded</p>
+                                <p class="font-semibold text-gray-800">{{ __('settings.submission_graded') }}</p>
+                                <p class="text-sm text-gray-600">{{ __('settings.submission_graded_desc') }}</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -170,7 +170,7 @@
                     </div>
 
                     <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all mt-6">
-                        💾 Save Notification Settings
+                        {{ __('settings.save_notification_settings') }}
                     </button>
                 </form>
             </div>
@@ -237,15 +237,15 @@
 
                     <!-- Profile Visibility -->
                     <div class="border-b border-gray-200 pb-6">
-                        <p class="font-semibold text-gray-800 mb-4">Profile Visibility</p>
+                        <p class="font-semibold text-gray-800 mb-4">{{ __('settings.profile_visibility') }}</p>
                         <div class="space-y-3">
                             <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
                                    {{ $user->profile_visibility === 'private' ? 'class=border-purple-300 bg-purple-50' : '' }}>
                                 <input type="radio" name="profile_visibility" value="private" class="w-4 h-4"
                                        {{ $user->profile_visibility === 'private' ? 'checked' : '' }}>
                                 <div>
-                                    <p class="font-medium text-gray-800"><i class="fas fa-lock text-red-600 mr-2"></i>Private Profile</p>
-                                    <p class="text-sm text-gray-600">Your profile is only visible to you</p>
+                                    <p class="font-medium text-gray-800"><i class="fas fa-lock text-red-600 mr-2"></i>{{ __('settings.private_profile') }}</p>
+                                    <p class="text-sm text-gray-600">{{ __('settings.private_profile_desc') }}</p>
                                 </div>
                             </label>
                             <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
@@ -253,8 +253,8 @@
                                 <input type="radio" name="profile_visibility" value="public" class="w-4 h-4"
                                        {{ $user->profile_visibility === 'public' ? 'checked' : '' }}>
                                 <div>
-                                    <p class="font-medium text-gray-800"><i class="fas fa-globe text-blue-600 mr-2"></i>Public Profile</p>
-                                    <p class="text-sm text-gray-600">Your profile is visible to other students</p>
+                                    <p class="font-medium text-gray-800"><i class="fas fa-globe text-blue-600 mr-2"></i>{{ __('settings.public_profile') }}</p>
+                                    <p class="text-sm text-gray-600">{{ __('settings.public_profile_desc') }}</p>
                                 </div>
                             </label>
                         </div>
@@ -263,8 +263,8 @@
                     <!-- Show Achievements -->
                     <div class="border-b border-gray-200 pb-6 flex items-center justify-between">
                         <div>
-                            <p class="font-semibold text-gray-800"><i class="fas fa-trophy text-yellow-600 mr-2"></i>Show Achievements</p>
-                            <p class="text-sm text-gray-600">Display your completed certificates and badges</p>
+                            <p class="font-semibold text-gray-800"><i class="fas fa-trophy text-yellow-600 mr-2"></i>{{ __('settings.show_achievements') }}</p>
+                            <p class="text-sm text-gray-600">{{ __('settings.show_achievements_desc') }}</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="show_achievements" class="sr-only peer"
@@ -276,8 +276,8 @@
                     <!-- Allow Direct Messages -->
                     <div class="pb-6 flex items-center justify-between">
                         <div>
-                            <p class="font-semibold text-gray-800"><i class="fas fa-comments text-cyan-600 mr-2"></i>Allow Direct Messages</p>
-                            <p class="text-sm text-gray-600">Let other students send you direct messages</p>
+                            <p class="font-semibold text-gray-800"><i class="fas fa-comments text-cyan-600 mr-2"></i>{{ __('settings.allow_direct_messages') }}</p>
+                            <p class="text-sm text-gray-600">{{ __('settings.allow_direct_messages_desc') }}</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="allow_direct_messages" class="sr-only peer"
@@ -287,7 +287,7 @@
                     </div>
 
                     <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
-                        💾 {{ __('messages.save') }}
+                        {{ __('settings.save_privacy_settings') }}
                     </button>
                 </form>
             </div>
@@ -300,17 +300,17 @@
                 
                 <!-- Change Password Section -->
                 <div class="border-b border-gray-200 pb-8 mb-8">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-key text-purple-600 mr-2"></i>Change Password</h3>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-key text-purple-600 mr-2"></i>{{ __('settings.change_password') }}</h3>
                     
                     <form action="{{ route('settings.password.update') }}" method="POST" class="space-y-4">
                         @csrf
 
                         <!-- Current Password -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('settings.current_password') }}</label>
                             <input type="password" name="current_password" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent @error('current_password') border-red-500 @enderror"
-                                   placeholder="Enter your current password">
+                                   placeholder="{{ __('settings.enter_current_password') }}">
                             @error('current_password')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
@@ -318,10 +318,10 @@
 
                         <!-- New Password -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('settings.new_password') }}</label>
                             <input type="password" name="password" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent @error('password') border-red-500 @enderror"
-                                   placeholder="Enter a new password (min 8 characters)">
+                                   placeholder="{{ __('settings.enter_new_password') }}">
                             @error('password')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
@@ -329,33 +329,33 @@
 
                         <!-- Confirm Password -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('settings.confirm_new_password') }}</label>
                             <input type="password" name="password_confirmation" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                   placeholder="Confirm your new password">
+                                   placeholder="{{ __('settings.confirm_new_password_text') }}">
                         </div>
 
                         <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
-                            🔐 Update Password
+                            {{ __('settings.update_password') }}
                         </button>
                     </form>
                 </div>
 
                 <!-- Account Information -->
                 <div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-envelope text-blue-600 mr-2"></i>Account Information</h3>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-envelope text-blue-600 mr-2"></i>{{ __('settings.account_information') }}</h3>
                     
                     <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Email:</span>
+                            <span class="text-gray-600">{{ __('settings.email') }}:</span>
                             <span class="font-medium text-gray-800">{{ $user->email }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Account Created:</span>
+                            <span class="text-gray-600">{{ __('settings.account_created') }}:</span>
                             <span class="font-medium text-gray-800">{{ $user->created_at->format('d M Y') }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Last Updated:</span>
+                            <span class="text-gray-600">{{ __('settings.last_updated') }}:</span>
                             <span class="font-medium text-gray-800">{{ $user->updated_at->format('d M Y H:i') }}</span>
                         </div>
                     </div>
@@ -363,7 +363,7 @@
                     <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <p class="text-sm text-yellow-800">
                             <i class="fas fa-info-circle mr-2"></i>
-                            To change your email address, please contact support@otakatik.com
+                            {{ __('settings.change_email_contact') }}
                         </p>
                     </div>
                 </div>

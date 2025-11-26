@@ -32,14 +32,45 @@ return [
     'language_changed' => 'Preferensi bahasa berhasil diperbarui!',
     'language_will_refresh' => 'Aplikasi akan dimuat ulang untuk menerapkan bahasa baru.',
     
+    // Account & Security passwords
+    'enter_current_password' => 'Masukkan kata sandi Anda saat ini',
+    'enter_new_password' => 'Masukkan kata sandi baru (min 8 karakter)',
+    'confirm_new_password_text' => 'Konfirmasi kata sandi baru Anda',
+    'update_password' => 'Perbarui Kata Sandi',
+    
     // Notification Settings
     'email_notifications' => 'Notifikasi Email',
-    'assignment_posted' => 'Beri tahu saat penugasan diposkan',
-    'deadline_reminder' => 'Beri tahu tentang pengingat batas waktu',
-    'quiz_posted' => 'Beri tahu saat kuis diposkan',
-    'material_posted' => 'Beri tahu saat materi diposkan',
-    'forum_reply' => 'Beri tahu tentang balasan forum',
-    'submission_graded' => 'Beri tahu saat pengiriman dinilai',
+    'assignment_posted' => 'Tugas Baru Diunggah',
+    'assignment_posted_desc' => 'Dapatkan pemberitahuan ketika instruktur memposting tugas baru',
+    'deadline_reminder' => 'Pengingat Tenggat Waktu',
+    'deadline_reminder_desc' => 'Ingatkan saya 1 hari sebelum tenggat waktu tugas/kuis',
+    'quiz_posted' => 'Kuis Baru Diunggah',
+    'quiz_posted_desc' => 'Dapatkan pemberitahuan ketika instruktur membuat kuis baru',
+    'material_posted' => 'Materi Baru Diunggah',
+    'material_posted_desc' => 'Dapatkan pemberitahuan ketika instruktur mengunggah materi kursus',
+    'forum_reply' => 'Balasan Forum',
+    'forum_reply_desc' => 'Dapatkan pemberitahuan ketika seseorang membalas postingan forum Anda',
+    'submission_graded' => 'Pengiriman Dinilai',
+    'submission_graded_desc' => 'Dapatkan pemberitahuan ketika tugas/kuis Anda dinilai',
+    'save_notification_settings' => 'Simpan Pengaturan Notifikasi',
+    
+    // Privacy Settings
+    'profile_visibility' => 'Visibilitas Profil',
+    'private_profile' => 'Profil Pribadi',
+    'private_profile_desc' => 'Profil Anda hanya terlihat oleh Anda',
+    'public_profile' => 'Profil Publik',
+    'public_profile_desc' => 'Profil Anda terlihat oleh siswa lain',
+    'show_achievements' => 'Tampilkan Pencapaian',
+    'show_achievements_desc' => 'Tampilkan sertifikat dan lencana yang telah Anda selesaikan',
+    'allow_direct_messages' => 'Izinkan Pesan Langsung',
+    'allow_direct_messages_desc' => 'Biarkan siswa lain mengirimkan Anda pesan langsung',
+    'save_privacy_settings' => 'Simpan Pengaturan Privasi',
+    
+    // Account Information
+    'account_information' => 'Informasi Akun',
+    'account_created' => 'Akun Dibuat',
+    'last_updated' => 'Pembaruan Terakhir',
+    'change_email_contact' => 'Untuk mengubah alamat email Anda, silakan hubungi support@otakatik.com',
     
     // Delete Account
     'danger_zone' => 'Zona Berbahaya',
