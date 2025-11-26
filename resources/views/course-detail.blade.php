@@ -1,3 +1,5 @@
+@extends('layouts.app')
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -248,20 +250,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12 px-6">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="flex items-center justify-center gap-2 mb-4">
-                <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                    <span class="text-white font-bold text-xl">O</span>
-                </div>
-                <span class="text-2xl font-bold">OtakAtik Academy</span>
-            </div>
-            <p class="text-gray-400 mb-4">Building Smart and Achieving Generations</p>
-            <p class="text-gray-500 text-sm">&copy; 2025 OtakAtik Academy. All rights reserved.</p>
-        </div>
-    </footer>
-
     <script>
         let courseId = {{ $course->id }};
         let originalPrice = {{ $course->price }};
@@ -333,14 +321,6 @@
         function formatPrice(price) {
             return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
-    </script>
-        
-        // Close modal when clicking outside
-        document.getElementById('registrationModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideRegistrationForm();
-            }
-        });
     </script>
 
 </body>
