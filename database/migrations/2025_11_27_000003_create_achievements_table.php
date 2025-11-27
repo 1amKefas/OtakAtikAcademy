@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('name_id');
             $table->text('description_en');
             $table->text('description_id');
-            $table->string('icon'); // SVG path or icon class
+            $table->text('icon'); // SVG path - use text for longer paths
             $table->string('color'); // Tailwind color: bg-blue-100, text-blue-600
             $table->integer('requirement_type'); // 1=courses_completed, 2=hours_learned, 3=quiz_score
             $table->integer('requirement_value'); // 1, 5, 10, 50, 100 etc
