@@ -28,11 +28,16 @@ class AchievementController extends Controller
         }
 
         // Calculate stats
-        $coursesCompleted = $user->enrolledCourses()->whereHas('submissions', function ($q) {
-            $q->where('status', 'completed');
-        })->count() ?? 0;
+        $coursesCompleted = $user->courseRegistrations()
+            ->where('status', 'paid')
+            ->count() ?? 0;
         
-        $totalHours = $user->enrolledCourses()->sum('duration') ?? 0;
+        $totalHours = $user->enrolledCourses()
+            ->get()
+            ->sum(function ($reg) {
+                return $reg->course->duration ?? 0;
+            }) ?? 0;
+        
         $averageScore = $user->quizSubmissions()->avg('score') ?? 0;
 
         return view('achievements.index', [

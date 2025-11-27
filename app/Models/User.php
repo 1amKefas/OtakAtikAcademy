@@ -82,6 +82,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get enrolled courses through registrations (approved/paid)
+     */
+    public function enrolledCourses()
+    {
+        return $this->courseRegistrations()
+            ->where('status', 'paid')
+            ->with('course');
+    }
+
+    /**
      * Get assignment submissions for the user
      */
     public function assignmentSubmissions()
