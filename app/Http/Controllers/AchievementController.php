@@ -15,14 +15,22 @@ class AchievementController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $achievements = Achievement::all();
-        $userAchievements = $user->achievements()->pluck('achievements.id')->toArray();
-        $certificates = $user->certificates()->with('course')->get();
+        
+        try {
+            $achievements = Achievement::all();
+            $userAchievements = $user->achievements()->pluck('achievements.id')->toArray();
+            $certificates = $user->certificates()->with('course')->get();
+        } catch (\Exception $e) {
+            // If achievements table doesn't exist yet (before migration), return empty data
+            $achievements = collect();
+            $userAchievements = [];
+            $certificates = collect();
+        }
 
         // Calculate stats
         $coursesCompleted = $user->enrolledCourses()->whereHas('submissions', function ($q) {
             $q->where('status', 'completed');
-        })->count();
+        })->count() ?? 0;
         
         $totalHours = $user->enrolledCourses()->sum('duration') ?? 0;
         $averageScore = $user->quizSubmissions()->avg('score') ?? 0;
@@ -43,8 +51,13 @@ class AchievementController extends Controller
      */
     public function showUserProfile(User $user)
     {
-        $achievements = $user->achievements()->get();
-        $certificates = $user->certificates()->with('course')->get();
+        try {
+            $achievements = $user->achievements()->get();
+            $certificates = $user->certificates()->with('course')->get();
+        } catch (\Exception $e) {
+            $achievements = collect();
+            $certificates = collect();
+        }
 
         return view('achievements.user-profile', [
             'user' => $user,
