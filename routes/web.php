@@ -14,6 +14,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\HelpController;
 
 // --- GOOGLE AUTH ROUTES ---
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
@@ -96,6 +97,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/help', [HelpController::class, 'index'])->name('help');
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
