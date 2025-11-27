@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Achievement extends Model
 {
@@ -22,19 +23,21 @@ class Achievement extends Model
     /**
      * Get the name in current locale
      */
-    public function getNameAttribute()
+    protected function name(): Attribute
     {
-        $locale = app()->getLocale();
-        return $locale === 'id' ? $this->name_id : $this->name_en;
+        return Attribute::make(
+            get: fn ($value) => app()->getLocale() === 'id' ? $this->name_id : $this->name_en,
+        );
     }
 
     /**
      * Get the description in current locale
      */
-    public function getDescriptionAttribute()
+    protected function description(): Attribute
     {
-        $locale = app()->getLocale();
-        return $locale === 'id' ? $this->description_id : $this->description_en;
+        return Attribute::make(
+            get: fn ($value) => app()->getLocale() === 'id' ? $this->description_id : $this->description_en,
+        );
     }
 
     /**
