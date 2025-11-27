@@ -11,7 +11,7 @@
             <a href="/dashboard" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.home') }}</a>
             <a href="/course" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.courses') }}</a>
             <a href="/my-courses" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.my_courses') }}</a>
-            <a href="/purchase-history" class="text-gray-700 hover:text-orange-500 font-medium transition">History</a>
+            <a href="/purchase-history" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.purchase_history') }}</a>
         </div>
         
         <!-- Right Section: Notifications and Profile -->
@@ -129,7 +129,7 @@
                             <span>{{ __('messages.profile') }}</span>
                         </a>
                         <a href="/purchase-history" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>Purchase History</span>
+                            <span>{{ __('messages.purchase_history') }}</span>
                         </a>
                         <a href="/settings" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
                             <span>{{ __('messages.settings') }}</span>

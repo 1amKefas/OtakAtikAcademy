@@ -77,4 +77,5 @@ return [
     'ready_to_start' => 'Ready to Start Your Learning Journey?',
     'ready_to_start_desc' => 'Join thousands of students who have benefited from learning with OtakAtik Academy',
     'start_learning_now' => 'Start Learning Now',
+    'purchase_history' => 'Purchase History',
 ];
