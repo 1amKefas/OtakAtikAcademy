@@ -13,6 +13,7 @@ use App\Http\Controllers\RefundController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AchievementController;
 
 // --- GOOGLE AUTH ROUTES ---
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
@@ -111,6 +112,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/update', [StudentController::class, 'updateSettings'])->name('settings.update');
     Route::post('/settings/password', [StudentController::class, 'updatePassword'])->name('settings.password.update');
     Route::post('/settings/locale', [StudentController::class, 'updateLocale'])->name('settings.locale.update');
+    
+    // Achievements & Certificates
+    Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');
+    Route::get('/user/{user}/achievements', [AchievementController::class, 'showUserProfile'])->name('achievements.user');
+    Route::get('/certificate/{certificate}/download', [AchievementController::class, 'downloadCertificate'])->name('certificate.download');
 });
 
 // Payment Routes

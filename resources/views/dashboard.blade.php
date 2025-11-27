@@ -138,7 +138,9 @@
                 <!-- Course Category 2 -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
                     <div class="bg-gradient-to-r from-orange-500 to-orange-600 h-32 flex items-center justify-center">
-                        <div class="text-5xl">🔬</div>
+                        <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5h.01v.01H12v-.01z"></path>
+                        </svg>
                     </div>
                     <div class="p-6">
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ __('messages.science') }}</h3>

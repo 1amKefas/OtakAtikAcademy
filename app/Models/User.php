@@ -272,4 +272,22 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->html(view('emails.verify-email', ['name' => $this->name, 'verificationUrl' => $verificationUrl])->render());
         });
     }
+
+    /**
+     * Get user's achievements/badges
+     */
+    public function achievements()
+    {
+        return $this->belongsToMany(Achievement::class, 'user_achievements')
+            ->withTimestamps()
+            ->withPivot('earned_at');
+    }
+
+    /**
+     * Get user's certificates
+     */
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
 }

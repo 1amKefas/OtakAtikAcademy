@@ -78,4 +78,5 @@ return [
     'ready_to_start_desc' => 'Bergabunglah dengan ribuan siswa yang telah merasakan manfaat belajar bersama OtakAtik Academy',
     'start_learning_now' => 'Mulai Belajar Sekarang',
     'purchase_history' => 'Riwayat Pembelian',
+    'unlocked' => 'Terbuka',
 ];
