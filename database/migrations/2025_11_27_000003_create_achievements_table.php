@@ -36,16 +36,18 @@ return new class extends Migration
             $table->unique(['user_id', 'achievement_id']);
         });
 
-        // User certificates
-        Schema::create('certificates', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->string('certificate_number')->unique();
-            $table->date('issued_date');
-            $table->string('pdf_path')->nullable();
-            $table->timestamps();
-        });
+        // User certificates - only create if not exists
+        if (!Schema::hasTable('certificates')) {
+            Schema::create('certificates', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->foreignId('course_id')->constrained()->onDelete('cascade');
+                $table->string('certificate_number')->unique();
+                $table->date('issued_date');
+                $table->string('pdf_path')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
