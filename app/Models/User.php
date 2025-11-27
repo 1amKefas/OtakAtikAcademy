@@ -100,6 +100,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get quiz submissions for the user
+     */
+    public function quizSubmissions()
+    {
+        return $this->hasMany(QuizSubmission::class);
+    }
+
+    /**
      * Get notifications for the user
      */
     public function notifications()
