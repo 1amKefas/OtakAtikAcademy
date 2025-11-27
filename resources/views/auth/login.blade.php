@@ -124,7 +124,7 @@
                 <!-- Footer Copyright -->
                 <div class="mt-10 text-center">
                     <p class="text-xs text-gray-400">
-                        &copy; {{ date('Y') }} OtakAtik Academy. All rights reserved.
+                        &copy; {{ date('Y') }} Politeknik Negeri Jakarta. All rights reserved.
                     </p>
                 </div>
             </div>
