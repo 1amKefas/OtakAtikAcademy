@@ -106,6 +106,18 @@
                                     @error('description') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 
+                                <div class="mb-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Struktur Modul</label>
+                                    <p class="text-xs text-gray-500 mb-3">Tambahkan modul/bab untuk kursus ini. Konten detail akan diisi oleh Instruktur.</p>
+                                    
+                                    <div id="modules-container" class="space-y-3">
+                                        </div>
+
+                                    <button type="button" onclick="addModuleInput()" class="mt-3 text-sm flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                                        <i class="fas fa-plus-circle mr-2"></i> Tambah Modul
+                                    </button>
+                                </div>
+
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <label class="text-sm font-medium text-gray-700 mb-1 block">Tipe Course</label>
@@ -448,5 +460,38 @@
             if (typeSelect) toggleInstructorField(typeSelect.value);
         });
     </script>
+    <script>
+    let moduleCount = 0;
+
+    function addModuleInput() {
+        const container = document.getElementById('modules-container');
+        const index = moduleCount; // Pakai counter biar unik
+
+        const html = `
+            <div class="flex items-center gap-2 group" id="module-row-${index}">
+                <div class="flex-1 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3">
+                    <span class="text-gray-400 font-bold px-2">::</span>
+                    <input type="text" name="modules[${index}][title]" placeholder="Nama Modul (Contoh: Pengenalan HTML)" 
+                           class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800 placeholder-gray-400" required>
+                </div>
+                <button type="button" onclick="removeModuleRow(${index})" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', html);
+        moduleCount++;
+    }
+
+    function removeModuleRow(index) {
+        document.getElementById(`module-row-${index}`).remove();
+    }
+
+    // Tambahkan 1 modul kosong saat pertama kali load
+    document.addEventListener('DOMContentLoaded', () => {
+        addModuleInput(); 
+    });
+</script>
 </body>
 </html>

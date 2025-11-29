@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Course;
+use App\Models\CourseModule;    
 use App\Models\User;
 use App\Models\CourseRegistration;
 use App\Models\Refund;
@@ -539,7 +540,10 @@ class AdminController extends Controller
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' // Validasi gambar
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi gambar
+            // Validasi Array Modul
+            'modules' => 'nullable|array',
+            'modules.*.title' => 'required|string|max:255', // Title modul wajib jika ada modul
         ]);
 
         $courseData = [
@@ -576,7 +580,19 @@ class AdminController extends Controller
             }
         }
 
-        Course::create($courseData);
+        // 1. Simpan Course
+        $course = Course::create($courseData);
+
+        // 2. Simpan Modul (Jika ada)
+        if (!empty($request->modules)) {
+            foreach ($request->modules as $index => $moduleData) {
+                CourseModule::create([
+                    'course_id' => $course->id,
+                    'title' => $moduleData['title'],
+                    'order' => $index + 1, // Urutan otomatis berdasarkan input
+                ]);
+            }
+        }
 
         return redirect()->route('admin.courses.manage')->with('success', 'Course "'.$validated['title'].'" berhasil dibuat!');
     }
@@ -613,7 +629,11 @@ class AdminController extends Controller
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' // Validasi gambar
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi gambar
+            // Validasi Modul
+            'modules' => 'nullable|array',
+            'modules.*.id' => 'nullable|integer', // Kalau ada ID berarti update, kalau null berarti create
+            'modules.*.title' => 'required|string|max:255',
         ]);
 
         // Handle Image Upload
@@ -633,7 +653,35 @@ class AdminController extends Controller
             $validated['instructor_id'] = null;
         }
 
-        $course->update($validated);
+        // 1. Update Data Course Utama
+        $course->update(collect($validated)->except('modules')->toArray());
+
+        // 2. Logic Sinkronisasi Modul (Create/Update/Delete)
+        $submittedModules = collect($request->modules ?? []);
+        
+        // A. Ambil ID modul yang dikirim dari form (untuk yang diedit)
+        $submittedIds = $submittedModules->pluck('id')->filter()->toArray();
+
+        // B. Hapus modul di database yang TIDAK ada di form submission (berarti user menghapusnya di UI)
+        $course->modules()->whereNotIn('id', $submittedIds)->delete();
+
+        // C. Loop untuk Update atau Create
+        foreach ($submittedModules as $index => $moduleData) {
+            if (isset($moduleData['id']) && $moduleData['id']) {
+                // Update Existing
+                CourseModule::where('id', $moduleData['id'])
+                    ->update([
+                        'title' => $moduleData['title'],
+                        'order' => $index + 1
+                    ]);
+            } else {
+                // Create New
+                $course->modules()->create([
+                    'title' => $moduleData['title'],
+                    'order' => $index + 1
+                ]);
+            }
+        }
 
         return redirect()->route('admin.courses.manage')->with('success', 'Course berhasil diupdate!');
     }

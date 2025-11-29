@@ -62,6 +62,14 @@ class Course extends Model
     ];
 
     /**
+     * Get the modules for the course.
+     */
+    public function modules()
+    {
+        return $this->hasMany(CourseModule::class)->orderBy('order');
+    }
+
+    /**
      * Get display type attribute for user-friendly display
      */
     public function getDisplayTypeAttribute()

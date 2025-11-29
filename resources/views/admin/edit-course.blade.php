@@ -115,6 +115,39 @@
                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow shadow-sm resize-none">{{ $course->description }}</textarea>
                             </div>
 
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">Manajemen Modul</h3>
+                                    <p class="text-sm text-gray-500">Atur struktur bab pembelajaran.</p>
+                                </div>
+                                <button type="button" onclick="addEditModuleInput()" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                                    <i class="fas fa-plus mr-2"></i> Tambah Baru
+                                </button>
+                            </div>
+
+                            <div id="edit-modules-container" class="space-y-3">
+                                @forelse($course->modules as $index => $module)
+                                    <div class="flex items-center gap-2 group" id="edit-module-row-old-{{ $index }}">
+                                        <input type="hidden" name="modules[{{ $index }}][id]" value="{{ $module->id }}">
+                                        
+                                        <div class="flex-1 bg-white p-3 rounded-lg border border-gray-300 flex items-center gap-3 shadow-sm">
+                                            <span class="text-gray-400 font-bold px-2 cursor-move"><i class="fas fa-grip-vertical"></i></span>
+                                            <input type="text" name="modules[{{ $index }}][title]" value="{{ $module->title }}"
+                                                class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800" required>
+                                        </div>
+                                        <button type="button" onclick="removeEditModuleRow('old-{{ $index }}')" class="p-2 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Hapus Modul">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                @empty
+                                    <div id="no-modules-msg" class="text-center py-4 text-gray-400 text-sm italic">
+                                        Belum ada modul. Silakan tambah modul.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Course</label>
@@ -326,5 +359,40 @@
             // imageInput.value = ''; 
         }
     </script>
+    <script>
+    // Counter dimulai dari jumlah modul yang ada + 1 biar index array gak bentrok
+    let editModuleCount = {{ $course->modules->count() + 100 }}; 
+
+    function addEditModuleInput() {
+        // Hilangkan pesan kosong jika ada
+        const emptyMsg = document.getElementById('no-modules-msg');
+        if(emptyMsg) emptyMsg.remove();
+
+        const container = document.getElementById('edit-modules-container');
+        const index = editModuleCount;
+
+        const html = `
+            <div class="flex items-center gap-2 group animate-fade-in" id="edit-module-row-new-${index}">
+                <div class="flex-1 bg-blue-50 p-3 rounded-lg border border-blue-200 flex items-center gap-3">
+                    <span class="text-blue-400 font-bold px-2"><i class="fas fa-plus"></i></span>
+                    <input type="text" name="modules[${index}][title]" placeholder="Judul Modul Baru..." 
+                           class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800 placeholder-blue-300" required>
+                </div>
+                <button type="button" onclick="removeEditModuleRow('new-${index}')" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', html);
+        editModuleCount++;
+    }
+
+    function removeEditModuleRow(idSuffix) {
+        // Hapus elemen dari DOM
+        // Logic Controller akan otomatis menghapus dari DB jika ID-nya tidak terkirim saat submit
+        document.getElementById(`edit-module-row-${idSuffix}`).remove();
+    }
+</script>
 </body>
 </html>
