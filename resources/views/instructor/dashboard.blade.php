@@ -191,7 +191,7 @@
                                     <span class="px-3 py-1 rounded-full text-xs font-medium {{ $course->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                         {{ $course->is_active ? 'Active' : 'Inactive' }}
                                     </span>
-                                    <a href="{{ route('instructor.course.show', $course->id) }}" class="text-blue-500 hover:text-blue-700 text-sm block mt-1">
+                                    <a href="{{ route('instructor.courses.show', $course->id) }}" class="text-blue-500 hover:text-blue-700 text-sm block mt-1">
                                         Manage ›
                                     </a>
                                 </div>
