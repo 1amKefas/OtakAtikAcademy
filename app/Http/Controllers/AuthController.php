@@ -11,6 +11,11 @@ use Illuminate\Auth\Events\Registered;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 
+/**
+ * Class AuthController
+ * * Bertanggung jawab menangani semua proses autentikasi dan otorisasi pengguna.
+ * Fitur utama: Registrasi Manual, Login/Logout, Verifikasi Email, dan OAuth Google.
+ */
 class AuthController extends Controller
 {
     /**
@@ -31,6 +36,14 @@ class AuthController extends Controller
 
     /**
      * Handle user registration (Manual)
+     */
+    /**
+     * Menangani proses registrasi pengguna baru (Manual).
+     * * Alur:
+     * 1. Validasi input (Nama, Email, Password).
+     * 2. Hash password untuk keamanan data.
+     * 3. Set default role sebagai Student (bukan admin/instruktur).
+     * 4. Kirim email verifikasi untuk validasi akun.
      */
     public function register(Request $request)
     {

@@ -195,6 +195,12 @@ public function processPayment(Request $request, $courseId)
             $payment = Payment::where('order_id', $orderId)->firstOrFail();
             $registration = CourseRegistration::where('order_id', $orderId)->firstOrFail();
 
+            // [FIX] Cek Idempotency untuk Webhook juga
+            // Jika status database sudah 'settlement', abaikan notifikasi susulan (kecuali kalau cancel/expire)
+            if ($payment->transaction_status === 'settlement' && $transactionStatus === 'settlement') {
+                return response()->json(['status' => 'ok', 'message' => 'Already processed']);
+            }
+
             // Update payment status
             $payment->update([
                 'transaction_status' => $transactionStatus,
@@ -234,6 +240,12 @@ public function processPayment(Request $request, $courseId)
             $payment = Payment::where('order_id', $orderId)->firstOrFail();
             $registration = CourseRegistration::where('order_id', $orderId)->firstOrFail();
 
+            // [FIX] Cek Idempotency: Jika sudah settlement/paid, jangan diproses lagi!
+            if ($payment->transaction_status === 'settlement' || $registration->status === 'paid') {
+                return redirect()->route('purchase.history')
+                    ->with('info', 'Pembayaran sudah diproses sebelumnya.');
+            }
+
             $this->handleSuccessfulPayment($payment, $registration);
 
             return redirect()->route('purchase.history')
@@ -250,6 +262,12 @@ public function processPayment(Request $request, $courseId)
      */
     private function handleSuccessfulPayment(Payment $payment, CourseRegistration $registration)
     {
+        // [FIX UTAMA] Double Check di dalam method ini
+        // Jika status regis sudah PAID, return (berhenti) agar tidak menambah kuota 2x
+        if ($registration->status === 'paid') {
+            return;
+        }
+
         DB::transaction(function () use ($payment, $registration) {
             // Update registration status
             $registration->update([

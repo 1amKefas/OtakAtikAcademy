@@ -236,210 +236,256 @@
     </footer>
 
     <script>
-        let selectedPaymentMethod = '';
-        let snapToken = '';
-        let orderId = '';
-        let finalPrice = {{ $finalPrice }};
-        let courseId = {{ $course->id }};
+    // --- VARIABLES ---
+    let selectedPaymentMethod = '';
+    let snapToken = '';
+    let orderId = '';
+    let finalPrice = {{ $finalPrice }};
+    let courseId = {{ $course->id }};
 
-        // Payment method selection
-        document.querySelectorAll('.payment-method').forEach(method => {
-            method.addEventListener('click', function() {
-                document.querySelectorAll('.payment-method').forEach(m => {
-                    m.classList.remove('selected');
-                });
-                this.classList.add('selected');
-                selectedPaymentMethod = this.dataset.method;
-                document.getElementById('selectedPaymentMethod').value = selectedPaymentMethod;
-                checkPaymentReady();
+    // --- LOADING HELPERS ---
+    const showLoading = () => document.getElementById('loadingOverlay').classList.remove('hidden');
+    const hideLoading = () => document.getElementById('loadingOverlay').classList.add('hidden');
+
+    // --- PAYMENT METHOD SELECTION ---
+    // (Ini yang bikin kamu bisa klik kotak payment method)
+    document.querySelectorAll('.payment-method').forEach(method => {
+        method.addEventListener('click', function() {
+            // Reset semua style
+            document.querySelectorAll('.payment-method').forEach(m => {
+                m.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
+                m.classList.add('border-gray-200');
             });
+            
+            // Highlight yang dipilih
+            this.classList.add('selected', 'border-blue-500', 'bg-blue-50');
+            this.classList.remove('border-gray-200');
+            
+            // Simpan value
+            selectedPaymentMethod = this.dataset.method;
+            document.getElementById('selectedPaymentMethod').value = selectedPaymentMethod;
+            
+            // Cek apakah tombol Pay boleh aktif
+            checkPaymentReady();
         });
+    });
 
-        // Terms agreement
-        const termsElement = document.getElementById('termsAgreement');
-        if (termsElement) {
-            termsElement.addEventListener('change', checkPaymentReady);
-        }
+    // --- TERMS CHECKBOX ---
+    const termsElement = document.getElementById('termsAgreement');
+    if (termsElement) {
+        termsElement.addEventListener('change', checkPaymentReady);
+    }
 
-        function checkPaymentReady() {
-            const termsChecked = document.getElementById('termsAgreement').checked;
-            const payButton = document.getElementById('payButton');
-            
-            if (selectedPaymentMethod && termsChecked) {
-                payButton.disabled = false;
-            } else {
-                payButton.disabled = true;
-            }
-        }
-
-        // Apply voucher
-        async function applyVoucher() {
-            const voucherCode = document.getElementById('voucherCode').value;
-            const messageDiv = document.getElementById('voucherMessage');
-
-            if (!voucherCode) {
-                messageDiv.innerHTML = '<p class="text-red-600">Please enter a voucher code</p>';
-                return;
-            }
-
-            try {
-                const response = await fetch('/checkout/voucher-check', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        voucher_code: voucherCode,
-                        course_id: courseId
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.valid) {
-                    messageDiv.innerHTML = `<p class="text-green-600">${data.message}</p>`;
-                    document.getElementById('discountAmount').textContent = `-Rp${data.discount_amount.toLocaleString()}`;
-                    document.getElementById('finalPrice').textContent = `Rp${data.final_price.toLocaleString()}`;
-                    finalPrice = data.final_price;
-                } else {
-                    messageDiv.innerHTML = `<p class="text-red-600">${data.message}</p>`;
-                    resetPrices();
-                }
-            } catch (error) {
-                messageDiv.innerHTML = '<p class="text-red-600">Error checking voucher</p>';
-                console.error('Voucher error:', error);
-            }
-        }
-
-        function resetPrices() {
-            document.getElementById('discountAmount').textContent = '-Rp0';
-            document.getElementById('finalPrice').textContent = `Rp${finalPrice.toLocaleString()}`;
-        }
-
-        // Enroll as Instructor (Free)
-        async function enrollFreeAsInstructor() {
-            const button = event.target;
-            button.disabled = true;
-            button.innerHTML = 'Enrolling...';
-
-            try {
-                const response = await fetch(`/checkout/process/{{ $course->id }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        payment_method: 'instructor_free',
-                        voucher_code: ''
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.is_instructor) {
-                    // Instructor enrollment success - redirect to my courses
-                    window.location.href = '/my-courses?enrolled=success';
-                } else {
-                    throw new Error(data.message || 'Enrollment failed');
-                }
-            } catch (error) {
-                alert('Enrollment failed: ' + error.message);
-                button.disabled = false;
-                button.innerHTML = 'Enroll Now';
-            }
-        }
-
-        // Process payment
-        async function processPayment() {
-            const voucherCode = document.getElementById('voucherCode').value;
-            const payButton = document.getElementById('payButton');
-            
+    // --- CHECK READY STATE ---
+    function checkPaymentReady() {
+        const termsChecked = document.getElementById('termsAgreement') ? document.getElementById('termsAgreement').checked : true;
+        const payButton = document.getElementById('payButton');
+        
+        // Tombol Pay hanya nyala jika Method dipilih & Terms dicentang
+        if (selectedPaymentMethod && termsChecked) {
+            payButton.disabled = false;
+            payButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            payButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        } else {
             payButton.disabled = true;
-            payButton.innerHTML = 'Processing...';
+            payButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+            payButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        }
+    }
 
-            try {
-                const response = await fetch(`/checkout/process/{{ $course->id }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        payment_method: selectedPaymentMethod,
-                        voucher_code: voucherCode
-                    })
-                });
+    // --- VOUCHER LOGIC ---
+    async function applyVoucher() {
+        const voucherCode = document.getElementById('voucherCode').value;
+        const messageDiv = document.getElementById('voucherMessage');
 
-                const data = await response.json();
-
-                if (data.success) {
-                    snapToken = data.snap_token;
-                    orderId = data.order_id;
-                    
-                    // Open Midtrans Snap
-                    window.snap.pay(snapToken, {
-                        onSuccess: function(result) {
-                            console.log('Payment success:', result);
-                            window.location.href = '/purchase-history?payment=success';
-                        },
-                        onPending: function(result) {
-                            console.log('Payment pending:', result);
-                            window.location.href = '/purchase-history?payment=pending';
-                        },
-                        onError: function(result) {
-                            console.log('Payment error:', result);
-                            alert('Payment failed. Please try again.');
-                            payButton.disabled = false;
-                            payButton.innerHTML = 'Pay Now';
-                        },
-                        onClose: function() {
-                            console.log('Payment popup closed');
-                            payButton.disabled = false;
-                            payButton.innerHTML = 'Pay Now';
-                        }
-                    });
-                } else {
-                    throw new Error(data.message);
-                }
-            } catch (error) {
-                alert('Payment processing failed: ' + error.message);
-                payButton.disabled = false;
-                payButton.innerHTML = 'Pay Now';
-            }
+        if (!voucherCode) {
+            messageDiv.innerHTML = '<p class="text-red-600">Please enter a voucher code</p>';
+            return;
         }
 
-        // Simulate payment (development only)
-        async function simulatePayment() {
-            const voucherCode = document.getElementById('voucherCode').value;
+        // Tampilkan loading kecil di tombol apply (opsional) atau biarkan async
+        try {
+            const response = await fetch('/checkout/voucher-check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    voucher_code: voucherCode,
+                    course_id: courseId
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.valid) {
+                messageDiv.innerHTML = `<p class="text-green-600 font-medium"><i class="fas fa-check-circle"></i> ${data.message}</p>`;
+                document.getElementById('discountAmount').textContent = `-Rp${data.discount_amount.toLocaleString()}`;
+                document.getElementById('finalPrice').textContent = `Rp${data.final_price.toLocaleString()}`;
+                finalPrice = data.final_price;
+            } else {
+                messageDiv.innerHTML = `<p class="text-red-600"><i class="fas fa-times-circle"></i> ${data.message}</p>`;
+                resetPrices();
+            }
+        } catch (error) {
+            messageDiv.innerHTML = '<p class="text-red-600">Error checking voucher</p>';
+            console.error('Voucher error:', error);
+        }
+    }
+
+    function resetPrices() {
+        document.getElementById('discountAmount').textContent = '-Rp0';
+        document.getElementById('finalPrice').textContent = `Rp${finalPrice.toLocaleString()}`;
+    }
+
+    // --- ENROLL INSTRUCTOR (FREE) ---
+    async function enrollFreeAsInstructor() {
+        showLoading(); // Layar Gelap
+
+        try {
+            const response = await fetch(`/checkout/process/{{ $course->id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    payment_method: 'instructor_free',
+                    voucher_code: ''
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.is_instructor) {
+                window.location.href = '/my-courses?enrolled=success';
+            } else {
+                throw new Error(data.message || 'Enrollment failed');
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Enrollment failed: ' + error.message);
+        }
+    }
+
+    // --- REAL PAYMENT (MIDTRANS) ---
+    async function processPayment() {
+        // Validasi lagi biar aman
+        if (!selectedPaymentMethod) {
+            alert('Silakan pilih metode pembayaran terlebih dahulu!');
+            return;
+        }
+
+        const voucherCode = document.getElementById('voucherCode').value;
+        
+        showLoading(); // BLOCK LAYAR
+
+        try {
+            const response = await fetch(`/checkout/process/{{ $course->id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    payment_method: selectedPaymentMethod,
+                    voucher_code: voucherCode
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                hideLoading(); // Buka layar sebentar buat munculin popup
+                
+                snapToken = data.snap_token;
+                orderId = data.order_id;
+                
+                window.snap.pay(snapToken, {
+                    onSuccess: function(result) {
+                        showLoading(); // Block lagi saat redirect
+                        window.location.href = '/purchase-history?payment=success';
+                    },
+                    onPending: function(result) {
+                        showLoading(); // Block lagi saat redirect
+                        window.location.href = '/purchase-history?payment=pending';
+                    },
+                    onError: function(result) {
+                        console.log('Payment error:', result);
+                        alert('Payment failed. Please try again.');
+                    },
+                    onClose: function() {
+                        console.log('Payment popup closed');
+                    }
+                });
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Payment processing failed: ' + error.message);
+        }
+    }
+
+    // --- SIMULATE PAYMENT (DEV MODE) ---
+    async function simulatePayment() {
+        const voucherCode = document.getElementById('voucherCode').value;
+        
+        // [UPDATE] Gunakan method yang dipilih user, kalau belum pilih, default ke bank_transfer
+        // atau alert suruh pilih dulu (sesuai requestmu "harus pilih payment method")
+        if (!selectedPaymentMethod) {
+            alert('Harap pilih Payment Method terlebih dahulu untuk simulasi!');
+            return;
+        }
+
+        // Efek visual tombol berubah warna saat diklik
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+        btn.classList.add('bg-green-800', 'cursor-wait');
+        btn.innerText = 'Simulating...';
+        
+        showLoading(); // BLOCK LAYAR
+
+        try {
+            const response = await fetch(`/checkout/process/{{ $course->id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    payment_method: selectedPaymentMethod, // Pakai yang dipilih user
+                    voucher_code: voucherCode
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Redirect ke simulasi sukses
+                window.location.href = `/checkout/simulate-success/${data.order_id}`;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            hideLoading();
+            // Balikin tombol ke semula jika error
+            btn.classList.add('bg-green-600', 'hover:bg-green-700');
+            btn.classList.remove('bg-green-800', 'cursor-wait');
+            btn.innerText = originalText;
             
-            try {
-                const response = await fetch(`/checkout/process/{{ $course->id }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        payment_method: 'bank_transfer',
-                        voucher_code: voucherCode
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Redirect to simulation success page
-                    window.location.href = `/checkout/simulate-success/${data.order_id}`;
-                } else {
-                    throw new Error(data.message);
-                }
-            } catch (error) {
-                alert('Simulation failed: ' + error.message);
-            }
+            alert('Simulation failed: ' + error.message);
         }
-    </script>
-
+    }
+</script>
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/50 z-[9999] flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-t-blue-600 mb-4"></div>
+            <h3 class="text-lg font-bold text-gray-800">Processing Payment...</h3>
+            <p class="text-sm text-gray-500">Please do not close this window.</p>
+        </div>
+    </div>
 </body>
 </html>
