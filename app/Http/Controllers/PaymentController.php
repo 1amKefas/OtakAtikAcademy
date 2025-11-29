@@ -51,133 +51,140 @@ class PaymentController extends Controller
     /**
      * Process payment
      */
-public function processPayment(Request $request, $courseId)
-{
-    $request->validate([
-        'payment_method' => 'required|in:bank_transfer,credit_card,gopay,shopeepay,instructor_free',
-        'voucher_code' => 'nullable|string|max:50'
-    ]);
+/**
+     * Process payment
+     */
+    public function processPayment(Request $request, $courseId)
+    {
+        $request->validate([
+            'payment_method' => 'required|string', // Validasi string saja biar fleksibel
+            'voucher_code' => 'nullable|string|max:50'
+        ]);
 
-    $course = Course::where('is_active', true)->findOrFail($courseId);
-    $user = Auth::user();
+        $course = Course::where('is_active', true)->findOrFail($courseId);
+        $user = Auth::user();
 
-    // --- [UPDATE] CEK APAKAH SUDAH TERDAFTAR (STATUS PAID) ---
-    $alreadyEnrolled = CourseRegistration::where('user_id', $user->id)
-        ->where('course_id', $course->id)
-        ->where('status', 'paid')
-        ->exists();
-    
-    if ($alreadyEnrolled) {
+        // [LOGIKA ANTI-DUPLIKASI] Cek apakah user sudah punya kursus ini (status 'paid')
+        $alreadyEnrolled = CourseRegistration::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->where('status', 'paid')
+            ->exists();
+        
+        if ($alreadyEnrolled) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda sudah memiliki course ini!'
             ], 400);
         }
 
-    DB::beginTransaction();
-    try {
-        // Check if user is instructor AND payment method is instructor_free
-        if ($user->is_instructor && $request->payment_method === 'instructor_free') {
-            $finalPrice = 0;
-            $isInstructor = true;
-        } else {
-            // Calculate final price with voucher
+        DB::beginTransaction();
+        try {
+            // 1. Hitung Harga Awal
             $finalPrice = $this->calculateFinalPrice($course, $request->voucher_code);
-            $isInstructor = false;
-        }
-        
-        // Create order ID
-        $orderId = Payment::generateOrderId();
+            $bypassPaymentGateway = false;
 
-        // normalisasikan dan cast ke integer (simpan tanpa desimal)
-        $priceToSave = (int) round($this->normalizeMoney($course->price));
-        $finalToSave = (int) round($this->normalizeMoney($finalPrice));
+            // 2. Cek Logika Bypass (Gratis / Instructor)
+            // Jika User adalah Instructor DAN pakai metode 'instructor_free'
+            if ($user->is_instructor && $request->payment_method === 'instructor_free') {
+                $finalPrice = 0;
+                $bypassPaymentGateway = true;
+            } 
+            // ATAU Jika Harga Akhir <= 0 (Kursus Gratis / Diskon 100%)
+            elseif ($finalPrice <= 0) {
+                $finalPrice = 0; // Pastikan tidak negatif
+                $bypassPaymentGateway = true;
+            }
 
-        // Create registration record
-        $registration = CourseRegistration::create([
-            'user_id' => $user->id,
-            'course_id' => $course->id,
-            'order_id' => $orderId,
-            'nama_lengkap' => $user->name,
-            'ttl' => $user->date_of_birth ? $user->date_of_birth->format('d F Y') : 'Tidak tersedia',
-            'tempat_tinggal' => $user->location ?? 'Tidak tersedia', 
-            'gender' => 'Laki-laki',
-            'price' => $priceToSave,
-            'final_price' => $finalToSave,
-            'discount_code' => $request->voucher_code,
-            'payment_method' => $request->payment_method,
-            'status' => $isInstructor ? 'paid' : 'pending',
-            'progress' => 0,
-        ]);
+            // 3. Persiapkan Data Simpan
+            $orderId = Payment::generateOrderId();
+            $priceToSave = (int) round($this->normalizeMoney($course->price));
+            $finalToSave = (int) round($this->normalizeMoney($finalPrice));
 
-        // Create payment record
-        $payment = Payment::create([
-            'user_id' => $user->id,
-            'course_id' => $course->id,
-            'order_id' => $orderId,
-            'gross_amount' => $finalToSave,
-            'payment_type' => $request->payment_method,
-            'transaction_status' => $isInstructor ? 'settlement' : 'pending',
-            'status_message' => $isInstructor ? 'Free access for instructor' : 'Waiting for payment'
-        ]);
-
-        // Jika instructor, langsung handle success
-        if ($isInstructor) {
-            $this->handleSuccessfulPayment($payment, $registration);
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'is_instructor' => true,
-                'message' => 'Enrolled successfully!'
+            // 4. Buat Record Registrasi
+            $registration = CourseRegistration::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'order_id' => $orderId,
+                'nama_lengkap' => $user->name,
+                'ttl' => $user->date_of_birth ? $user->date_of_birth->format('d F Y') : 'Tidak tersedia',
+                'tempat_tinggal' => $user->location ?? 'Tidak tersedia', 
+                'gender' => 'Laki-laki', // Sebaiknya ambil dari profile user jika ada
+                'price' => $priceToSave,
+                'final_price' => $finalToSave,
+                'discount_code' => $request->voucher_code,
+                'payment_method' => $request->payment_method,
+                'status' => $bypassPaymentGateway ? 'paid' : 'pending', // Auto-paid jika gratis
+                'progress' => 0,
             ]);
-        }
 
-        // Prepare Midtrans transaction for non-instructor
-        $transactionDetails = [
-            'transaction_details' => [
+            // 5. Buat Record Payment
+            $payment = Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
                 'order_id' => $orderId,
                 'gross_amount' => $finalToSave,
-            ],
-            'customer_details' => [
-                'first_name' => $user->name,
-                'email' => $user->email,
-            ],
-            'item_details' => [
-                [
-                    'id' => $course->id,
-                    'price' => $finalToSave,
-                    'quantity' => 1,
-                    'name' => $course->title,
+                'payment_type' => $bypassPaymentGateway ? 'free_access' : $request->payment_method,
+                'transaction_status' => $bypassPaymentGateway ? 'settlement' : 'pending',
+                'status_message' => $bypassPaymentGateway ? 'Free access / 100% Discount' : 'Waiting for payment'
+            ]);
+
+            // CASE 1: GRATIS / BYPASS MIDTRANS
+            if ($bypassPaymentGateway) {
+                $this->handleSuccessfulPayment($payment, $registration); // Aktifkan course
+                DB::commit();
+                
+                return response()->json([
+                    'success' => true,
+                    'is_instructor' => true, // Flag ini dipakai frontend untuk redirect langsung
+                    'message' => 'Enrolled successfully (Free)!'
+                ]);
+            }
+
+            // CASE 2: BAYAR VIA MIDTRANS
+            $transactionDetails = [
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => $finalToSave, // Pastikan ini > 0
+                ],
+                'customer_details' => [
+                    'first_name' => $user->name,
+                    'email' => $user->email,
+                ],
+                'item_details' => [
+                    [
+                        'id' => $course->id,
+                        'price' => $finalToSave,
+                        'quantity' => 1,
+                        'name' => substr($course->title, 0, 50), // Midtrans limit nama item 50 char
+                    ]
                 ]
-            ]
-        ];
+            ];
 
-        // Get Snap token from Midtrans
-        $midtransResponse = $this->midtransService->createTransaction($transactionDetails);
+            // Get Snap Token
+            $midtransResponse = $this->midtransService->createTransaction($transactionDetails);
 
-        if (!$midtransResponse['success']) {
-            throw new \Exception('Payment gateway error: ' . $midtransResponse['message']);
+            if (!$midtransResponse['success']) {
+                throw new \Exception('Payment gateway error: ' . $midtransResponse['message']);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'snap_token' => $midtransResponse['snap_token'],
+                'order_id' => $orderId,
+                'is_instructor' => false
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Payment processing error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment processing failed: ' . $e->getMessage()
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'snap_token' => $midtransResponse['snap_token'],
-            'order_id' => $orderId,
-            'is_instructor' => false
-        ]);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Payment processing error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Payment processing failed: ' . $e->getMessage()
-        ], 500);
     }
-}
 
     /**
      * Handle payment notification from Midtrans (webhook)
