@@ -11,10 +11,35 @@ class CourseModule extends Model
 
     protected $fillable = ['course_id', 'title', 'description', 'order'];
 
+    /**
+     * Relasi ke Course induk
+     */
     public function course()
     {
         return $this->belongsTo(Course::class);
     }
 
-    // Nanti relasi ke konten (materi/quiz) akan ditambahkan di sini
+    /**
+     * Relasi ke Materi Bacaan/Video (CourseMaterial)
+     */
+    public function materials()
+    {
+        return $this->hasMany(CourseMaterial::class)->orderBy('order'); // Asumsi ada kolom order, atau hapus orderBy jika error
+    }
+
+    /**
+     * Relasi ke Tugas (CourseAssignment)
+     */
+    public function assignments()
+    {
+        return $this->hasMany(CourseAssignment::class);
+    }
+
+    /**
+     * Relasi ke Kuis (Quiz)
+     */
+    public function quizzes()
+    {
+        return $this->hasMany(Quiz::class);
+    }
 }

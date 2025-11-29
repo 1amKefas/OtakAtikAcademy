@@ -178,16 +178,27 @@ class CourseController extends Controller
     /**
  * Show course details - HANYA COURSE AKTIF untuk STUDENT
  */
-    public function show($id)
+   public function show($id)
     {
         // Jika user adalah INSTRUCTOR, redirect ke dashboard instructor
         if (Auth::check() && Auth::user()->is_instructor) {
             return redirect()->route('instructor.courses.show', $id);
         }
 
-        $course = Course::where('is_active', true)->with(['instructor', 'materials', 'assignments'])->findOrFail($id);
+        // [UPDATE] Load Modules beserta isinya (Materials, Assignments, Quizzes)
+        $course = Course::where('is_active', true)
+            ->with([
+                'instructor', 
+                'modules' => function($query) {
+                    $query->orderBy('order');
+                },
+                'modules.materials', 
+                'modules.assignments', 
+                'modules.quizzes'
+            ])
+            ->findOrFail($id);
         
-        // Check if user is enrolled in this course
+        // ... (Logika cek enrollment tetap sama seperti sebelumnya) ...
         $isEnrolled = false;
         $userRegistration = null;
         
@@ -198,14 +209,14 @@ class CourseController extends Controller
                 ->first();
             $isEnrolled = !is_null($userRegistration);
             
-            // Jika user sudah enroll, redirect ke student course detail view
             if ($isEnrolled && $userRegistration) {
                 return redirect()->route('student.course-detail', $userRegistration->id);
             }
         }
 
         return view('course-detail', compact('course', 'isEnrolled', 'userRegistration'));
-    }    /**
+    }
+     /**
      * Delete course registration
      */
     public function destroy($id)

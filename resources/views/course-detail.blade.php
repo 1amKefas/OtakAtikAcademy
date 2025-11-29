@@ -37,6 +37,127 @@
                         <h2 class="text-2xl font-bold text-gray-800 mb-4">Course Description</h2>
                         <p class="text-gray-600 leading-relaxed">{{ $course->description }}</p>
                     </div>
+                    
+                    <div class="mt-10 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                            <i class="fas fa-list-ul text-blue-600"></i> Kurikulum Kursus
+                        </h3>
+
+                        <div class="flex flex-wrap gap-4 mb-6 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-layer-group text-blue-500"></i>
+                                <span>{{ $course->modules->count() }} Modul</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-book-open text-green-500"></i>
+                                <span>{{ $course->modules->sum(fn($m) => $m->materials->where('type', 'file')->count()) }} Bacaan</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-video text-red-500"></i>
+                                <span>{{ $course->modules->sum(fn($m) => $m->materials->where('type', 'video')->count()) }} Video</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-clock text-orange-500"></i>
+                                @php
+                                    $totalQuizMinutes = $course->modules->sum(fn($m) => $m->quizzes->sum('duration_minutes'));
+                                    // Asumsi: 1 Video = 10 menit, 1 Bacaan = 5 menit (Bisa disesuaikan)
+                                    $totalMaterialMinutes = $course->modules->sum(fn($m) => 
+                                        ($m->materials->where('type', 'video')->count() * 10) + 
+                                        ($m->materials->where('type', 'file')->count() * 5)
+                                    );
+                                    $totalMinutes = $totalQuizMinutes + $totalMaterialMinutes;
+                                    $hours = floor($totalMinutes / 60);
+                                    $minutes = $totalMinutes % 60;
+                                @endphp
+                                <span>Total {{ $hours > 0 ? $hours.' Jam ' : '' }}{{ $minutes }} Menit</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4" x-data="{ activeModule: 0 }">
+                            @forelse($course->modules as $index => $module)
+                            <div class="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-blue-300">
+                                
+                                <button 
+                                    @click="activeModule === {{ $index }} ? activeModule = null : activeModule = {{ $index }}"
+                                    class="w-full flex items-center justify-between p-5 bg-white hover:bg-gray-50 transition text-left focus:outline-none"
+                                >
+                                    <div>
+                                        <h4 class="font-bold text-gray-800 text-lg mb-1">{{ $module->title }}</h4>
+                                        <p class="text-xs text-gray-500 flex items-center gap-3">
+                                            <span class="flex items-center gap-1"><i class="fas fa-play-circle text-xs"></i> {{ $module->materials->count() }} Materi</span>
+                                            <span class="flex items-center gap-1"><i class="fas fa-clipboard-check text-xs"></i> {{ $module->quizzes->count() }} Kuis</span>
+                                        </p>
+                                    </div>
+                                    <div class="transform transition-transform duration-300 text-gray-400" 
+                                        :class="{'rotate-180 text-blue-600': activeModule === {{ $index }}}">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </button>
+
+                                <div x-show="activeModule === {{ $index }}" 
+                                    x-collapse
+                                    class="bg-gray-50 border-t border-gray-100"
+                                    style="display: none;"> <div class="p-4 space-y-3">
+                                        @foreach($module->materials as $material)
+                                        <div class="flex items-center gap-3 p-2 rounded hover:bg-white hover:shadow-sm transition">
+                                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 
+                                                {{ $material->type == 'video' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600' }}">
+                                                <i class="fas {{ $material->type == 'video' ? 'fa-play' : 'fa-file-alt' }} text-xs"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-gray-700">{{ $material->title }}</p>
+                                                <p class="text-xs text-gray-400">
+                                                    {{ $material->type == 'video' ? 'Video Pembelajaran' : 'Bahan Bacaan' }}
+                                                </p>
+                                            </div>
+                                            @if($isEnrolled)
+                                                <span class="text-xs text-green-600 font-bold"><i class="fas fa-lock-open"></i> Akses</span>
+                                            @else
+                                                <i class="fas fa-lock text-gray-300 text-sm"></i>
+                                            @endif
+                                        </div>
+                                        @endforeach
+
+                                        @foreach($module->quizzes as $quiz)
+                                        <div class="flex items-center gap-3 p-2 rounded hover:bg-white hover:shadow-sm transition">
+                                            <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                                                <i class="fas fa-question text-xs"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-gray-700">{{ $quiz->title }}</p>
+                                                <p class="text-xs text-gray-400">{{ $quiz->duration_minutes }} Menit • Minimal Nilai {{ $quiz->passing_score }}</p>
+                                            </div>
+                                            <i class="fas fa-lock text-gray-300 text-sm"></i>
+                                        </div>
+                                        @endforeach
+
+                                        @foreach($module->assignments as $assignment)
+                                        <div class="flex items-center gap-3 p-2 rounded hover:bg-white hover:shadow-sm transition">
+                                            <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
+                                                <i class="fas fa-pencil-alt text-xs"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-gray-700">{{ $assignment->title }}</p>
+                                                <p class="text-xs text-gray-400">Tugas Praktik</p>
+                                            </div>
+                                            <i class="fas fa-lock text-gray-300 text-sm"></i>
+                                        </div>
+                                        @endforeach
+
+                                        @if($module->materials->isEmpty() && $module->quizzes->isEmpty() && $module->assignments->isEmpty())
+                                            <p class="text-center text-xs text-gray-400 py-2">Konten modul ini sedang disiapkan.</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-500">Kurikulum sedang disusun oleh Instruktur.</p>
+                            </div>
+                            @endforelse
+                        </div>
+                    </div>
 
                     <!-- Course Materials -->
                     <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
