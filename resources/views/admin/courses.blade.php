@@ -76,6 +76,14 @@
                             <span>Refund Management</span>
                         </a>
                     </li>
+                    </li>  <li class="pt-4 mt-4 border-t border-gray-700"></li>
+
+                    <li>
+                        <a href="/" class="flex items-center gap-3 px-4 py-3 text-emerald-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Back to Home</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
             
