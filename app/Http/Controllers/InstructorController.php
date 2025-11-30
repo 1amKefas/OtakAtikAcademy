@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Course;
+use App\Models\CourseModule;
 use App\Models\CourseMaterial;
 use App\Models\CourseAssignment;
 use App\Models\CourseRegistration;
@@ -57,6 +58,74 @@ class InstructorController extends Controller
         return view('instructor.dashboard', compact('stats', 'taughtCourses', 'recentRegistrations'));
     }
 
+    public function manageCourse($id)
+    {
+        $course = Course::where('instructor_id', Auth::id())
+            ->with([
+                'modules' => function($q) {
+                    $q->orderBy('order');
+                },
+                'modules.materials',   // Eager load materi
+                'modules.assignments', // Eager load tugas
+                'modules.quizzes'      // Eager load kuis
+            ])
+            ->findOrFail($id);
+
+        return view('instructor.courses.manage', compact('course'));
+    }
+
+    /**
+     * Tambah Modul Baru
+     */
+    public function storeModule(Request $request, $courseId)
+    {
+        $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+        
+        $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        // Auto increment order
+        $lastOrder = CourseModule::where('course_id', $courseId)->max('order');
+
+        CourseModule::create([
+            'course_id' => $courseId,
+            'title' => $request->title,
+            'order' => $lastOrder + 1
+        ]);
+
+        return back()->with('success', 'Modul berhasil ditambahkan!');
+    }
+
+    /**
+     * Update Modul (Rename)
+     */
+    public function updateModule(Request $request, $id)
+    {
+        $module = CourseModule::whereHas('course', function($q) {
+            $q->where('instructor_id', Auth::id());
+        })->findOrFail($id);
+
+        $request->validate(['title' => 'required|string|max:255']);
+        
+        $module->update(['title' => $request->title]);
+
+        return back()->with('success', 'Modul diperbarui!');
+    }
+
+    /**
+     * Hapus Modul
+     */
+    public function deleteModule($id)
+    {
+        $module = CourseModule::whereHas('course', function($q) {
+            $q->where('instructor_id', Auth::id());
+        })->findOrFail($id);
+
+        $module->delete();
+
+        return back()->with('success', 'Modul dihapus!');
+    }
     /**
      * Show instructor's courses
      */

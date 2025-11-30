@@ -53,6 +53,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="/instructor/courses" class="flex items-center gap-3 px-4 py-3 bg-blue-600 rounded-lg text-white shadow-lg">
+                            <i class="fas fa-chalkboard-teacher w-5"></i>
+                            <span>Course Management</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="/instructor/courses" class="flex items-center gap-3 px-4 py-3 text-blue-200 hover:bg-blue-500 rounded-lg transition-colors">
                             <i class="fas fa-book w-5"></i>
                             <span>My Courses</span>

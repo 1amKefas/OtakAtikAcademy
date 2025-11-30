@@ -217,6 +217,24 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
         Route::get('/{quizId}/submissions', [QuizController::class, 'submissions'])->name('submissions');
         Route::get('/{quizId}/submissions/{submissionId}', [QuizController::class, 'submissionDetail'])->name('submission.detail');
     });
+
+    // --- COURSE CONTENT MANAGEMENT ---
+    Route::get('/courses/{id}/manage', [InstructorController::class, 'manageCourse'])->name('courses.manage');
+    
+    // Modules CRUD
+    Route::post('/courses/{id}/modules', [InstructorController::class, 'storeModule'])->name('course.module.store');
+    Route::put('/modules/{id}', [InstructorController::class, 'updateModule'])->name('course.module.update');
+    Route::delete('/modules/{id}', [InstructorController::class, 'deleteModule'])->name('course.module.delete');
+
+    // Content: Materials (Text, Video, File, Link)
+    Route::post('/courses/{courseId}/modules/{moduleId}/materials', [InstructorController::class, 'storeMaterial'])->name('course.material.store');
+    Route::delete('/materials/{id}', [InstructorController::class, 'deleteMaterial'])->name('course.material.delete');
+
+    // Content: Connect Quiz to Module
+    Route::post('/courses/{courseId}/modules/{moduleId}/quiz', [InstructorController::class, 'storeModuleQuiz'])->name('course.module.quiz.store');
+    
+    // Content: Connect Assignment to Module
+    Route::post('/courses/{courseId}/modules/{moduleId}/assignment', [InstructorController::class, 'storeModuleAssignment'])->name('course.module.assignment.store');
 });
 
 // Student routes with refund
