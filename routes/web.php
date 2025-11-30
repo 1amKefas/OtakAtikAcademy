@@ -23,15 +23,12 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 // TEMPORARY SETUP ROUTE - RUN MIGRATIONS AND SEED
 Route::get('/setup/achievements', function () {
     if (env('APP_ENV') === 'production') {
-        // Run migrations
         \Artisan::call('migrate', ['--force' => true]);
-        // Seed achievements
         \Artisan::call('db:seed', ['--class' => 'AchievementSeeder']);
         return response()->json(['message' => 'Achievements setup complete!']);
     }
     abort(403);
 });
-// END TEMPORARY SETUP ROUTE
 
 // TEMPORARY DEBUG ROUTE - DELETE AFTER TESTING
 Route::get('/debug/delete-user/{email}', function ($email) {
@@ -41,36 +38,29 @@ Route::get('/debug/delete-user/{email}', function ($email) {
     }
     abort(403);
 });
-// END TEMPORARY DEBUG ROUTE
 
 // --- EMAIL VERIFICATION ROUTES ---
 Route::get('/email/verify', function () {
-    return view('auth.verify-email'); // Anda perlu membuat view ini
+    return view('auth.verify-email');
 })->middleware('auth')->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
-    // Try to get user from ID
     $user = \App\Models\User::findOrFail($id);
     
-    // Check signature validity
     if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
         abort(403, 'Invalid verification hash');
     }
     
-    // Check signature of URL
     if (!$request->hasValidSignature()) {
         abort(403, 'Invalid URL signature');
     }
     
-    // If already verified, just redirect
     if ($user->hasVerifiedEmail()) {
         return redirect('/dashboard')->with('success', 'Email sudah diverifikasi sebelumnya!');
     }
     
-    // Mark email as verified
     $user->markEmailAsVerified();
     
-    // Log the user in if not already logged in
     if (!auth()->check()) {
         auth()->loginUsingId($user->id);
     }
@@ -82,14 +72,6 @@ Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
     return back()->with('message', 'Link verifikasi telah dikirim ulang!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-
-// --- UPDATE MIDDLEWARE GROUP ---
-// Tambahkan 'verified' ke middleware group dashboard user
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Route User Course, Profile, dll masukan di sini
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    // ... pindahkan route user lain ke sini
-});
 
 // Public Routes
 Route::get('/', function () {
@@ -152,27 +134,37 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
 });
 
-// Admin Routes
+// Admin Routes - FIXED: Route tanpa parameter di atas, dengan parameter di bawah
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole'])->name('users.role');
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
     
+    // COURSES: Route tanpa parameter HARUS di ATAS
     Route::get('/courses', [AdminController::class, 'courses'])->name('courses');
     Route::get('/courses/manage', [AdminController::class, 'manageCourses'])->name('courses.manage');
+    Route::get('/courses/create', [AdminController::class, 'create'])->name('courses.create.form');
     Route::post('/courses/create', [AdminController::class, 'createCourse'])->name('courses.create');
+    Route::get('/courses/export', [AdminController::class, 'exportCourses'])->name('courses.export');
+    
+    // COURSES: Route dengan parameter {id} HARUS di BAWAH
     Route::get('/courses/{id}/edit', [AdminController::class, 'editCourse'])->name('courses.edit');
     Route::put('/courses/{id}', [AdminController::class, 'updateCourse'])->name('courses.update');
     Route::delete('/courses/{id}', [AdminController::class, 'deleteCourse'])->name('courses.delete');
     Route::put('/courses/{id}/toggle', [AdminController::class, 'toggleCourse'])->name('courses.toggle');
     Route::put('/courses/{id}/status', [AdminController::class, 'updateCourseStatus'])->name('courses.status.update');
     Route::put('/courses/{id}/active-status', [AdminController::class, 'updateCourseActiveStatus'])->name('courses.status');
-    Route::get('/courses/export', [AdminController::class, 'exportCourses'])->name('courses.export');
     
     Route::get('/financial', [AdminController::class, 'financial'])->name('financial');
     Route::get('/refund', [AdminController::class, 'refund'])->name('refund');
     Route::put('/refund/{id}/process', [AdminController::class, 'processRefund'])->name('refund.process');
+    
+    // REFUND ROUTES - Admin Side (FIXED: Pakai RefundController yang sudah ada)
+    Route::get('/refunds', [RefundController::class, 'adminIndex'])->name('refunds.index');
+    Route::get('/refunds/{id}', [RefundController::class, 'adminShow'])->name('refunds.show');
+    Route::post('/refunds/{id}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
+    Route::post('/refunds/{id}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
 });
 
 // Instructor Routes
@@ -221,8 +213,11 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
 
 // Student routes with refund
 Route::middleware(['auth'])->group(function () {
-    // Student dashboard
-    Route::get('/student/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
+    // FIXED: Redirect student.dashboard ke dashboard utama
+    Route::get('/student/dashboard', function() {
+        return redirect()->route('dashboard');
+    })->name('student.dashboard');
+    
     Route::get('/student/courses', [StudentController::class, 'myCourses'])->name('student.courses');
     Route::get('/student/course/{registrationId}', [StudentController::class, 'courseDetail'])->name('student.course-detail');
     
@@ -254,7 +249,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{assignmentId}/view', [StudentController::class, 'viewSubmission'])->name('view');
     });
     
-    // REFUND ROUTES - Student Side
+    // REFUND ROUTES - Student Side (Hanya Hybrid & Tatap Muka)
     Route::prefix('refund')->name('refund.')->group(function () {
         Route::get('/create/{registrationId}', [RefundController::class, 'create'])->name('create');
         Route::post('/store/{registrationId}', [RefundController::class, 'store'])->name('store');
