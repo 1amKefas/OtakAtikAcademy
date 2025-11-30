@@ -116,40 +116,72 @@
                 </button>
                 
                 <!-- Profile Dropdown Menu -->
-                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-50">
-                    <!-- Header with name -->
-                    <div class="p-4 border-b border-gray-200">
-                        <p class="font-semibold text-gray-900">{{ Auth::user()->name ?? 'User' }}</p>
-                        <p class="text-xs text-gray-500 mt-1">{{ Auth::user()->email ?? 'user@email.com' }}</p>
-                    </div>
-                    
-                    <!-- Menu Items -->
-                    <div class="py-2">
-                        <a href="/profile" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>{{ __('messages.profile') }}</span>
-                        </a>
-                        <a href="/purchase-history" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>{{ __('messages.purchase_history') }}</span>
-                        </a>
-                        <a href="/settings" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>{{ __('messages.settings') }}</span>
-                        </a>
-                        <a href="/achievements" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>{{ __('messages.achievements') }}</span>
-                        </a>
-                        <a href="/help" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
-                            <span>{{ __('messages.help') }}</span>
-                        </a>
-                    </div>
-                    
-                    <!-- Divider -->
-                    <div class="border-t border-gray-200 py-2">
-                        <form action="/logout" method="POST" class="block">
-                            @csrf
-                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition">
-                                <span>{{ __('messages.logout') }}</span>
-                            </button>
-                        </form>
+                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 overflow-hidden border border-gray-100">
+                        <div class="p-4 border-b border-gray-200 bg-gray-50">
+                            <p class="font-semibold text-gray-900 truncate">{{ Auth::user()->name ?? 'User' }}</p>
+                            <p class="text-xs text-gray-500 mt-1 truncate">{{ Auth::user()->email ?? 'user@email.com' }}</p>
+                            
+                            <div class="mt-2 flex gap-1 flex-wrap">
+                                @if(Auth::user()->is_admin)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">ADMIN</span>
+                                @endif
+                                @if(Auth::user()->is_instructor)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">INSTRUCTOR</span>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <div class="py-2">
+                            @if(Auth::user()->is_admin)
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-purple-700 hover:bg-purple-50 transition font-medium">
+                                    <div class="w-5 text-center"><i class="fas fa-tachometer-alt"></i></div>
+                                    <span>Admin Dashboard</span>
+                                </a>
+                            @endif
+
+                            @if(Auth::user()->is_instructor)
+                                <a href="{{ route('instructor.dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-blue-700 hover:bg-blue-50 transition font-medium">
+                                    <div class="w-5 text-center"><i class="fas fa-chalkboard-teacher"></i></div>
+                                    <span>Dashboard</span>
+                                </a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                            @endif
+
+                            <a href="/profile" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
+                                <div class="w-5 text-center"><i class="fas fa-user text-gray-400"></i></div>
+                                <span>{{ __('messages.profile') }}</span>
+                            </a>
+                            <a href="/my-courses" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
+                                <div class="w-5 text-center"><i class="fas fa-book text-gray-400"></i></div>
+                                <span>{{ __('messages.my_courses') }}</span>
+                            </a>
+                            <a href="/purchase-history" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
+                                <div class="w-5 text-center"><i class="fas fa-history text-gray-400"></i></div>
+                                <span>{{ __('messages.purchase_history') }}</span>
+                            </a>
+                            <a href="/achievements" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
+                                <div class="w-5 text-center"><i class="fas fa-trophy text-gray-400"></i></div>
+                                <span>{{ __('messages.achievements') }}</span>
+                            </a>
+                            <a href="/settings" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
+                                <div class="w-5 text-center"><i class="fas fa-cog text-gray-400"></i></div>
+                                <span>{{ __('messages.settings') }}</span>
+                            </a>
+                            <a href="/help" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition">
+                                <div class="w-5 text-center"><i class="fas fa-question-circle text-gray-400"></i></div>
+                                <span>{{ __('messages.help') }}</span>
+                            </a>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 py-2 bg-gray-50">
+                            <form action="/logout" method="POST" class="block">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition font-medium">
+                                    <div class="w-5 text-center"><i class="fas fa-sign-out-alt"></i></div>
+                                    <span>{{ __('messages.logout') }}</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
