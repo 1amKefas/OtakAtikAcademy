@@ -70,6 +70,43 @@ class Course extends Model
     }
 
     /**
+     * Many-to-Many: Course punya banyak instructors
+     */
+    public function instructors()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'course_instructor',
+            'course_id',
+            'instructor_id'
+        )->withPivot('active_duration_days', 'zoom_link', 'zoom_start_time', 'notes');
+    }
+
+    /**
+     * Many-to-Many: Course punya banyak categories
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_course');
+    }
+
+    /**
+     * One-to-Many: Course punya banyak ratings
+     */
+    public function ratings()
+    {
+        return $this->hasMany(CourseRating::class);
+    }
+
+    /**
+     * One-to-Many: Course punya banyak certificates
+     */
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    /**
      * Get display type attribute for user-friendly display
      */
     public function getDisplayTypeAttribute()
