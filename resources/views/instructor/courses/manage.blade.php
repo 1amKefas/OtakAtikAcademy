@@ -167,6 +167,32 @@
                             <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-purple-200 hover:bg-purple-50 group transition mt-1">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">{{ $quiz->title }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ $quiz->duration_minutes }} Menit • KKM: {{ $quiz->passing_score }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('instructor.quiz.edit', [$course->id, $quiz->id]) }}" class="px-3 py-1 bg-white border border-purple-200 text-purple-700 text-xs rounded hover:bg-purple-600 hover:text-white transition font-medium">
+                                        <i class="fas fa-cog mr-1"></i> Kelola Soal
+                                    </a>
+                                    
+                                    <form action="{{ route('instructor.course.module.quiz.delete', ['courseId' => $course->id, 'quizId' => $quiz->id]) }}" method="POST" onsubmit="return confirm('Hapus quiz ini?');">
+                                        @csrf @method('DELETE')
+                                        <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded opacity-0 group-hover:opacity-100 transition"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                            @endforeach
+
+                            @foreach($module->quizzes as $quiz)
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-purple-200 hover:bg-purple-50 group transition mt-1">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-question-circle"></i>
                                     </div>
                                     <div>
@@ -186,9 +212,9 @@
                                 <i class="fas fa-plus-circle"></i> Tambah Materi
                             </button>
                             
-                            <a href="#" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
-                                <i class="fas fa-question-circle"></i> Kuis
-                            </a>
+                            <button @click="openQuizModal({{ $module->id }})" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
+                                <i class="fas fa-question-circle"></i> Tambah Quiz
+                            </button>
                         </div>
 
                     </div>
@@ -310,6 +336,9 @@
             Alpine.data('contentManager', () => ({
                 showModuleModal: false,
                 showContentModal: false,
+                
+                // [ADD] State baru untuk Quiz
+                showQuizModal: false, 
                 activeModuleId: null,
                 
                 openModal(moduleId) {
@@ -341,10 +370,53 @@
                             })
                         });
                     }, 100);
-                }
+                },
+                
+                // [ADD] Fungsi Buka Modal Quiz
+                openQuizModal(moduleId) {
+                    this.activeModuleId = moduleId;
+                    this.showQuizModal = true;
+                },
+
             }))
         });
     </script>
+    <div x-show="showQuizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in" @click.outside="showQuizModal = false">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 class="text-xl font-bold text-gray-800">Buat Quiz Baru</h3>
+                <button @click="showQuizModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <form :action="`/instructor/courses/${courseId}/modules/${activeModuleId}/quiz`" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Judul Quiz</label>
+                    <input type="text" name="title" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Contoh: Evaluasi Akhir Modul">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi / Deskripsi</label>
+                    <textarea name="description" rows="2" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Kerjakan dengan teliti..."></textarea>
+                </div>
 
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Durasi (Menit)</label>
+                        <input type="number" name="duration_minutes" value="30" min="1" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-center font-bold text-gray-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">KKM (0-100)</label>
+                        <input type="number" name="passing_score" value="70" min="0" max="100" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-center font-bold text-gray-800">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" @click="showQuizModal = false" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg">Buat & Tambah Soal</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

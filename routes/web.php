@@ -184,6 +184,11 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::put('/modules/{id}', [InstructorController::class, 'updateModule'])->name('course.module.update');
     Route::delete('/modules/{id}', [InstructorController::class, 'deleteModule'])->name('course.module.delete');
 
+    // Content: Connect Quiz to Module
+    Route::post('/courses/{courseId}/modules/{moduleId}/quiz', [InstructorController::class, 'storeModuleQuiz'])->name('course.module.quiz.store');
+    // [TAMBAHKAN INI]
+    Route::delete('/courses/{courseId}/quiz/{quizId}/detach', [InstructorController::class, 'deleteModuleQuiz'])->name('course.module.quiz.delete');
+  
     // CRUD Materi (Dalam Modul - SYSTEM BARU)
     Route::post('/courses/{courseId}/modules/{moduleId}/materials', [InstructorController::class, 'storeMaterialContent'])->name('course.material.store');
     Route::delete('/materials/content/{id}', [InstructorController::class, 'deleteMaterialContent'])->name('course.material.delete');

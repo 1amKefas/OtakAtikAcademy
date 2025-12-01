@@ -126,6 +126,51 @@ class InstructorController extends Controller
 
         return back()->with('success', 'Modul dihapus!');
     }
+
+    /**
+     * Simpan Quiz Baru ke dalam Modul
+     */
+    public function storeModuleQuiz(Request $request, $courseId, $moduleId)
+    {
+        $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+        $module = CourseModule::where('course_id', $courseId)->findOrFail($moduleId);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'duration_minutes' => 'required|integer|min:1',
+            'passing_score' => 'required|integer|min:0|max:100',
+        ]);
+
+        $quiz = \App\Models\Quiz::create([
+            'course_id' => $courseId,
+            'course_module_id' => $moduleId,
+            'title' => $request->title,
+            'description' => $request->description,
+            'duration_minutes' => $request->duration_minutes,
+            'passing_score' => $request->passing_score,
+            'is_published' => true 
+        ]);
+
+        // Redirect user ke halaman "Edit Soal" agar bisa langsung bikin pertanyaan
+        return redirect()->route('instructor.quiz.edit', [$courseId, $quiz->id])
+            ->with('success', 'Wadah Quiz berhasil dibuat! Silakan tambahkan soal-soal di bawah ini.');
+    }
+
+    /**
+     * Hapus Quiz dari Modul
+     */
+    public function deleteModuleQuiz($courseId, $quizId)
+    {
+        // Validasi kepemilikan via course -> instructor
+        $quiz = \App\Models\Quiz::whereHas('course', function($q) {
+            $q->where('instructor_id', Auth::id());
+        })->findOrFail($quizId);
+
+        $quiz->delete();
+
+        return back()->with('success', 'Quiz berhasil dihapus!');
+    }
     /**
      * Show instructor's courses
      */
