@@ -540,10 +540,12 @@ class AdminController extends Controller
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi gambar
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
             // Validasi Array Modul
             'modules' => 'nullable|array',
-            'modules.*.title' => 'required|string|max:255', // Title modul wajib jika ada modul
+            'modules.*.title' => 'required|string|max:255',
         ]);
 
         $courseData = [
@@ -582,6 +584,11 @@ class AdminController extends Controller
 
         // 1. Simpan Course
         $course = Course::create($courseData);
+
+        // Attach categories if provided
+        if (!empty($validated['categories'])) {
+            $course->categories()->attach($validated['categories']);
+        }
 
         // 2. Simpan Modul (Jika ada)
         if (!empty($request->modules)) {
@@ -629,7 +636,9 @@ class AdminController extends Controller
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi gambar
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
             // Validasi Modul
             'modules' => 'nullable|array',
             'modules.*.id' => 'nullable|integer', // Kalau ada ID berarti update, kalau null berarti create
@@ -654,7 +663,14 @@ class AdminController extends Controller
         }
 
         // 1. Update Data Course Utama
-        $course->update(collect($validated)->except('modules')->toArray());
+        $course->update(collect($validated)->except(['modules', 'categories'])->toArray());
+
+        // Update categories
+        if (isset($validated['categories'])) {
+            $course->categories()->sync($validated['categories']);
+        } else {
+            $course->categories()->detach();
+        }
 
         // 2. Logic Sinkronisasi Modul (Create/Update/Delete)
         $submittedModules = collect($request->modules ?? []);
