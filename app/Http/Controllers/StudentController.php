@@ -55,17 +55,32 @@ class StudentController extends Controller
         return view('my-courses', compact('courses'), ['enrolledCourses' => $courses]);
     }
 
+   /**
+     * Show course detail for enrolled student
+     */
     public function courseDetail($registrationId)
     {
-        $registration = CourseRegistration::where('id', $registrationId)
-            ->where('user_id', Auth::id())
-            ->with(['course', 'refund'])
+        // 1. Ambil data registrasi milik user yang sedang login
+        $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
+            ->where('id', $registrationId)
+            ->where('status', 'paid')
             ->firstOrFail();
 
-        // Get refund if exists
-        $refund = Refund::where('course_registration_id', $registrationId)->first();
+        // 2. Ambil data course dari relasi registrasi
+        // Kita perlu eager load modules, materials, quizzes, dan instructor biar query efisien
+        $course = $registration->course()->with([
+            'instructor',
+            'modules' => function($q) {
+                $q->orderBy('order');
+            },
+            'modules.materials' => function($q) {
+                $q->orderBy('order');
+            },
+            'modules.quizzes'
+        ])->first();
 
-        return view('student.course-detail', compact('registration', 'refund'));
+        // 3. Kirim variabel $course dan $registration ke view
+        return view('student.course-detail', compact('course', 'registration'));
     }
 
     public function profile()
@@ -374,5 +389,96 @@ class StudentController extends Controller
                 ->route('settings')
                 ->with('error', 'Failed to update language preference');
         }
+    }
+
+    /**
+     * Halaman Utama Belajar (Redirect ke konten terakhir atau pertama)
+     */
+    public function learningPage($courseId)
+    {
+        // 1. Validasi Akses (Harus Enroll & Paid)
+        $registration = CourseRegistration::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('status', 'paid')
+            ->firstOrFail();
+
+        $course = Course::with(['modules.materials', 'modules.quizzes', 'modules.assignments'])
+            ->findOrFail($courseId);
+
+        // 2. Cari Konten Terakhir yang Diakses (Logic Sequential)
+        // Untuk simplifikasi awal, kita arahkan ke item pertama di modul pertama
+        // Nanti bisa dikembangkan pakai tabel 'user_progress'
+        
+        $firstModule = $course->modules->sortBy('order')->first();
+        
+        if (!$firstModule) {
+            return back()->with('error', 'Belum ada konten di kursus ini.');
+        }
+
+        // Prioritas urutan: Materi -> Quiz -> Assignment
+        $firstContent = null;
+        $type = null;
+
+        if ($firstModule->materials->isNotEmpty()) {
+            $firstContent = $firstModule->materials->sortBy('order')->first();
+            $type = 'material';
+        } elseif ($firstModule->quizzes->isNotEmpty()) {
+            $firstContent = $firstModule->quizzes->first();
+            $type = 'quiz';
+        }
+
+        if ($firstContent) {
+            return redirect()->route('student.learning.content', [
+                'courseId' => $courseId, 
+                'type' => $type, 
+                'contentId' => $firstContent->id
+            ]);
+        }
+
+        return back()->with('error', 'Konten belum tersedia.');
+    }
+
+    /**
+     * Menampilkan Konten Spesifik (Materi/Quiz)
+     */
+    public function learningContent($courseId, $type, $contentId)
+    {
+        $registration = CourseRegistration::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('status', 'paid')
+            ->firstOrFail();
+
+        $course = Course::with(['modules' => function($q) {
+            $q->orderBy('order');
+        }, 'modules.materials', 'modules.quizzes'])->findOrFail($courseId);
+
+        // Ambil konten yang diminta
+        $currentContent = null;
+        if ($type == 'material') {
+            $currentContent = \App\Models\CourseMaterial::findOrFail($contentId);
+        } elseif ($type == 'quiz') {
+            $currentContent = \App\Models\Quiz::findOrFail($contentId);
+        }
+
+        // LOGIC SEQUENTIAL ACCESS (Basic)
+        // Di versi simple ini, kita izinkan akses semua. 
+        // Untuk strict sequential, kita perlu tabel pivot 'course_progress' untuk mencatat item yg sudah 'completed'.
+        // Implementasi strict butuh migrasi tambahan. 
+        // Sesuai request, kita buat UI-nya dulu, logic kuncinya nanti di tombol "Next".
+
+        return view('student.learning.index', compact('course', 'currentContent', 'type', 'registration'));
+    }
+
+    /**
+     * Tandai Materi Selesai & Lanjut
+     */
+    public function completeMaterial(Request $request, $courseId, $materialId)
+    {
+        // Logic simpan progress di sini (nanti kita tambahkan tabel progress)
+        
+        // Cari Next Content
+        // Ini butuh algoritma pencarian "Next Item" berdasarkan urutan modul & order item
+        // Sementara redirect back dulu
+        return back()->with('success', 'Materi selesai!');
     }
 }

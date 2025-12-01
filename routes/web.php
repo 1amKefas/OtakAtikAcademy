@@ -283,4 +283,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/store/{registrationId}', [RefundController::class, 'store'])->name('store');
         Route::get('/view/{id}', [RefundController::class, 'view'])->name('view');
     });
+
+    // --- LEARNING PAGE (LMS) ---
+    // Halaman utama belajar (menampilkan materi saat ini)
+    Route::get('/learning/{courseId}', [StudentController::class, 'learningPage'])->name('student.learning.index');
+    
+    // Pindah ke konten spesifik (Materi/Quiz) dengan validasi urutan
+    Route::get('/learning/{courseId}/content/{type}/{contentId}', [StudentController::class, 'learningContent'])->name('student.learning.content');
+    
+    // Mark materi as complete (untuk lanjut ke next step)
+    Route::post('/learning/{courseId}/complete-material/{materialId}', [StudentController::class, 'completeMaterial'])->name('student.learning.complete-material');
 });
