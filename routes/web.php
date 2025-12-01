@@ -15,6 +15,10 @@ use App\Http\Controllers\QuizController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\HelpController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\FinancialController;
 
 // --- GOOGLE AUTH ROUTES ---
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
@@ -165,6 +169,42 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/refunds/{id}', [RefundController::class, 'adminShow'])->name('refunds.show');
     Route::post('/refunds/{id}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
     Route::post('/refunds/{id}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
+    
+    // CATEGORY ROUTES - Admin Categories
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::post('/categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
+    
+    // CERTIFICATE ROUTES - Admin Certificates
+    Route::get('/certificates', [CertificateController::class, 'adminIndex'])->name('certificates.index');
+    Route::get('/certificates/templates', [CertificateController::class, 'templates'])->name('certificates.templates');
+    Route::get('/certificates/templates/create', [CertificateController::class, 'createTemplate'])->name('certificates.templates.create');
+    Route::post('/certificates/templates', [CertificateController::class, 'storeTemplate'])->name('certificates.templates.store');
+    Route::get('/certificates/templates/{template}/edit', [CertificateController::class, 'editTemplate'])->name('certificates.templates.edit');
+    Route::put('/certificates/templates/{template}', [CertificateController::class, 'updateTemplate'])->name('certificates.templates.update');
+    Route::delete('/certificates/templates/{template}', [CertificateController::class, 'deleteTemplate'])->name('certificates.templates.destroy');
+    Route::get('/certificates/{certificate}', [CertificateController::class, 'adminView'])->name('certificates.view');
+    Route::post('/certificates/generate', [CertificateController::class, 'generate'])->name('certificates.generate');
+    Route::post('/certificates/{certificate}/revoke', [CertificateController::class, 'revoke'])->name('certificates.revoke');
+    
+    // FINANCIAL ROUTES - Admin Financial Dashboard
+    Route::get('/financial/dashboard', [FinancialController::class, 'dashboard'])->name('financial.dashboard');
+    Route::get('/financial/revenue', [FinancialController::class, 'revenue'])->name('financial.revenue');
+    Route::get('/financial/orders', [FinancialController::class, 'orders'])->name('financial.orders');
+    Route::get('/financial/orders/{order}', [FinancialController::class, 'orderDetail'])->name('financial.orders.detail');
+    Route::get('/financial/refunds', [FinancialController::class, 'refunds'])->name('financial.refunds');
+    Route::get('/financial/refunds/{refund}', [FinancialController::class, 'refundDetail'])->name('financial.refunds.detail');
+    Route::post('/financial/refunds/{refund}/approve', [FinancialController::class, 'approveRefund'])->name('financial.refunds.approve');
+    Route::post('/financial/refunds/{refund}/reject', [FinancialController::class, 'rejectRefund'])->name('financial.refunds.reject');
+    Route::get('/financial/analytics', [FinancialController::class, 'analytics'])->name('financial.analytics');
+    Route::post('/financial/export/orders', [FinancialController::class, 'exportOrders'])->name('financial.export.orders');
+    Route::post('/financial/export/refunds', [FinancialController::class, 'exportRefunds'])->name('financial.export.refunds');
+    Route::post('/financial/export/pdf', [FinancialController::class, 'exportPdf'])->name('financial.export.pdf');
 });
 
 // Instructor Routes
@@ -237,6 +277,19 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
         Route::get('/{quizId}/submissions', [QuizController::class, 'submissions'])->name('submissions');
         Route::get('/{quizId}/submissions/{submissionId}', [QuizController::class, 'submissionDetail'])->name('submission.detail');
     });
+    
+    // --- MODULES (NEW MODULAR SYSTEM) ---
+    Route::get('/courses/{course}/modules', [ModuleController::class, 'index'])->name('modules.index');
+    Route::get('/courses/{course}/modules/create', [ModuleController::class, 'create'])->name('modules.create');
+    Route::post('/courses/{course}/modules', [ModuleController::class, 'store'])->name('modules.store');
+    Route::get('/courses/{course}/modules/{module}', [ModuleController::class, 'show'])->name('modules.show');
+    Route::get('/courses/{course}/modules/{module}/edit', [ModuleController::class, 'edit'])->name('modules.edit');
+    Route::put('/courses/{course}/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');
+    Route::delete('/courses/{course}/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
+    Route::post('/courses/{course}/modules/{module}/materials', [ModuleController::class, 'addMaterial'])->name('modules.materials.add');
+    Route::put('/courses/{course}/modules/{module}/materials/{material}', [ModuleController::class, 'updateMaterial'])->name('modules.materials.update');
+    Route::delete('/courses/{course}/modules/{module}/materials/{material}', [ModuleController::class, 'deleteMaterial'])->name('modules.materials.delete');
+    Route::post('/courses/{course}/modules/{module}/materials/reorder', [ModuleController::class, 'reorderMaterials'])->name('modules.materials.reorder');
 });
 
 // Student routes with refund
@@ -252,6 +305,11 @@ Route::middleware(['auth'])->group(function () {
     // Profile
     Route::get('/student/profile', [StudentController::class, 'profile'])->name('student.profile');
     Route::post('/student/profile/update', [StudentController::class, 'updateProfile'])->name('student.profile.update');
+    
+    // Student Certificates
+    Route::get('/student/certificates', [CertificateController::class, 'myCertificates'])->name('student.certificates');
+    Route::get('/student/certificates/{certificate}', [CertificateController::class, 'view'])->name('student.certificates.view');
+    Route::get('/student/certificates/{certificate}/download', [CertificateController::class, 'download'])->name('student.certificates.download');
     
     // Forum Routes (Student)
     Route::prefix('student/course/{courseId}/forum')->name('student.forum.')->group(function () {

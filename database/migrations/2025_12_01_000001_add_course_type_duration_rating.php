@@ -10,10 +10,18 @@ return new class extends Migration
     {
         // Add course_type and course_duration columns to courses table
         Schema::table('courses', function (Blueprint $table) {
-            $table->enum('course_type', ['online', 'offline', 'hybrid'])->default('online')->after('is_active');
-            $table->integer('duration_days')->nullable()->after('course_type');
-            $table->unsignedInteger('rating_count')->default(0)->after('duration_days');
-            $table->decimal('average_rating', 3, 2)->default(0)->after('rating_count');
+            if (!Schema::hasColumn('courses', 'course_type')) {
+                $table->enum('course_type', ['online', 'offline', 'hybrid'])->default('online')->after('is_active');
+            }
+            if (!Schema::hasColumn('courses', 'duration_days')) {
+                $table->integer('duration_days')->nullable()->after('course_type');
+            }
+            if (!Schema::hasColumn('courses', 'rating_count')) {
+                $table->unsignedInteger('rating_count')->default(0)->after('duration_days');
+            }
+            if (!Schema::hasColumn('courses', 'average_rating')) {
+                $table->decimal('average_rating', 3, 2)->default(0)->after('rating_count');
+            }
         });
     }
 
