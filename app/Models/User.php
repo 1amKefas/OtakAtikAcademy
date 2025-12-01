@@ -255,17 +255,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification()
     {
-        // Determine the correct base URL for verification link
-        $baseUrl = rtrim(config('app.url'), '/');
-        
-        // If APP_URL is still localhost atau example.com di production, use Vercel URL
-        if ((env('APP_ENV') === 'production' || env('APP_ENV') === 'staging') 
-            && (strpos($baseUrl, 'localhost') !== false || strpos($baseUrl, 'example.com') !== false)) {
-            if (env('VERCEL_URL')) {
-                $baseUrl = 'https://' . env('VERCEL_URL');
-            }
-        }
-
         // Generate verification URL dengan temporary signed route
         $verificationUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
             'verification.verify',
@@ -274,13 +263,6 @@ class User extends Authenticatable implements MustVerifyEmail
                 'id' => $this->getKey(),
                 'hash' => sha1($this->getEmailForVerification()),
             ]
-        );
-        
-        // Replace base URL to ensure consistency with APP_URL
-        $verificationUrl = preg_replace(
-            '~^https?://[^/]+~',
-            $baseUrl,
-            $verificationUrl
         );
 
         \Illuminate\Support\Facades\Mail::send([], [], function (\Illuminate\Mail\Message $message) use ($verificationUrl) {
