@@ -168,13 +168,35 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 // Instructor Routes
+// Instructor Routes
 Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructor.')->group(function () {
+    
+    // --- DASHBOARD & MAIN MENU ---
     Route::get('/dashboard', [InstructorController::class, 'dashboard'])->name('dashboard');
     Route::get('/courses', [InstructorController::class, 'courses'])->name('courses');
+    
+    // --- COURSE MANAGEMENT (BARU - MODULAR SYSTEM) ---
+    // Halaman Editor Kurikulum
+    Route::get('/courses/{id}/manage', [InstructorController::class, 'manageCourse'])->name('courses.manage');
+    
+    // CRUD Modul
+    Route::post('/courses/{id}/modules', [InstructorController::class, 'storeModule'])->name('course.module.store');
+    Route::put('/modules/{id}', [InstructorController::class, 'updateModule'])->name('course.module.update');
+    Route::delete('/modules/{id}', [InstructorController::class, 'deleteModule'])->name('course.module.delete');
+
+    // CRUD Materi (Dalam Modul - SYSTEM BARU)
+    Route::post('/courses/{courseId}/modules/{moduleId}/materials', [InstructorController::class, 'storeMaterialContent'])->name('course.material.store');
+    Route::delete('/materials/content/{id}', [InstructorController::class, 'deleteMaterialContent'])->name('course.material.delete');
+
+    // --- FITUR LEGACY / PENDUKUNG (JANGAN DIHAPUS DULU) ---
     Route::get('/courses/{id}', [InstructorController::class, 'showCourse'])->name('courses.show');
     Route::get('/courses/{id}/students', [InstructorController::class, 'courseStudents'])->name('courses.students');
+    
+    // Ini Route yang Error tadi (Route Lama) -> Tetap pertahankan untuk backward compatibility
     Route::post('/courses/{id}/materials', [InstructorController::class, 'storeMaterial'])->name('materials.store');
     Route::delete('/materials/{id}', [InstructorController::class, 'deleteMaterial'])->name('materials.delete');
+
+    // --- ASSIGNMENTS & QUIZZES ---
     Route::post('/courses/{id}/assignments', [InstructorController::class, 'storeAssignment'])->name('assignments.store');
     Route::get('/assignments/{id}/json', [InstructorController::class, 'getAssignmentJson'])->name('assignments.json');
     Route::put('/assignments/{id}', [InstructorController::class, 'updateAssignment'])->name('assignments.update');
@@ -184,7 +206,7 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::put('/submissions/{id}/grade', [InstructorController::class, 'gradeSubmission'])->name('submissions.grade');
     Route::put('/students/{id}/progress', [InstructorController::class, 'updateStudentProgress'])->name('students.progress');
     
-    // Forum Routes (Instructor)
+    // --- FORUM ---
     Route::prefix('courses/{courseId}/forum')->name('forum.')->group(function () {
         Route::post('/', [InstructorController::class, 'storeForum'])->name('store');
         Route::get('/{forumId}', [InstructorController::class, 'showForum'])->name('show');
@@ -193,7 +215,7 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
         Route::delete('/{forumId}/reply/{replyId}', [InstructorController::class, 'deleteForumReply'])->name('reply.destroy');
     });
     
-    // Quiz Routes (Instructor)
+    // --- QUIZ ---
     Route::prefix('courses/{courseId}/quiz')->name('quiz.')->group(function () {
         Route::get('/', [QuizController::class, 'index'])->name('index');
         Route::get('/create', [QuizController::class, 'create'])->name('create');
@@ -209,24 +231,6 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
         Route::get('/{quizId}/submissions', [QuizController::class, 'submissions'])->name('submissions');
         Route::get('/{quizId}/submissions/{submissionId}', [QuizController::class, 'submissionDetail'])->name('submission.detail');
     });
-
-    // --- COURSE CONTENT MANAGEMENT ---
-    Route::get('/courses/{id}/manage', [InstructorController::class, 'manageCourse'])->name('courses.manage');
-    
-    // Modules CRUD
-    Route::post('/courses/{id}/modules', [InstructorController::class, 'storeModule'])->name('course.module.store');
-    Route::put('/modules/{id}', [InstructorController::class, 'updateModule'])->name('course.module.update');
-    Route::delete('/modules/{id}', [InstructorController::class, 'deleteModule'])->name('course.module.delete');
-
-    // Content: Materials (Text, Video, File, Link)
-    Route::post('/courses/{courseId}/modules/{moduleId}/materials', [InstructorController::class, 'storeMaterial'])->name('course.material.store');
-    Route::delete('/materials/{id}', [InstructorController::class, 'deleteMaterial'])->name('course.material.delete');
-
-    // Content: Connect Quiz to Module
-    Route::post('/courses/{courseId}/modules/{moduleId}/quiz', [InstructorController::class, 'storeModuleQuiz'])->name('course.module.quiz.store');
-    
-    // Content: Connect Assignment to Module
-    Route::post('/courses/{courseId}/modules/{moduleId}/assignment', [InstructorController::class, 'storeModuleAssignment'])->name('course.module.assignment.store');
 });
 
 // Student routes with refund
