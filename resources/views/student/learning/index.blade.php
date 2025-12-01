@@ -36,7 +36,7 @@
     <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-20 flex-shrink-0">
         <div class="flex items-center gap-4">
             <a href="{{ route('student.course-detail', $registration->id) }}" class="text-gray-500 hover:text-gray-800 transition">
-                <i class="fas fa-chevron-left mr-1"></i> Kembali ke Dashboard
+                <i class="fas fa-chevron-left mr-1"></i> Kembali ke beranda
             </a>
             <div class="h-6 w-px bg-gray-300"></div>
             <h1 class="text-lg font-bold text-gray-800 truncate max-w-md">{{ $course->title }}</h1>
@@ -61,7 +61,7 @@
         <!-- LEFT SIDEBAR (Curriculum Navigation) -->
         <aside class="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden z-10 hidden md:flex">
             <div class="p-4 bg-gray-50 border-b border-gray-200">
-                <h3 class="font-bold text-gray-700 text-sm uppercase tracking-wide">Daftar Materi</h3>
+                <h3 class="font-bold text-gray-700 text-sm uppercase tracking-wide">Daftar Modul</h3>
             </div>
             
             <div class="flex-1 overflow-y-auto sidebar-scroll p-2 space-y-2">
