@@ -187,4 +187,32 @@ class AuthController extends Controller
             return redirect('/login')->withErrors(['error' => 'Gagal login dengan Google. Silakan coba lagi.']);
         }
     }
+
+    /**
+     * Verify email from signed URL
+     */
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $user = User::findOrFail($id);
+
+        // Check if hash matches
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            abort(403, __('Invalid verification hash'));
+        }
+
+        // Check if already verified
+        if ($user->hasVerifiedEmail()) {
+            return redirect('/dashboard')->with('success', __('Email already verified!'));
+        }
+
+        // Mark as verified
+        $user->markEmailAsVerified();
+
+        // Auto-login if not authenticated
+        if (!auth()->check()) {
+            auth()->loginUsingId($user->id);
+        }
+
+        return redirect('/dashboard')->with('success', __('Email verified successfully! Welcome to OtakAtik Academy.'));
+    }
 }

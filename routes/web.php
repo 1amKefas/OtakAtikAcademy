@@ -48,33 +48,14 @@ Route::get('/email/verify', function () {
     return view('auth.verify-email');
 })->middleware('auth')->name('verification.notice');
 
-Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
-    $user = \App\Models\User::findOrFail($id);
-    
-    if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-        abort(403, 'Invalid verification hash');
-    }
-    
-    if (!$request->hasValidSignature()) {
-        abort(403, 'Invalid URL signature');
-    }
-    
-    if ($user->hasVerifiedEmail()) {
-        return redirect('/dashboard')->with('success', 'Email sudah diverifikasi sebelumnya!');
-    }
-    
-    $user->markEmailAsVerified();
-    
-    if (!auth()->check()) {
-        auth()->loginUsingId($user->id);
-    }
-    
-    return redirect('/dashboard')->with('success', 'Email berhasil diverifikasi! Selamat datang di OtakAtik Academy.');
-})->name('verification.verify');
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/dashboard')->with('success', __('Email verified successfully! Welcome to OtakAtik Academy.'));
+})->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
-    return back()->with('message', 'Link verifikasi telah dikirim ulang!');
+    return back()->with('message', __('Verification link sent!'));
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Public Routes
