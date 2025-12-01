@@ -11,9 +11,12 @@ class CourseMaterial extends Model
 
     protected $fillable = [
         'course_id',
+        'course_module_id', // <--- WAJIB ADA
         'title',
         'description',
+        'type',             // <--- WAJIB ADA
         'file_path',
+        'external_url',     // <--- WAJIB ADA
         'file_name',
         'file_size',
         'order',
@@ -31,5 +34,10 @@ class CourseMaterial extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function module()
+    {
+        return $this->belongsTo(CourseModule::class, 'course_module_id');
     }
 }

@@ -193,8 +193,9 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::get('/courses/{id}/students', [InstructorController::class, 'courseStudents'])->name('courses.students');
     
     // Ini Route yang Error tadi (Route Lama) -> Tetap pertahankan untuk backward compatibility
-    Route::post('/courses/{id}/materials', [InstructorController::class, 'storeMaterial'])->name('materials.store');
-    Route::delete('/materials/{id}', [InstructorController::class, 'deleteMaterial'])->name('materials.delete');
+    // Perhatikan: storeMaterialContent dan deleteMaterialContent
+    Route::post('/courses/{courseId}/modules/{moduleId}/materials', [InstructorController::class, 'storeMaterialContent'])->name('course.material.store');
+    Route::delete('/materials/content/{id}', [InstructorController::class, 'deleteMaterialContent'])->name('course.material.delete');
 
     // --- ASSIGNMENTS & QUIZZES ---
     Route::post('/courses/{id}/assignments', [InstructorController::class, 'storeAssignment'])->name('assignments.store');

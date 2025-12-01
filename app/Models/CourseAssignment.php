@@ -11,6 +11,7 @@ class CourseAssignment extends Model
 
     protected $fillable = [
         'course_id',
+        'course_module_id', // <--- WAJIB ADA
         'title',
         'description',
         'instructions',

@@ -190,52 +190,83 @@ class InstructorController extends Controller
     }
 
     /**
-     * Store course material
+     * Simpan Materi ke dalam Modul (Fitur Baru)
      */
-        public function storeMaterial(Request $request, $id)
+   public function storeMaterialContent(Request $request, $courseId, $moduleId)
     {
-        if (!Auth::check() || !Auth::user()->is_instructor) {
-            abort(403, 'Unauthorized access.');
-        }
-
-        $course = Course::findOrFail($id);
-        
-        // TEMPORARY BYPASS - Comment out authorization
-        // Check if instructor owns this course
-        // if ($course->instructor_id !== Auth::id()) {
-        //     abort(403, 'Unauthorized action.');
-        // }
+        $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
+        $module = CourseModule::where('course_id', $courseId)->findOrFail($moduleId);
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,txt|max:10240',
+            'type' => 'required|in:file,video,link,text',
+            'file' => 'nullable|required_if:type,file|file|max:51200',
+            'content_url' => 'nullable|required_if:type,video,link|url',
+            'text_content' => 'nullable|required_if:type,text|string'
         ]);
 
-        // Handle file upload
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('course_materials', $fileName, 'public');
+        $filePath = null;
+        $externalUrl = null;
+        $description = null;
+        
+        // [FIX] Inisialisasi variabel file info
+        $fileName = null;
+        $fileSize = null;
 
-            $material = CourseMaterial::create([
-                'course_id' => $course->id,
-                'title' => $request->title,
-                'description' => $request->description,
-                'file_path' => $filePath,
-                'file_name' => $file->getClientOriginalName(),
-                'file_size' => $file->getSize(),
-                'order' => $course->materials()->count() + 1,
-                'is_published' => true,
-            ]);
-
-            // Dispatch event to notify students
-            MaterialPosted::dispatch($material);
-
-            return back()->with('success', 'Material berhasil diupload!');
+        if ($request->type === 'file' && $request->hasFile('file')) {
+            $file = $request->file('file'); // Tangkap objek file dulu
+            $filePath = $file->store('course-materials', 'public');
+            
+            // [FIX] Ambil nama asli dan ukuran file
+            $fileName = $file->getClientOriginalName();
+            $fileSize = $file->getSize();
+            
+        } elseif (in_array($request->type, ['video', 'link'])) {
+            $externalUrl = $request->input('content_url');
+            // Isi dummy untuk video/link agar tidak error database (jika kolom tidak nullable)
+            $fileName = $request->type . '_link'; 
+            $fileSize = 0;
+        } elseif ($request->type === 'text') {
+            $description = $request->input('text_content');
+            // Isi dummy untuk text
+            $fileName = 'text_content';
+            $fileSize = 0;
         }
 
-        return back()->withErrors(['error' => 'Gagal mengupload file.']);
+        CourseMaterial::create([
+            'course_id' => $courseId,
+            'course_module_id' => $moduleId,
+            'title' => $request->title,
+            'type' => $request->type,
+            'file_path' => $filePath,
+            'external_url' => $externalUrl,
+            'description' => $description,
+            'order' => $module->materials()->count() + 1,
+            'is_published' => true,
+            
+            // [FIX] Masukkan data ke database
+            'file_name' => $fileName,
+            'file_size' => $fileSize,
+        ]);
+
+        return back()->with('success', 'Konten berhasil ditambahkan!');
+    }
+
+    /**
+     * Hapus Materi (Fitur Baru)
+     */
+    public function deleteMaterialContent($id)
+    {
+        $material = CourseMaterial::whereHas('course', function($q) {
+            $q->where('instructor_id', Auth::id());
+        })->findOrFail($id);
+
+        if ($material->file_path) {
+            Storage::disk('public')->delete($material->file_path);
+        }
+        $material->delete();
+
+        return back()->with('success', 'Konten dihapus!');
     }
 
     /**
