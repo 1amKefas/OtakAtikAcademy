@@ -93,8 +93,7 @@
                             <span>Refund Management</span>
                         </a>
                     </li>
-                    </li>  <li class="pt-4 mt-4 border-t border-gray-700"></li>
-
+                    <li class="pt-4 mt-4 border-t border-gray-700"></li>
                     <li>
                         <a href="/" class="flex items-center gap-3 px-4 py-3 text-emerald-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
                             <i class="fas fa-home w-5"></i>
@@ -242,7 +241,9 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                       <div class="text-sm text-gray-900">{{ $refund->course->title ?? 'Course Title' }}</div>
+                                        <div class="text-sm text-gray-900">
+                                            {{ $refund->registration->course->title ?? 'Course Deleted' }}
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">Rp{{ number_format($refund->amount, 0, ',', '.') }}</div>
@@ -265,22 +266,40 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex gap-2">
                                             @if($refund->status == 'pending')
-                                            <button onclick="processRefund({{ $refund->id }}, 'approved')" 
-                                                    class="text-green-600 hover:text-green-900">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button onclick="processRefund({{ $refund->id }}, 'rejected')" 
-                                                    class="text-red-600 hover:text-red-900">
+                                            <!-- Form Approve -->
+                                            <form action="{{ route('admin.refunds.approve', $refund->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" 
+                                                        onclick="return confirm('Approve refund ini?')"
+                                                        class="text-green-600 hover:text-green-900"
+                                                        title="Approve">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            <!-- Button Reject (Trigger Modal) -->
+                                            <button onclick="showRejectModal({{ $refund->id }})" 
+                                                    class="text-red-600 hover:text-red-900"
+                                                    title="Reject">
                                                 <i class="fas fa-times"></i>
                                             </button>
+                                            
                                             @elseif($refund->status == 'approved')
-                                            <span class="text-green-600 text-xs">Approved</span>
+                                            <span class="text-green-600 text-xs">
+                                                <i class="fas fa-check-circle"></i> Approved
+                                            </span>
                                             @else
-                                            <span class="text-red-600 text-xs">Rejected</span>
+                                            <span class="text-red-600 text-xs">
+                                                <i class="fas fa-times-circle"></i> Rejected
+                                            </span>
                                             @endif
-                                            <button class="text-blue-600 hover:text-blue-900">
+                                            
+                                            <!-- View Detail -->
+                                            <a href="{{ route('admin.refunds.show', $refund->id) }}" 
+                                               class="text-blue-600 hover:text-blue-900"
+                                               title="View Details">
                                                 <i class="fas fa-eye"></i>
-                                            </button>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -360,40 +379,115 @@
         </div>
     </div>
 
-    <!-- Success Message Handler -->
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">Reject Refund</h3>
+                <button onclick="closeRejectModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="rejectForm" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Alasan Penolakan <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="rejection_reason" 
+                              class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+                              rows="4" 
+                              required
+                              minlength="10"
+                              placeholder="Minimal 10 karakter..."></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Berikan alasan yang jelas untuk penolakan</p>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" 
+                            onclick="closeRejectModal()"
+                            class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-times-circle mr-1"></i> Reject Refund
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success/Error Message Handler -->
     @if(session('success'))
-    <div class="fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3">
+    <div id="successAlert" class="fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3">
         <i class="fas fa-check-circle"></i>
         <span class="font-medium">{{ session('success') }}</span>
     </div>
     <script>
         setTimeout(() => {
-            const alert = document.querySelector('.fixed.top-6');
-            if(alert) alert.remove();
+            const alert = document.getElementById('successAlert');
+            if(alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s';
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 5000);
+    </script>
+    @endif
+
+    @if(session('error'))
+    <div id="errorAlert" class="fixed top-6 right-6 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3">
+        <i class="fas fa-exclamation-circle"></i>
+        <span class="font-medium">{{ session('error') }}</span>
+    </div>
+    <script>
+        setTimeout(() => {
+            const alert = document.getElementById('errorAlert');
+            if(alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s';
+                setTimeout(() => alert.remove(), 500);
+            }
         }, 5000);
     </script>
     @endif
 
     <script>
-        function processRefund(refundId, action) {
-            if (confirm(`Are you sure you want to ${action} this refund request?`)) {
-                // In a real application, you would make an AJAX request here
-                alert(`Refund #${refundId} ${action} successfully!`);
-                // Reload the page to see the changes
-                location.reload();
-            }
+        function showRejectModal(refundId) {
+            const modal = document.getElementById('rejectModal');
+            const form = document.getElementById('rejectForm');
+            form.action = `/admin/refunds/${refundId}/reject`;
+            modal.classList.remove('hidden');
         }
 
-        // Sample refund processing simulation
-        document.addEventListener('DOMContentLoaded', function() {
-            const pendingBadges = document.querySelectorAll('.status-badge.status-pending');
-            pendingBadges.forEach(badge => {
-                badge.addEventListener('click', function() {
-                    const row = this.closest('tr');
-                    const refundId = row.querySelector('td:first-child').textContent.replace('#REF-', '');
-                    console.log('Processing refund:', refundId);
-                });
-            });
+        function closeRejectModal() {
+            const modal = document.getElementById('rejectModal');
+            modal.classList.add('hidden');
+            document.getElementById('rejectForm').reset();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('rejectModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectModal();
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeRejectModal();
+            }
+        });
+
+        // Form validation
+        document.getElementById('rejectForm')?.addEventListener('submit', function(e) {
+            const textarea = this.querySelector('textarea[name="rejection_reason"]');
+            if (textarea.value.trim().length < 10) {
+                e.preventDefault();
+                alert('Alasan penolakan minimal 10 karakter!');
+                textarea.focus();
+            }
         });
     </script>
 

@@ -222,11 +222,11 @@
                     </div>
                 </div>
 
-                <!-- Quick Links - Request Refund -->
-                @if($registration->status === 'paid' && !$refund)
+                <!-- Quick Links - Request Refund (HANYA UNTUK HYBRID DAN TATAP MUKA) -->
+                @if($registration->status === 'paid' && !$refund && in_array($registration->course->display_type, ['Hybrid', 'Tatap Muka']))
                 <div class="bg-red-50 border-2 border-red-200 rounded-lg shadow-md p-6">
                     <h3 class="font-bold text-red-800 mb-4">💸 Request Refund</h3>
-                    <p class="text-sm text-red-700 mb-4">Not satisfied with this course? You can request a refund.</p>
+                    <p class="text-sm text-red-700 mb-4">Not satisfied with this course? You can request a refund within 30 days.</p>
                     <a href="{{ route('refund.create', $registration->id) }}" 
                        class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition">
                         Request Refund
@@ -234,13 +234,46 @@
                 </div>
                 @endif
 
+                <!-- Info untuk Kursus Online (Tidak Bisa Refund) -->
+                @if($registration->course->display_type === 'Online' && !$refund)
+                <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-yellow-800 mb-3">ℹ️ Refund Policy</h3>
+                    <p class="text-sm text-yellow-700">
+                        Kursus <strong>Online</strong> tidak dapat di-refund. Refund hanya tersedia untuk kursus <strong>Hybrid</strong> dan <strong>Tatap Muka</strong>.
+                    </p>
+                </div>
+                @endif
+
                 <!-- Status Pengembalian Dana -->
                 @if($refund)
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm"><strong>Status Pengembalian Dana:</strong> {{ ucfirst($refund->status) }}</p>
-                    @if($refund->status === 'rejected')
-                        <p class="text-xs text-red-600 mt-2">{{ $refund->rejection_reason ?? 'Alasan tidak diberikan' }}</p>
-                    @endif
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-blue-800 mb-3">📋 Status Refund</h3>
+                    <div class="space-y-2">
+                        <div>
+                            <p class="text-xs text-blue-600 uppercase">Status</p>
+                            <p class="font-semibold text-gray-800">
+                                @if($refund->status === 'pending')
+                                    <span class="text-yellow-600">⏳ Pending</span>
+                                @elseif($refund->status === 'approved')
+                                    <span class="text-green-600">✓ Approved</span>
+                                @elseif($refund->status === 'rejected')
+                                    <span class="text-red-600">✗ Rejected</span>
+                                @endif
+                            </p>
+                        </div>
+                        @if($refund->status === 'rejected' && $refund->admin_notes)
+                        <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                            <p class="text-xs text-red-600 uppercase mb-1">Alasan Ditolak</p>
+                            <p class="text-sm text-red-800">{{ $refund->admin_notes }}</p>
+                        </div>
+                        @endif
+                        @if($refund->status === 'approved' && $refund->admin_notes)
+                        <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded">
+                            <p class="text-xs text-green-600 uppercase mb-1">Catatan Admin</p>
+                            <p class="text-sm text-green-800">{{ $refund->admin_notes }}</p>
+                        </div>
+                        @endif
+                    </div>
                 </div>
                 @endif
             </div>
