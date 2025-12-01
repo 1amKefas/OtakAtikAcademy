@@ -199,59 +199,37 @@ class InstructorController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|in:file,video,link,text',
-            'file' => 'nullable|required_if:type,file|file|max:51200',
-            'content_url' => 'nullable|required_if:type,video,link|url',
-            'text_content' => 'nullable|required_if:type,text|string'
+            'content' => 'required|string', // Ini isi dari Canvas/Editor
+            'attachment' => 'nullable|file|max:51200', // Opsional: File lampiran
         ]);
 
-        $filePath = null;
-        $externalUrl = null;
-        $description = null;
-        
-        // [FIX] Inisialisasi variabel file info
-        $fileName = null;
-        $fileSize = null;
+        $attachmentPath = null;
+        $attachmentName = null;
+        $attachmentSize = null;
 
-        if ($request->type === 'file' && $request->hasFile('file')) {
-            $file = $request->file('file'); // Tangkap objek file dulu
-            $filePath = $file->store('course-materials', 'public');
-            
-            // [FIX] Ambil nama asli dan ukuran file
-            $fileName = $file->getClientOriginalName();
-            $fileSize = $file->getSize();
-            
-        } elseif (in_array($request->type, ['video', 'link'])) {
-            $externalUrl = $request->input('content_url');
-            // Isi dummy untuk video/link agar tidak error database (jika kolom tidak nullable)
-            $fileName = $request->type . '_link'; 
-            $fileSize = 0;
-        } elseif ($request->type === 'text') {
-            $description = $request->input('text_content');
-            // Isi dummy untuk text
-            $fileName = 'text_content';
-            $fileSize = 0;
+        // Jika ada file lampiran tambahan
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $attachmentPath = $file->store('course-materials', 'public');
+            $attachmentName = $file->getClientOriginalName();
+            $attachmentSize = $file->getSize();
         }
 
         CourseMaterial::create([
             'course_id' => $courseId,
             'course_module_id' => $moduleId,
             'title' => $request->title,
-            'type' => $request->type,
-            'file_path' => $filePath,
-            'external_url' => $externalUrl,
-            'description' => $description,
+            'type' => 'mixed', // Tipe baru: Campuran
+            'description' => $request->content, // Simpan HTML di sini
+            'file_path' => $attachmentPath,
+            'file_name' => $attachmentName,
+            'file_size' => $attachmentSize,
             'order' => $module->materials()->count() + 1,
-            'is_published' => true,
-            
-            // [FIX] Masukkan data ke database
-            'file_name' => $fileName,
-            'file_size' => $fileSize,
+            'is_published' => true
         ]);
 
-        return back()->with('success', 'Konten berhasil ditambahkan!');
+        return back()->with('success', 'Materi berhasil dibuat!');
     }
-
     /**
      * Hapus Materi (Fitur Baru)
      */
