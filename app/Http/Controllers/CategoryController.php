@@ -36,7 +36,7 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories',
-            'slug' => 'required|string|max:255|unique:categories',
+            //'slug' => 'required|string|max:255|unique:categories',
             'description' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'courses' => 'nullable|array',
@@ -46,6 +46,8 @@ class CategoryController extends Controller
         ]);
 
         $data = $request->only(['name', 'description']);
+        
+        // Generate Slug otomatis di sini
         $data['slug'] = Str::slug($request->name);
 
         // 1. Upload Thumbnail
@@ -60,7 +62,7 @@ class CategoryController extends Controller
             $category->courses()->attach($request->courses);
         }
 
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil dibuat!');
+        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil dibuat!');
     }
 
     /**
@@ -90,7 +92,7 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
+            //'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
             'description' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'courses' => 'nullable|array',
@@ -99,6 +101,8 @@ class CategoryController extends Controller
         ]);
 
         $data = $request->only(['name', 'description']);
+
+        // Update slug jika nama berubah
         $data['slug'] = Str::slug($request->name);
 
         // 1. Update Thumbnail
@@ -115,7 +119,7 @@ class CategoryController extends Controller
         // 2. Sync Courses (Otomatis tambah/hapus sesuai checklist)
         $category->courses()->sync($request->input('courses', []));
 
-        return redirect()->route('categories.index')->with('success', 'Kategori diperbarui!');
+        return redirect()->route('admin.categories.index')->with('success', 'Kategori diperbarui!');
     }
 
     /**
