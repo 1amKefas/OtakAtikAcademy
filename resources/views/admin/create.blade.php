@@ -268,6 +268,31 @@
                     </label>
                 </div>
 
+                <!-- Categories -->
+                <div class="mb-6">
+                    <label for="categories" class="block text-sm font-medium text-gray-700 mb-2">
+                        Categories <span class="text-red-500">*</span>
+                    </label>
+                    <select 
+                        name="categories[]" 
+                        id="categories"
+                        multiple
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                    >
+                        @php
+                            $categories = \App\Models\Category::orderBy('sort_order')->get();
+                            $oldCategories = old('categories', []);
+                        @endphp
+                        @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ in_array($category->id, $oldCategories) ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Select one or more categories (Hold Ctrl/Cmd to select multiple)</p>
+                </div>
+
                 <!-- Buttons -->
                 <div class="flex items-center gap-4 pt-6 border-t">
                     <button 

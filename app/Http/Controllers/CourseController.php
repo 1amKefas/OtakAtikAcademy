@@ -12,14 +12,20 @@ use Illuminate\Support\Facades\Response;
 class CourseController extends Controller
 {
     /**
-     * Show course registration page - HANYA COURSE AKTIF
+     * Show course registration page - HANYA COURSE AKTIF dengan filter category
      */
-    public function showCourse()
+    public function showCourse(Request $request)
     {
-        // HANYA tampilkan course yang is_active = true
-        $courses = Course::where('is_active', true)
-                    ->with('instructor')
-                    ->get();
+        $query = Course::where('is_active', true)->with('instructor');
+        
+        // Filter by category jika ada
+        if ($request->has('category') && $request->category) {
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+        
+        $courses = $query->get();
         
         return view('course', compact('courses'));
     }

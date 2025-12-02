@@ -33,6 +33,12 @@
                             <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Dashboard
                             </a>
+                            <a href="{{ route('categories.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Categories
+                            </a>
+                            <a href="{{ route('admin.financial') }}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Financial
+                            </a>
                             <a href="{{ route('admin.refunds.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Refunds
                             </a>

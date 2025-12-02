@@ -10,6 +10,22 @@
             <p class="text-gray-500 text-lg max-w-2xl mx-auto">Tingkatkan karirmu dengan course terbaik dari para ahli di industri.</p>
         </div>
 
+        <!-- Category Filter -->
+        <div class="mb-12 flex justify-center gap-3 flex-wrap">
+            <a href="{{ route('course.index') }}" class="px-6 py-2 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-700 transition {{ !request('category') ? 'bg-blue-700' : '' }}">
+                Semua Kategori
+            </a>
+            @php
+                $categories = \App\Models\Category::orderBy('sort_order')->get();
+            @endphp
+            @foreach($categories as $cat)
+                <a href="{{ route('course.index', ['category' => $cat->slug]) }}" 
+                   class="px-6 py-2 rounded-full font-semibold {{ request('category') === $cat->slug ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} transition">
+                    {{ $cat->name }}
+                </a>
+            @endforeach
+        </div>
+
         @if($courses->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($courses as $course)
