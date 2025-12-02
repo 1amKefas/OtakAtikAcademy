@@ -137,7 +137,7 @@
                                     <div class="w-5 text-center"><i class="fas fa-tachometer-alt"></i></div>
                                     <span>Admin Dashboard</span>
                                 </a>
-                                <a href="{{ route('categories.index') }}" class="flex items-center gap-3 px-4 py-2 text-purple-700 hover:bg-purple-50 transition font-medium">
+                                <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-4 py-2 text-purple-700 hover:bg-purple-50 transition font-medium">
                                     <div class="w-5 text-center"><i class="fas fa-list"></i></div>
                                     <span>Categories</span>
                                 </a>

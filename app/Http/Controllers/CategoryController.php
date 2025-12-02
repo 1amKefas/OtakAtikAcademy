@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -21,7 +24,9 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return view('admin.categories.create');
+        // Ambil semua course aktif untuk dipilih
+        $courses = Course::where('is_active', true)->get();
+        return view('admin.categories.create', compact('courses'));
     }
 
     /**
@@ -33,14 +38,29 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:categories',
             'slug' => 'required|string|max:255|unique:categories',
             'description' => 'nullable|string',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'courses' => 'nullable|array',
+            'courses.*' => 'exists:courses,id',
             'icon_url' => 'nullable|string|max:500',
-            'sort_order' => 'nullable|integer|min:0',
+            'sort_order' => 'nullable|integer|min:0'
         ]);
 
-        Category::create($validated);
+        $data = $request->only(['name', 'description']);
+        $data['slug'] = Str::slug($request->name);
 
-        return redirect()->route('admin.categories.index')
-            ->with('success', __('Category created successfully'));
+        // 1. Upload Thumbnail
+        if ($request->hasFile('thumbnail')) {
+            $data['thumbnail'] = $request->file('thumbnail')->store('categories', 'public');
+        }
+
+        $category = Category::create($data);
+
+        // 2. Assign Courses (Attach)
+        if ($request->has('courses')) {
+            $category->courses()->attach($request->courses);
+        }
+
+        return redirect()->route('categories.index')->with('success', 'Kategori berhasil dibuat!');
     }
 
     /**
@@ -57,7 +77,10 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        return view('admin.categories.edit', compact('category'));
+        $courses = Course::where('is_active', true)->get();
+        // Load relasi courses agar checkbox tercentang otomatis
+        $category->load('courses');
+        return view('admin.categories.edit', compact('category', 'courses'));
     }
 
     /**
@@ -69,14 +92,30 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
             'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
             'description' => 'nullable|string',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'courses' => 'nullable|array',
             'icon_url' => 'nullable|string|max:500',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        $category->update($validated);
+        $data = $request->only(['name', 'description']);
+        $data['slug'] = Str::slug($request->name);
 
-        return redirect()->route('admin.categories.index')
-            ->with('success', __('Category updated successfully'));
+        // 1. Update Thumbnail
+        if ($request->hasFile('thumbnail')) {
+            // Hapus gambar lama jika ada
+            if ($category->thumbnail) {
+                Storage::disk('public')->delete($category->thumbnail);
+            }
+            $data['thumbnail'] = $request->file('thumbnail')->store('categories', 'public');
+        }
+
+        $category->update($data);
+
+        // 2. Sync Courses (Otomatis tambah/hapus sesuai checklist)
+        $category->courses()->sync($request->input('courses', []));
+
+        return redirect()->route('categories.index')->with('success', 'Kategori diperbarui!');
     }
 
     /**
@@ -84,10 +123,14 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
+        if ($category->thumbnail) {
+            Storage::disk('public')->delete($category->thumbnail);
+        }
+        // Hapus relasi course dulu
+        $category->courses()->detach();
         $category->delete();
 
-        return redirect()->route('admin.categories.index')
-            ->with('success', __('Category deleted successfully'));
+        return back()->with('success', 'Kategori dihapus!');
     }
 
     /**
