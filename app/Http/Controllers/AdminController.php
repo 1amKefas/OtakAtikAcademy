@@ -518,7 +518,11 @@ class AdminController extends Controller
         $courses = Course::with('instructor')->latest()->paginate(20);
         $instructors = User::where('is_instructor', true)->get();
         
-        return view('admin.manage-courses', compact('courses', 'instructors'));
+        // [BARU] Ambil data kategori & sertifikat
+        $categories = \App\Models\Category::all();
+        $certificates = \App\Models\CertificateTemplate::all(); 
+        
+        return view('admin.manage-courses', compact('courses', 'instructors', 'categories', 'certificates'));
     }
 
     /**
@@ -609,10 +613,14 @@ class AdminController extends Controller
      */
     public function editCourse($id)
     {
-        $course = Course::findOrFail($id);
+        $course = Course::with('modules')->findOrFail($id);
         $instructors = User::where('is_instructor', true)->get();
         
-        return view('admin.edit-course', compact('course', 'instructors'));
+        // [BARU] Ambil data kategori & sertifikat
+        $categories = \App\Models\Category::all();
+        $certificates = \App\Models\CertificateTemplate::all();
+
+        return view('admin.edit-course', compact('course', 'instructors', 'categories', 'certificates'));
     }
 
     /**
