@@ -550,6 +550,9 @@ class AdminController extends Controller
             // Validasi Array Modul
             'modules' => 'nullable|array',
             'modules.*.title' => 'required|string|max:255',
+            // Di dalam $validated rules tambahkan:
+            'category_id' => 'nullable|exists:categories,id',
+            'certificate_template_id' => 'nullable|exists:certificate_templates,id',
         ]);
 
         $courseData = [
