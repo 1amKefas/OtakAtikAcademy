@@ -5,12 +5,12 @@
     <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold text-gray-800">Edit Kategori: {{ $category->name }}</h2>
-            <a href="{{ route('categories.index') }}" class="text-gray-500 hover:text-gray-700 flex items-center gap-2">
+            <a href="{{ route('admin.categories.index') }}" class="text-gray-500 hover:text-gray-700 flex items-center gap-2">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>
 
-        <form action="{{ route('categories.update', $category->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -68,7 +68,7 @@
             </div>
 
             <div class="flex justify-end gap-3 border-t pt-6">
-                <a href="{{ route('categories.index') }}" class="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition">Batal</a>
+                <a href="{{ route('admin.categories.index') }}" class="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition">Batal</a>
                 <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-lg transition transform hover:-translate-y-0.5">
                     <i class="fas fa-check mr-2"></i> Update Kategori
                 </button>
