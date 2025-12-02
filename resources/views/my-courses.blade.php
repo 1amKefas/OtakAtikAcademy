@@ -12,7 +12,7 @@
                     <h1 class="text-4xl font-bold text-gray-800">Course Saya</h1>
                     <p class="text-gray-600 mt-2">Kelola dan lanjutkan course yang sedang Anda jalani</p>
                 </div>
-                <a href="{{ route('course.show') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-all font-medium inline-flex items-center gap-2">
+                <a href="{{ route('course.index') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-all font-medium inline-flex items-center gap-2">
                     <i class="fas fa-plus"></i> Tambah Course
                 </a>
             </div>
