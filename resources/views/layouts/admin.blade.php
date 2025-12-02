@@ -1,62 +1,148 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>{{ config('app.name', 'Laravel') }} - Admin</title>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ config('app.name', 'OtakAtik') }} - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Style Sidebar persis kayak Dashboard */
+        .sidebar {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        }
+        
+        /* Scrollbar custom biar rapi */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
 </head>
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100">
-        <!-- Navigation -->
-        <nav class="bg-white border-b border-gray-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex">
-                        <!-- Logo -->
-                        <div class="shrink-0 flex items-center">
-                            <a href="{{ route('admin.dashboard') }}">
-                                {{ config('app.name', 'Laravel') }} Admin
-                            </a>
-                        </div>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        
+        <div class="sidebar w-64 text-white flex flex-col flex-shrink-0 transition-all duration-300">
+            <div class="p-6 border-b border-gray-700">
+                <a href="{{ route('admin.dashboard') }}" class="block">
+                    <h1 class="text-2xl font-bold text-white">OtakAtik<span class="text-blue-400">Admin</span></h1>
+                </a>
+            </div>
+            
+            <nav class="flex-1 p-4 overflow-y-auto">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{{ route('admin.dashboard') }}" 
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700' }}">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="{{ route('admin.users') }}" 
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.users*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700' }}">
+                            <i class="fas fa-users w-5"></i>
+                            <span>Participants / Users</span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="{{ route('admin.courses') }}" 
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.courses*') && !request()->routeIs('admin.courses.create*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700' }}">
+                            <i class="fas fa-book w-5"></i>
+                            <span>Course Management</span>
+                        </a>
+                    </li>
 
-                        <!-- Navigation Links -->
-                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                Dashboard
-                            </a>
-                            <a href="{{ route('admin.refunds.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                Refunds
-                            </a>
+                    <li>
+                        <a href="{{ route('admin.categories.index') }}" 
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.categories.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700' }}">
+                            <i class="fas fa-tags w-5"></i>
+                            <span>Kategori</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('admin.courses.create.form') }}" 
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.courses.create*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700' }}">
+                            <i class="fas fa-plus-circle w-5"></i>
+                            <span>Tambah Course</span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="{{ route('admin.financial') }}" 
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.financial*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700' }}">
+                            <i class="fas fa-chart-bar w-5"></i>
+                            <span>Financial Analytics</span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="{{ route('admin.refund') }}" 
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.refund*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700' }}">
+                            <i class="fas fa-exchange-alt w-5"></i>
+                            <span>Refund Management</span>
+                        </a>
+                    </li>
+
+                    <li class="pt-4 mt-4 border-t border-gray-700"></li>
+
+                    <li>
+                        <a href="/" class="flex items-center gap-3 px-4 py-3 text-emerald-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Back to Home</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="p-4 border-t border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">{{ substr(Auth::user()->name ?? 'A', 0, 1) }}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate">{{ Auth::user()->name ?? 'Admin' }}</p>
+                        <p class="text-xs text-gray-400 truncate">Administrator</p>
+                    </div>
+                </div>
+                <form action="{{ route('logout') }}" method="POST" class="mt-4">
+                    @csrf
+                    <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt w-4"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col overflow-hidden h-screen">
+            <header class="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">
+                            @yield('title', 'Admin Panel')
+                        </h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm text-gray-600">Admin Panel</p>
+                            <p class="text-sm font-medium text-gray-800">{{ date('l, F j, Y') }}</p>
                         </div>
                     </div>
                 </div>
-            </div>
-        </nav>
-
-        <!-- Page Heading -->
-        @if (isset($header))
-            <header class="bg-white shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    {{ $header }}
-                </div>
             </header>
-        @endif
 
-        <!-- Page Content -->
-        <main>
-            @yield('content')
-        </main>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+                @yield('content')
+            </main>
+        </div>
     </div>
 </body>
 </html>
