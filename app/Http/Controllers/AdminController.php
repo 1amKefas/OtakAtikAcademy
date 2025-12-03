@@ -535,6 +535,8 @@ class AdminController extends Controller
             'description' => 'required|string',
             'type' => 'required|in:Full Online,Hybrid,Tatap Muka',
             'instructor_id' => 'nullable|exists:users,id',
+            'assistants' => 'nullable|array', // Instruktur Tambahan (Array ID)
+            'assistants.*' => 'exists:users,id',
             'price' => 'required|numeric|min:0',
             'discount_percent' => 'required|numeric|min:0|max:100',
             'discount_code' => 'nullable|string|max:50',
@@ -560,6 +562,7 @@ class AdminController extends Controller
             'description' => $validated['description'],
             'type' => $validated['type'],
             'price' => (float)$validated['price'],
+            'instructor_id' => $request->instructor_id, // <--- Ini Instruktur Utama
             'discount_percent' => (float)$validated['discount_percent'],
             'discount_code' => $validated['discount_code'] ?? null,
             'min_quota' => (int)$validated['min_quota'],
@@ -570,6 +573,13 @@ class AdminController extends Controller
             'current_enrollment' => 0,
             'is_active' => $validated['is_active'] ?? true,
         ];
+
+        // 2. Simpan Instruktur Tambahan (Jika ada)
+        if ($request->has('assistants')) {
+            // Pastikan instruktur utama tidak dimasukkan lagi sebagai asisten
+            $assistants = collect($request->assistants)->reject(fn($id) => $id == $request->instructor_id);
+            $course->assistants()->sync($assistants);
+        }
 
         // Handle Image Upload
         if ($request->hasFile('image')) {
@@ -638,6 +648,7 @@ class AdminController extends Controller
             'description' => 'required|string',
             'type' => 'required|in:Full Online,Hybrid,Tatap Muka',
             'instructor_id' => 'nullable|exists:users,id',
+            'assistants' => 'nullable|array',
             'price' => 'required|numeric|min:0',
             'discount_percent' => 'required|numeric|min:0|max:100',
             'discount_code' => 'nullable|string|max:50',
@@ -655,6 +666,14 @@ class AdminController extends Controller
             'modules.*.id' => 'nullable|integer', // Kalau ada ID berarti update, kalau null berarti create
             'modules.*.title' => 'required|string|max:255',
         ]);
+
+        // Update Instruktur Tambahan (Sync otomatis hapus yang lama, tambah yang baru)
+        if ($request->has('assistants')) {
+            $assistants = collect($request->assistants)->reject(fn($id) => $id == $request->instructor_id);
+            $course->assistants()->sync($assistants);
+        } else {
+            $course->assistants()->detach(); // Hapus semua asisten jika input kosong
+        }
 
         // Handle Image Upload
         if ($request->hasFile('image')) {
