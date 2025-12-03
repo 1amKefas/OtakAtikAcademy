@@ -82,6 +82,18 @@ class Course extends Model
         )->withPivot('active_duration_days', 'zoom_link', 'zoom_start_time', 'notes');
     }
 
+    // Tambahkan relasi ini di dalam class Course
+    public function assistants()
+    {
+        // Mengambil instruktur tambahan dari tabel pivot
+        return $this->belongsToMany(User::class, 'course_instructor', 'course_id', 'user_id');
+    }
+
+    // Helper untuk cek apakah user adalah instruktur (baik utama maupun asisten)
+    public function hasInstructor(User $user)
+    {
+        return $this->instructor_id === $user->id || $this->assistants->contains($user->id);
+    }
     /**
      * Many-to-Many: Course punya banyak categories
      */
