@@ -223,16 +223,28 @@ class StudentController extends Controller
     /**
      * View forum discussions for a course
      */
-    public function forumIndex($courseId)
+    public function forumIndex(Request $request, $courseId)
     {
-        // Get all forum discussions for the course
-        $forums = \App\Models\CourseForum::where('course_id', $courseId)
-            ->with(['user', 'replies.user'])
-            ->orderBy('is_pinned', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('status', 'paid')
+            ->firstOrFail();
+
+        $course = $registration->course;
         
-        return view('student.forum-index', compact('courseId', 'forums'));
+        // Logic Sorting (Terbaru / Terlama)
+        $sort = $request->get('sort', 'latest');
+        
+        $forums = \App\Models\CourseForum::where('course_id', $courseId)
+            ->with(['user', 'replies']) // Eager load biar cepat
+            ->when($sort == 'oldest', function($q) {
+                return $q->orderBy('created_at', 'asc');
+            }, function($q) {
+                return $q->orderBy('created_at', 'desc');
+            })
+            ->paginate(10); // Pagination 10 item per halaman
+
+        return view('student.forum-index', compact('course', 'forums', 'sort'));
     }
 
     public function forumDetail($courseId, $forumId)
@@ -243,6 +255,32 @@ class StudentController extends Controller
             ->firstOrFail();
         
         return view('student.forum.detail', compact('forum', 'courseId'));
+    }
+
+    /**
+     * Simpan Diskusi Baru (Support Gambar di Text Editor)
+     */
+    public function storeForum(Request $request, $courseId)
+    {
+        // Validasi akses
+        $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('status', 'paid')
+            ->firstOrFail();
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string', // Ini isi TinyMCE (HTML)
+        ]);
+
+        \App\Models\CourseForum::create([
+            'course_id' => $courseId,
+            'user_id' => Auth::id(),
+            'title' => $request->title,
+            'message' => $request->message,
+        ]);
+
+        return back()->with('success', 'Diskusi berhasil dibuat!');
     }
 
     public function storeForumReply($courseId, $forumId, \Illuminate\Http\Request $request)

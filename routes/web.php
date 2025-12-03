@@ -324,6 +324,8 @@ Route::middleware(['auth'])->group(function () {
     // Forum Routes (Student)
     Route::prefix('student/course/{courseId}/forum')->name('student.forum.')->group(function () {
         Route::get('/', [StudentController::class, 'forumIndex'])->name('index');
+        // [BARU] Tambahkan baris ini:
+        Route::post('/', [StudentController::class, 'storeForum'])->name('store');
         Route::get('/{forumId}', [StudentController::class, 'forumDetail'])->name('detail');
         Route::post('/{forumId}/reply', [StudentController::class, 'storeForumReply'])->name('reply');
         Route::delete('/{replyId}/reply', [StudentController::class, 'deleteForumReply'])->name('delete-reply');
