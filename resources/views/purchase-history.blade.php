@@ -95,7 +95,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex gap-2">
                                                 @if($registration->status === 'paid')
-                                                <a href="{{ route('course.show', $registration->course->id) }}" 
+                                                <a href="{{ route('course.show.detail', $registration->course->id) }}" 
                                                 class="text-blue-600 hover:text-blue-900" title="Lihat Course">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
