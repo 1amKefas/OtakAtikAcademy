@@ -1,448 +1,259 @@
 @extends('layouts.app')
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $course->title }} - OtakAtik Academy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-gray-50">
+@section('content')
+@push('head')
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+@endpush
+
+<div class="bg-gray-50 min-h-screen pb-20">
     
-    @include('components.navbar')
-
-    <!-- Course Detail Section -->
-    <section class="pt-32 pb-20 px-6">
-        <div class="max-w-4xl mx-auto">
-            <!-- Course Header -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
-                <div class="h-48 bg-gradient-to-r from-blue-500 to-purple-600 relative">
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                        <div class="text-center text-white">
-                            <h1 class="text-4xl font-bold mb-4">{{ $course->title }}</h1>
-                            <p class="text-xl opacity-90">{{ $course->type }} Course</p>
-                            <p class="text-lg opacity-80 mt-2">by {{ $course->instructor->name ?? 'Tidak tersedia' }}</p>
-                        </div>
-                    </div>
+    <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white pt-32 pb-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-3xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <a href="{{ route('course.index') }}" class="text-slate-300 hover:text-white text-sm flex items-center gap-1 transition">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </a>
+                    <span class="px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-full text-xs font-semibold tracking-wide uppercase">
+                        {{ $course->type }}
+                    </span>
                 </div>
-            </div>
-
-            <!-- Course Content -->
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Main Content -->
-                <div class="md:col-span-2">
-                    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Course Description</h2>
-                        <p class="text-gray-600 leading-relaxed">{{ $course->description }}</p>
+                
+                <h1 class="text-3xl md:text-5xl font-bold mb-6 leading-tight">{{ $course->title }}</h1>
+                <p class="text-lg text-slate-300 mb-8 leading-relaxed max-w-2xl">
+                    {{ Str::limit(strip_tags($course->description), 180) }}
+                </p>
+                
+                <div class="flex flex-wrap items-center gap-6 text-sm border-t border-white/10 pt-6">
+                    <div class="flex items-center gap-3">
+                        @if($course->instructor && $course->instructor->profile_picture)
+                            <img src="{{ Storage::url($course->instructor->profile_picture) }}" class="w-10 h-10 rounded-full border-2 border-blue-400">
+                        @else
+                            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg">
+                                {{ substr($course->instructor->name ?? 'O', 0, 1) }}
+                            </div>
+                        @endif
+                        <div>
+                            <p class="text-slate-400 text-xs uppercase tracking-wider">Instructor</p>
+                            <p class="font-medium text-white">{{ $course->instructor->name ?? 'OtakAtik Team' }}</p>
+                        </div>
                     </div>
                     
-                    <div class="mt-10 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                            <i class="fas fa-list-ul text-blue-600"></i> Kurikulum Kursus
-                        </h3>
-
-                        <div class="flex flex-wrap gap-4 mb-6 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-layer-group text-blue-500"></i>
-                                <span>{{ $course->modules->count() }} Modul</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-book-open text-green-500"></i>
-                                <span>{{ $course->modules->sum(fn($m) => $m->materials->where('type', 'file')->count()) }} Bacaan</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-video text-red-500"></i>
-                                <span>{{ $course->modules->sum(fn($m) => $m->materials->where('type', 'video')->count()) }} Video</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-clock text-orange-500"></i>
-                                @php
-                                    $totalQuizMinutes = $course->modules->sum(fn($m) => $m->quizzes->sum('duration_minutes'));
-                                    // Asumsi: 1 Video = 10 menit, 1 Bacaan = 5 menit (Bisa disesuaikan)
-                                    $totalMaterialMinutes = $course->modules->sum(fn($m) => 
-                                        ($m->materials->where('type', 'video')->count() * 10) + 
-                                        ($m->materials->where('type', 'file')->count() * 5)
-                                    );
-                                    $totalMinutes = $totalQuizMinutes + $totalMaterialMinutes;
-                                    $hours = floor($totalMinutes / 60);
-                                    $minutes = $totalMinutes % 60;
-                                @endphp
-                                <span>Total {{ $hours > 0 ? $hours.' Jam ' : '' }}{{ $minutes }} Menit</span>
-                            </div>
-                        </div>
-
-                        <div class="space-y-4" x-data="{ activeModule: 0 }">
-                            @forelse($course->modules as $index => $module)
-                            <div class="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-blue-300">
-                                
-                                <button 
-                                    @click="activeModule === {{ $index }} ? activeModule = null : activeModule = {{ $index }}"
-                                    class="w-full flex items-center justify-between p-5 bg-white hover:bg-gray-50 transition text-left focus:outline-none"
-                                >
-                                    <div>
-                                        <h4 class="font-bold text-gray-800 text-lg mb-1">{{ $module->title }}</h4>
-                                        <p class="text-xs text-gray-500 flex items-center gap-3">
-                                            <span class="flex items-center gap-1"><i class="fas fa-play-circle text-xs"></i> {{ $module->materials->count() }} Materi</span>
-                                            <span class="flex items-center gap-1"><i class="fas fa-clipboard-check text-xs"></i> {{ $module->quizzes->count() }} Kuis</span>
-                                        </p>
-                                    </div>
-                                    <div class="transform transition-transform duration-300 text-gray-400" 
-                                        :class="{'rotate-180 text-blue-600': activeModule === {{ $index }}}">
-                                        <i class="fas fa-chevron-down"></i>
-                                    </div>
-                                </button>
-
-                                <div x-show="activeModule === {{ $index }}" 
-                                    x-collapse
-                                    class="bg-gray-50 border-t border-gray-100"
-                                    style="display: none;"> <div class="p-4 space-y-3">
-                                        @foreach($module->materials as $material)
-                                        <div class="flex items-center gap-3 p-2 rounded hover:bg-white hover:shadow-sm transition">
-                                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 
-                                                {{ $material->type == 'video' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600' }}">
-                                                <i class="fas {{ $material->type == 'video' ? 'fa-play' : 'fa-file-alt' }} text-xs"></i>
-                                            </div>
-                                            <div class="flex-1">
-                                                <p class="text-sm font-medium text-gray-700">{{ $material->title }}</p>
-                                                <p class="text-xs text-gray-400">
-                                                    {{ $material->type == 'video' ? 'Video Pembelajaran' : 'Bahan Bacaan' }}
-                                                </p>
-                                            </div>
-                                            @if($isEnrolled)
-                                                <span class="text-xs text-green-600 font-bold"><i class="fas fa-lock-open"></i> Akses</span>
-                                            @else
-                                                <i class="fas fa-lock text-gray-300 text-sm"></i>
-                                            @endif
-                                        </div>
-                                        @endforeach
-
-                                        @foreach($module->quizzes as $quiz)
-                                        <div class="flex items-center gap-3 p-2 rounded hover:bg-white hover:shadow-sm transition">
-                                            <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
-                                                <i class="fas fa-question text-xs"></i>
-                                            </div>
-                                            <div class="flex-1">
-                                                <p class="text-sm font-medium text-gray-700">{{ $quiz->title }}</p>
-                                                <p class="text-xs text-gray-400">{{ $quiz->duration_minutes }} Menit • Minimal Nilai {{ $quiz->passing_score }}</p>
-                                            </div>
-                                            <i class="fas fa-lock text-gray-300 text-sm"></i>
-                                        </div>
-                                        @endforeach
-
-                                        @foreach($module->assignments as $assignment)
-                                        <div class="flex items-center gap-3 p-2 rounded hover:bg-white hover:shadow-sm transition">
-                                            <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
-                                                <i class="fas fa-pencil-alt text-xs"></i>
-                                            </div>
-                                            <div class="flex-1">
-                                                <p class="text-sm font-medium text-gray-700">{{ $assignment->title }}</p>
-                                                <p class="text-xs text-gray-400">Tugas Praktik</p>
-                                            </div>
-                                            <i class="fas fa-lock text-gray-300 text-sm"></i>
-                                        </div>
-                                        @endforeach
-
-                                        @if($module->materials->isEmpty() && $module->quizzes->isEmpty() && $module->assignments->isEmpty())
-                                            <p class="text-center text-xs text-gray-400 py-2">Konten modul ini sedang disiapkan.</p>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
-                                <p class="text-gray-500">Kurikulum sedang disusun oleh Instruktur.</p>
-                            </div>
-                            @endforelse
-                        </div>
+                    <div class="hidden md:block h-8 w-px bg-white/10"></div>
+                    
+                    <div>
+                        <p class="text-slate-400 text-xs uppercase tracking-wider">Last Updated</p>
+                        <p class="font-medium text-white">{{ $course->updated_at->format('M Y') }}</p>
                     </div>
-
-                    <!-- Course Materials -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Course Materials</h2>
-                        @if($course->materials->count() > 0)
-                            <div class="space-y-4">
-                                @foreach($course->materials as $material)
-                                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-file-pdf text-white text-xl"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-semibold text-gray-800">{{ $material->title }}</h4>
-                                            @if($material->description)
-                                            <p class="text-sm text-gray-600">{{ $material->description }}</p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @if($isEnrolled)
-                                    <a href="/storage/{{ $material->file_path }}" 
-                                       class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2"
-                                       target="_blank">
-                                        <i class="fas fa-download"></i> Download
-                                    </a>
-                                    @else
-                                    <span class="text-gray-500 text-sm">Enroll to access</span>
-                                    @endif
-                                </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-gray-500 text-center py-8">No materials available yet.</p>
-                        @endif
-                    </div>
-
-                    <!-- Assignments -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Course Assignments</h2>
-                        @if($course->assignments->count() > 0)
-                            <div class="space-y-6">
-                                @foreach($course->assignments as $assignment)
-                                <div class="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition-colors">
-                                    <div class="flex items-start justify-between mb-4">
-                                        <div>
-                                            <h4 class="text-xl font-bold text-gray-800">{{ $assignment->title }}</h4>
-                                            @if($assignment->description)
-                                            <p class="text-gray-600 mt-2">{{ $assignment->description }}</p>
-                                            @endif
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-sm text-gray-500">Due Date</div>
-                                            <div class="font-semibold text-gray-800">{{ $assignment->due_date->format('d M Y, H:i') }}</div>
-                                            <div class="text-sm text-blue-600 font-medium">{{ $assignment->max_points }} Points</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                                        <h5 class="font-semibold text-gray-800 mb-2">Instructions:</h5>
-                                        <p class="text-gray-700">{{ $assignment->instructions }}</p>
-                                    </div>
-                                    
-                                    @if($isEnrolled)
-                                    <a href="{{ route('student.assignment.submit.form', $assignment->id) }}" 
-                                       class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all inline-flex items-center gap-2">
-                                        <i class="fas fa-upload"></i> Submit Assignment
-                                    </a>
-                                    @else
-                                    <p class="text-gray-500 text-sm">Enroll to submit assignments</p>
-                                    @endif
-                                </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-gray-500 text-center py-8">No assignments available yet.</p>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Sidebar -->
-                <div class="md:col-span-1">
-                    <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-32">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">Course Info</h3>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-sm text-gray-600">Instructor</p>
-                                <p class="font-semibold text-gray-800">{{ $course->instructor->name ?? 'Tidak tersedia' }}</p>
-                            </div>
-                            
-                            <div>
-                                <p class="text-sm text-gray-600">Course Type</p>
-                                <p class="font-semibold text-gray-800">{{ $course->type }}</p>
-                            </div>
-                            
-                            <div>
-                                <p class="text-sm text-gray-600">Price</p>
-                                @if($course->discount_percent > 0)
-                                <div class="flex items-center gap-2">
-                                    <span class="text-2xl font-bold text-green-600">
-                                        {{ 'Rp' . number_format($course->price * (1 - $course->discount_percent/100), 0, ',', '.') }}
-                                    </span>
-                                    <span class="text-lg text-gray-500 line-through">
-                                        {{ 'Rp' . number_format($course->price, 0, ',', '.') }}
-                                    </span>
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                                        -{{ $course->discount_percent }}%
-                                    </span>
-                                </div>
-                                @else
-                                <span class="text-2xl font-bold text-gray-800">
-                                    {{ 'Rp' . number_format($course->price, 0, ',', '.') }}
-                                </span>
-                                @endif
-                            </div>
-
-                            <div>
-                                <p class="text-sm text-gray-600">Available Slots</p>
-                                <p class="font-semibold text-gray-800">{{ $course->max_quota - $course->current_enrollment }} / {{ $course->max_quota }}</p>
-                            </div>
-                        </div>
-
-                        @if(!$isEnrolled)
-                        <button onclick="showRegistrationForm({{ $course->id }})" 
-                                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-all mt-6">
-                            <i class="fas fa-shopping-cart mr-2"></i> Enroll Now
-                        </button>
-                        @else
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-6">
-                            <p class="text-green-800 font-semibold text-center">
-                                <i class="fas fa-check-circle mr-2"></i>You are enrolled in this course
-                            </p>
-                            <p class="text-green-600 text-sm text-center mt-2">Progress: {{ $userRegistration->progress }}%</p>
-                        </div>
-                        @endif
+                    
+                    <div class="hidden md:block h-8 w-px bg-white/10"></div>
+                    
+                    <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
+                        <i class="fas fa-star text-yellow-400 text-sm"></i>
+                        <span class="font-bold text-white">{{ number_format($course->average_rating ?? 4.8, 1) }}</span>
+                        <span class="text-slate-400 text-xs">({{ $course->rating_count ?? 12 }} reviews)</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Registration Modal -->
-    <div id="registrationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
-            <!-- Header -->
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span class="text-3xl">🎓</span>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">Ready to Enroll?</h3>
-                <p class="text-gray-600 text-sm">Your profile information will be used</p>
-            </div>
-
-            <!-- Course Summary -->
-            <div class="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-100">
-                <p class="text-sm text-gray-700 mb-1">Course</p>
-                <p class="font-bold text-gray-800">{{ $course->title }}</p>
-                <p class="text-lg font-bold text-blue-600 mt-2">Rp{{ number_format($course->price, 0, ',', '.') }}</p>
-            </div>
-
-            <form action="{{ route('checkout.show', $course->id) }}" method="GET">
-                <input type="hidden" name="course_id" id="course_id">
-                
-                <!-- Discount Code Section -->
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        🎁 Discount Code (Optional)
-                    </label>
-                    <div class="flex gap-2">
-                        <input type="text" name="discount_code" id="discountCodeInput"
-                               class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                               placeholder="Enter code if you have one">
-                        <button type="button" onclick="validateDiscountCode()" 
-                                class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-4 py-3 rounded-lg transition-all">
-                            Check
-                        </button>
-                    </div>
-                    <div id="discountMessage" class="mt-2 text-sm hidden"></div>
-                </div>
-
-                <!-- Price Summary -->
-                <div class="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 border border-gray-200">
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">Original Price</span>
-                        <span class="font-medium text-gray-800" id="originalPrice">Rp{{ number_format($course->price, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm hidden" id="discountRowDiv">
-                        <span class="text-gray-600">Discount</span>
-                        <span class="font-medium text-green-600" id="discountAmount">-Rp0</span>
-                    </div>
-                    <div class="border-t border-gray-300 pt-2 flex justify-between items-center">
-                        <span class="font-semibold text-gray-800">Total Price</span>
-                        <span class="font-bold text-lg text-blue-600" id="finalPrice">Rp{{ number_format($course->price, 0, ',', '.') }}</span>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-3">
-                    <button type="submit" 
-                            class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl">
-                        <span class="flex items-center justify-center gap-2">
-                            <i class="fas fa-check-circle"></i> Proceed to Checkout
-                        </span>
-                    </button>
-                    <button type="button" onclick="hideRegistrationForm()" 
-                            class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium">
-                        Cancel
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <script>
-        let courseId = {{ $course->id }};
-        let originalPrice = {{ $course->price }};
+    <div class="max-w-7xl mx-auto px-6 -mt-16">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-8">
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Tentang Kursus Ini</h3>
+                    <div class="prose max-w-none text-gray-600 leading-relaxed">
+                        {!! nl2br(e($course->description)) !!}
+                    </div>
+                </div>
 
-        function showRegistrationForm(cId) {
-            document.getElementById('course_id').value = cId;
-            document.getElementById('registrationModal').classList.remove('hidden');
-            // Reset discount when opening modal
-            resetDiscount();
-        }
-        
-        function hideRegistrationForm() {
-            document.getElementById('registrationModal').classList.add('hidden');
-        }
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-book-open text-blue-600"></i> Materi Pembelajaran
+                        </h3>
+                        <span class="text-sm text-gray-500">{{ $course->modules->count() }} Modul • {{ $course->materials_count ?? $course->modules->sum(fn($m) => $m->materials->count()) }} Konten</span>
+                    </div>
 
-        async function validateDiscountCode() {
-            const code = document.getElementById('discountCodeInput').value.trim();
-            const messageDiv = document.getElementById('discountMessage');
-            const coursePrice = {{ $course->price }};
+                    <div class="space-y-3" x-data="{ activeModule: 0 }">
+                        @forelse($course->modules as $index => $module)
+                        <div class="border border-gray-200 rounded-xl overflow-hidden transition-all duration-200 hover:border-blue-300 bg-white">
+                            <button 
+                                @click="activeModule === {{ $index }} ? activeModule = null : activeModule = {{ $index }}"
+                                class="w-full flex items-center justify-between p-4 bg-gray-50/50 hover:bg-blue-50/30 transition text-left focus:outline-none"
+                            >
+                                <div class="flex items-center gap-4">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                        {{ $index + 1 }}
+                                    </div>
+                                    <h4 class="font-semibold text-gray-800 text-base">{{ $module->title }}</h4>
+                                </div>
+                                <div class="transform transition-transform duration-300 text-gray-400" 
+                                     :class="{'rotate-180 text-blue-600': activeModule === {{ $index }}}">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </button>
 
-            if (!code) {
-                messageDiv.classList.add('hidden');
-                resetDiscount();
-                return;
-            }
+                            <div x-show="activeModule === {{ $index }}" 
+                                 x-collapse
+                                 class="bg-white border-t border-gray-100">
+                                <div class="p-2 space-y-1">
+                                    @foreach($module->materials as $material)
+                                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition ml-2 group">
+                                        <div class="w-6 text-center">
+                                            <i class="fas {{ $material->type == 'video' ? 'fa-play-circle text-red-500' : 'fa-file-alt text-blue-500' }} text-sm group-hover:scale-110 transition"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 flex-1 group-hover:text-gray-900">{{ $material->title }}</span>
+                                        
+                                        @if($material->type == 'video')
+                                            <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Video</span>
+                                        @else
+                                            <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Bacaan</span>
+                                        @endif
+                                    </div>
+                                    @endforeach
+                                    
+                                    @foreach($module->quizzes as $quiz)
+                                    <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition ml-2">
+                                        <div class="w-6 text-center">
+                                            <i class="fas fa-question-circle text-purple-500 text-sm"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 flex-1">{{ $quiz->title }}</span>
+                                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded font-medium">Quiz</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="text-center py-12 bg-white border-2 border-dashed border-gray-200 rounded-xl">
+                            <i class="fas fa-box-open text-gray-300 text-4xl mb-3"></i>
+                            <p class="text-gray-500">Materi kursus sedang disusun.</p>
+                        </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
 
-            try {
-                const response = await fetch('/checkout/voucher-check', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        voucher_code: code,
-                        course_id: courseId
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.valid) {
-                    messageDiv.innerHTML = '<p class="text-green-600 font-semibold flex items-center gap-2"><i class="fas fa-check-circle"></i>' + data.message + '</p>';
-                    messageDiv.classList.remove('hidden');
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-28 z-10">
                     
-                    // Update price display
-                    const discountAmount = coursePrice - data.final_price;
-                    document.getElementById('discountRowDiv').classList.remove('hidden');
-                    document.getElementById('discountAmount').textContent = '-Rp' + formatPrice(discountAmount);
-                    document.getElementById('finalPrice').textContent = 'Rp' + formatPrice(data.final_price);
-                } else {
-                    messageDiv.innerHTML = '<p class="text-red-600 font-semibold flex items-center gap-2"><i class="fas fa-times-circle"></i>' + data.message + '</p>';
-                    messageDiv.classList.remove('hidden');
-                    resetDiscount();
-                }
-            } catch (error) {
-                messageDiv.innerHTML = '<p class="text-red-600">Error validating code</p>';
-                messageDiv.classList.remove('hidden');
-                resetDiscount();
-            }
-        }
+                    <div class="rounded-xl overflow-hidden mb-6 relative group cursor-pointer bg-gray-900 shadow-lg aspect-video">
+                        @if($course->image_url)
+                            <img src="{{ $course->image_url }}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-500">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center">
+                                <i class="fas fa-play-circle text-white/80 text-6xl group-hover:scale-110 transition"></i>
+                            </div>
+                        @endif
+                        
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:bg-white/30 transition">
+                                <i class="fas fa-play text-white text-2xl ml-1"></i>
+                            </div>
+                        </div>
+                        <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">Preview</span>
+                    </div>
 
-        function resetDiscount() {
-            document.getElementById('discountRowDiv').classList.add('hidden');
-            document.getElementById('discountAmount').textContent = '-Rp0';
-            document.getElementById('finalPrice').textContent = 'Rp' + formatPrice(originalPrice);
-        }
+                    <div class="mb-8">
+                        @if($course->price == 0)
+                            <h2 class="text-4xl font-bold text-gray-900 mb-2">GRATIS</h2>
+                        @else
+                            <div class="flex items-end gap-3 flex-wrap">
+                                <h2 class="text-3xl font-bold text-gray-900">
+                                    {{ 'Rp ' . number_format($course->price - ($course->price * ($course->discount_percent/100)), 0, ',', '.') }}
+                                </h2>
+                                @if($course->discount_percent > 0)
+                                    <span class="text-gray-400 line-through mb-1.5 text-base">
+                                        {{ 'Rp ' . number_format($course->price, 0, ',', '.') }}
+                                    </span>
+                                    <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full mb-2">
+                                        {{ $course->discount_percent }}% OFF
+                                    </span>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
 
-        function formatPrice(price) {
-            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-    </script>
+                    @php
+                        $userRegistration = null;
+                        if(Auth::check()) {
+                            $userRegistration = \App\Models\CourseRegistration::where('user_id', Auth::id())
+                                ->where('course_id', $course->id)
+                                ->where('status', 'paid')
+                                ->first();
+                        }
+                    @endphp
 
-</body>
-</html>
+                    @if($userRegistration)
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-5 mb-6 text-center">
+                            <div class="flex items-center justify-center gap-2 text-green-700 font-bold mb-3">
+                                <i class="fas fa-check-circle text-xl"></i>
+                                <span>Anda Terdaftar</span>
+                            </div>
+                            
+                            <div class="w-full bg-green-200 rounded-full h-2.5 mb-1">
+                                <div class="bg-green-600 h-2.5 rounded-full transition-all duration-1000" style="width: {{ $userRegistration->progress }}%"></div>
+                            </div>
+                            <p class="text-xs text-green-600 text-right">{{ $userRegistration->progress }}% Selesai</p>
+                        </div>
+
+                        <a href="{{ route('student.learning.index', $course->id) }}" 
+                           class="block w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-0.5 text-center flex items-center justify-center gap-2">
+                            <span>Lanjut Belajar</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+
+                    @else
+                        <form action="{{ route('checkout.show', $course->id) }}" method="GET">
+                            <button type="submit" class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-orange-200 transition transform hover:-translate-y-0.5 mb-4 flex items-center justify-center gap-2">
+                                <span>Enroll Now</span>
+                                <i class="fas fa-shopping-cart"></i>
+                            </button>
+                        </form>
+                        
+                        <p class="text-center text-xs text-gray-500 mb-6">
+                            <i class="fas fa-shield-alt mr-1"></i> 30-Day Money-Back Guarantee
+                        </p>
+                    @endif
+
+                    <div class="mt-8 space-y-4 pt-6 border-t border-gray-100">
+                        <h4 class="font-bold text-gray-800 text-sm">Kursus ini mencakup:</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-center gap-3 text-sm text-gray-600">
+                                <i class="fas fa-video w-5 text-center text-gray-400"></i>
+                                <span>{{ $course->duration_hours ?? '10+' }} jam video on-demand</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm text-gray-600">
+                                <i class="fas fa-file-download w-5 text-center text-gray-400"></i>
+                                <span>Bahan bacaan & download</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm text-gray-600">
+                                <i class="fas fa-mobile-alt w-5 text-center text-gray-400"></i>
+                                <span>Akses di Perangkat Mobile</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm text-gray-600">
+                                <i class="fas fa-certificate w-5 text-center text-gray-400"></i>
+                                <span>Sertifikat Kelulusan</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100 flex justify-center gap-4">
+                        <button class="text-gray-400 hover:text-blue-600 transition"><i class="fab fa-facebook text-xl"></i></button>
+                        <button class="text-gray-400 hover:text-sky-500 transition"><i class="fab fa-twitter text-xl"></i></button>
+                        <button class="text-gray-400 hover:text-green-600 transition"><i class="fab fa-whatsapp text-xl"></i></button>
+                        <button class="text-gray-400 hover:text-gray-600 transition"><i class="fas fa-link text-xl"></i></button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@endsection
