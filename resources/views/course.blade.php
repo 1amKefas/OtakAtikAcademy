@@ -51,14 +51,16 @@
                     <div class="p-5 flex flex-col flex-1">
                         
                         <div class="flex items-center gap-2 mb-3">
-                            {{-- LOGIKA BARU: Cek Utama dulu, kalau kosong cek Asisten --}}
                             @php
+                                // Logika Prioritas: Utama -> Asisten -> Default
                                 $instructorName = 'OtakAtik Team';
-                                // Cek Instruktur Utama
-                                if ($course->instructor && $course->instructor->name !== 'Tidak tersedia') {
-                                    $instructorName = $course->instructor->name;
+                                $instructor = $course->instructor;
+                                
+                                // 1. Cek Instruktur Utama
+                                if ($instructor && $instructor->name !== 'Tidak tersedia' && $instructor->name !== 'N/A') {
+                                    $instructorName = $instructor->name;
                                 } 
-                                // Cek Instruktur Tambahan (Assistants)
+                                // 2. Jika kosong, Cek Instruktur Tambahan (Asisten)
                                 elseif ($course->assistants && $course->assistants->count() > 0) {
                                     $instructorName = $course->assistants->first()->name;
                                 }

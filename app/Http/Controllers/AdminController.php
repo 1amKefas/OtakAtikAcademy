@@ -562,7 +562,7 @@ class AdminController extends Controller
             'description' => $validated['description'],
             'type' => $validated['type'],
             'price' => (float)$validated['price'],
-            'instructor_id' => $request->instructor_id, // <--- Ini Instruktur Utama
+            'instructor_id' => $validated['instructor_id'], // <--- Ini Instruktur Utama
             'discount_percent' => (float)$validated['discount_percent'],
             'discount_code' => $validated['discount_code'] ?? null,
             'min_quota' => (int)$validated['min_quota'],
@@ -581,16 +581,16 @@ class AdminController extends Controller
         }
 
         // Handle instructor - Full Online tidak butuh instructor
-        if ($validated['type'] === 'Full Online') {
-            $courseData['instructor_id'] = null;
-        } else {
-            $courseData['instructor_id'] = $validated['instructor_id'];
-            
-            // Validasi untuk Hybrid/Tatap Muka harus punya instructor
-            if (empty($validated['instructor_id'])) {
-                return redirect()->back()->withErrors(['instructor_id' => 'Instruktur harus dipilih untuk course Hybrid/Tatap Muka'])->withInput();
-            }
-        }
+        //if ($validated['type'] === 'Full Online') {
+        //    $courseData['instructor_id'] = null;
+        // } else {
+        //    $courseData['instructor_id'] = $validated['instructor_id'];
+        //    
+        //    // Validasi untuk Hybrid/Tatap Muka harus punya instructor
+        //    if (empty($validated['instructor_id'])) {
+        //        return redirect()->back()->withErrors(['instructor_id' => 'Instruktur harus dipilih untuk course Hybrid/Tatap Muka'])->withInput();
+        //    }
+        //}
 
         // 1. Simpan Course
         $course = Course::create($courseData);
@@ -688,9 +688,9 @@ class AdminController extends Controller
         }
 
         // Handle instructor
-        if ($validated['type'] === 'Full Online') {
-            $validated['instructor_id'] = null;
-        }
+        // if ($validated['type'] === 'Full Online') {
+        //    $validated['instructor_id'] = null;
+        // }
 
         // 1. Update Data Course Utama
         $course->update(collect($validated)->except(['modules', 'categories'])->toArray());

@@ -30,14 +30,15 @@ class InstructorController extends Controller
 
         $instructor = Auth::user();
         $taughtCourses = Course::where(function($q) use ($instructor) {
-                $q->where('instructor_id', $instructor->id)
+                $q->where('instructor_id', $instructor->id) // Cek sebagai Instruktur Utama
                   ->orWhereHas('assistants', function($sq) use ($instructor) {
-                      $sq->where('users.id', $instructor->id);
+                      $sq->where('users.id', $instructor->id); // Cek sebagai Asisten
                   });
             })
             ->withCount(['registrations' => function($query) {
                 $query->where('status', 'paid');
             }])
+            // ->latest() // Tambahkan latest() kalau mau urutan terbaru
             ->get();
 
         $totalStudents = 0;
