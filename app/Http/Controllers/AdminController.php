@@ -574,13 +574,6 @@ class AdminController extends Controller
             'is_active' => $validated['is_active'] ?? true,
         ];
 
-        // 2. Simpan Instruktur Tambahan (Jika ada)
-        if ($request->has('assistants')) {
-            // Pastikan instruktur utama tidak dimasukkan lagi sebagai asisten
-            $assistants = collect($request->assistants)->reject(fn($id) => $id == $request->instructor_id);
-            $course->assistants()->sync($assistants);
-        }
-
         // Handle Image Upload
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('courses', 'public');
@@ -601,6 +594,13 @@ class AdminController extends Controller
 
         // 1. Simpan Course
         $course = Course::create($courseData);
+
+        // 2. Simpan Instruktur Tambahan (Jika ada)
+        if ($request->has('assistants')) {
+            // Pastikan instruktur utama tidak dimasukkan lagi sebagai asisten
+            $assistants = collect($request->assistants)->reject(fn($id) => $id == $request->instructor_id);
+            $course->assistants()->sync($assistants);
+        }
 
         // Attach categories if provided
         if (!empty($validated['categories'])) {
