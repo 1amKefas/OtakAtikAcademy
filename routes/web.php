@@ -19,6 +19,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\FinancialController;
+use App\Models\Category;
 
 // --- GOOGLE AUTH ROUTES ---
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
@@ -84,7 +85,11 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 // Public Routes
 Route::get('/', function () {
-    return view('dashboard');
+    // Ambil kategori biar slidernya jalan
+    $categories = \App\Models\Category::orderBy('sort_order', 'asc')->get();
+    
+    // Kirim ke view
+    return view('dashboard', compact('categories'));
 })->name('home');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

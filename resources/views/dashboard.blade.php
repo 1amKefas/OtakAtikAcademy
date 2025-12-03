@@ -12,8 +12,8 @@
                 TIPS: Simpan gambar background lo di: public/images/hero-bg.jpg
                 Kalau nama filenya beda, ganti 'hero-bg.jpg' di bawah ini.
             --}}
-            <img src="{{ asset('images/home_background.png') }}" 
-                 alt="Hero Background" 
+            <img src="{{ asset('home_background.png') }}" 
+                 alt="Home Background" 
                  class="w-full h-full object-cover"
                  onerror="this.style.display='none'"> {{-- Kalau gambar gak ada, sembunyiin (pake warna backup) --}}
         </div>
