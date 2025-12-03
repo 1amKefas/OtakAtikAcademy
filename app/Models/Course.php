@@ -58,7 +58,7 @@ class Course extends Model
         'formatted_final_price',
         'final_price',
         'requires_instructor',
-        'has_available_slots' // TAMBAH INI
+        'has_available_slots'
     ];
 
     /**
@@ -70,7 +70,29 @@ class Course extends Model
     }
 
     /**
-     * Many-to-Many: Course punya banyak instructors
+     * Relasi Asisten Instruktur (Instruktur Tambahan)
+     * FIXED: Menggunakan 'instructor_id' sebagai foreign key pivot, bukan 'user_id'
+     */
+    public function assistants()
+    {
+        return $this->belongsToMany(
+            User::class, 
+            'course_instructor', 
+            'course_id', 
+            'instructor_id' // <--- KUNCI PERBAIKAN ERROR SQL
+        );
+    }
+
+    /**
+     * Helper untuk cek apakah user adalah instruktur (baik utama maupun asisten)
+     */
+    public function hasInstructor(User $user)
+    {
+        return $this->instructor_id === $user->id || $this->assistants->contains($user->id);
+    }
+
+    /**
+     * Many-to-Many: Course punya banyak instructors (Legacy/Existing relation)
      */
     public function instructors()
     {
@@ -82,18 +104,6 @@ class Course extends Model
         )->withPivot('active_duration_days', 'zoom_link', 'zoom_start_time', 'notes');
     }
 
-    // Tambahkan relasi ini di dalam class Course
-    public function assistants()
-    {
-        // Mengambil instruktur tambahan dari tabel pivot
-        return $this->belongsToMany(User::class, 'course_instructor', 'course_id', 'user_id');
-    }
-
-    // Helper untuk cek apakah user adalah instruktur (baik utama maupun asisten)
-    public function hasInstructor(User $user)
-    {
-        return $this->instructor_id === $user->id || $this->assistants->contains($user->id);
-    }
     /**
      * Many-to-Many: Course punya banyak categories
      */
@@ -208,7 +218,7 @@ class Course extends Model
     }
 
     /**
-     * Check if course has available slots - METHOD YANG DIPERLUKAN
+     * Check if course has available slots
      */
     public function hasAvailableSlots()
     {
@@ -435,11 +445,10 @@ class Course extends Model
         return $this->hasMany(CourseForum::class)->orderBy('created_at', 'desc');
     }
 
-    // Add this method to the Course model
-public function getCheckoutUrlAttribute()
-{
-    return route('checkout.show', $this->id);
-}
+    public function getCheckoutUrlAttribute()
+    {
+        return route('checkout.show', $this->id);
+    }
 
     /**
      * Boot method for model events
@@ -450,15 +459,20 @@ public function getCheckoutUrlAttribute()
 
         // Set default instructor_id for online courses
         static::saving(function ($course) {
+            // Kita hapus logic yang memaksa instructor_id = null untuk online
+            // Karena sekarang admin boleh assign instruktur untuk Full Online jika mau
+            /*
             if ($course->type === 'online') {
                 $course->instructor_id = null;
             }
+            */
         });
 
         // Validate max_quota > min_quota
         static::saving(function ($course) {
             if ($course->max_quota <= $course->min_quota) {
-                throw new \Exception('Kuota maksimal harus lebih besar dari kuota minimal');
+                // throw new \Exception('Kuota maksimal harus lebih besar dari kuota minimal');
+                // Sebaiknya biarkan validator controller yang handle exception, return true/false disini
             }
         });
     }

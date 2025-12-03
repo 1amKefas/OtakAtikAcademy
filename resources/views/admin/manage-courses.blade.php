@@ -142,35 +142,55 @@
                                         </select>
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-700 mb-1 block">Kategori</label>
-                                        <select name="category_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="">Pilih Kategori</option>
-                                            @foreach($categories as $category)
-                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">Kategori</label>
+                                            <select name="category_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="">Pilih Kategori</option>
+                                                @foreach($categories as $category)
+                                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">Template Sertifikat</label>
+                                            <select name="certificate_template_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="">Default (Otomatis)</option>
+                                                @foreach($certificates as $cert)
+                                                    <option value="{{ $cert->id }}">{{ $cert->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-700 mb-1 block">Template Sertifikat</label>
-                                        <select name="certificate_template_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="">Default (Otomatis)</option>
-                                            @foreach($certificates as $cert)
-                                                <option value="{{ $cert->id }}">{{ $cert->name }}</option>
-                                            @endforeach
-                                        </select>
+
+                                    <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/50">
+                                        <h4 class="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-1">
+                                            <i class="fas fa-chalkboard-teacher"></i> Tim Pengajar
+                                        </h4>
+                                        
+                                        <div class="mb-3">
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">
+                                                Instruktur Utama <span id="instructor-required" class="text-red-500" style="display:none">*</span>
+                                            </label>
+                                            <select name="instructor_id" id="instructor_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="">Pilih Instruktur</option>
+                                                @foreach($instructors as $instructor)
+                                                <option value="{{ $instructor->id }}">{{ $instructor->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p class="text-[10px] text-blue-500 mt-1" id="instructor-note">Opsional untuk Full Online (Bisa dipilih jika ada)</p>
+                                        </div>
+
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">Instruktur Tambahan</label>
+                                            <select name="assistants[]" multiple class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 text-sm custom-scrollbar">
+                                                @foreach($instructors as $instructor)
+                                                <option value="{{ $instructor->id }}">{{ $instructor->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p class="text-[10px] text-gray-400 mt-1">Tahan CTRL/CMD untuk pilih banyak</p>
+                                        </div>
                                     </div>
-                                </div>
-                                    <div id="instructorField" style="display: none;">
-                                        <label class="text-sm font-medium text-gray-700 mb-1 block">Assign Instruktur</label>
-                                        <select name="instructor_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="">Pilih Instruktur</option>
-                                            @foreach($instructors as $instructor)
-                                            <option value="{{ $instructor->id }}">{{ $instructor->name }}</option>
-                                            @endforeach
-                                        </select>
                                     </div>
-                                </div>
                                 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
@@ -405,14 +425,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
         function toggleInstructorField(type) {
-            const field = document.getElementById('instructorField');
-            if (type === 'Hybrid' || type === 'Tatap Muka') {
-                field.style.display = 'block';
-                field.querySelector('select').required = true;
+            const instructorInput = document.getElementById('instructor_id');
+            const requiredStar = document.getElementById('instructor-required');
+            const noteText = document.getElementById('instructor-note');
+            
+            if (type === 'Full Online') {
+                instructorInput.removeAttribute('required');
+                requiredStar.style.display = 'none';
+                noteText.innerHTML = 'Opsional untuk Full Online (Bisa dipilih jika ada)';
+                noteText.classList.add('text-blue-500');
+                noteText.classList.remove('text-gray-500');
             } else {
-                field.style.display = 'none';
-                field.querySelector('select').required = false;
-                field.querySelector('select').value = '';
+                instructorInput.setAttribute('required', 'required');
+                requiredStar.style.display = 'inline';
+                noteText.innerHTML = 'Wajib untuk Hybrid & Tatap Muka';
+                noteText.classList.remove('text-blue-500');
+                noteText.classList.add('text-gray-500');
             }
         }
 

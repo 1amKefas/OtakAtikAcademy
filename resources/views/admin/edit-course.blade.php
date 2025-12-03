@@ -159,17 +159,30 @@
                                     </select>
                                 </div>
                                 
-                                <div id="instructorField" style="{{ in_array($course->type, ['Hybrid', 'Tatap Muka']) ? 'display: block;' : 'display: none;' }}">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">Instruktur</label>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Instruktur Utama</label>
                                     <select name="instructor_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
-                                        <option value="">Pilih Instruktur</option>
+                                        <option value="">Pilih Instruktur Utama</option>
                                         @foreach($instructors as $instructor)
                                         <option value="{{ $instructor->id }}" {{ $course->instructor_id == $instructor->id ? 'selected' : '' }}>
                                             {{ $instructor->name }}
                                         </option>
                                         @endforeach
                                     </select>
+                                    <p class="text-xs text-gray-500 mt-1">Wajib untuk Hybrid & Tatap Muka. Opsional untuk Online.</p>
                                 </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Instruktur Tambahan</label>
+                                <select name="assistants[]" multiple class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white shadow-sm h-32">
+                                    @foreach($instructors as $instructor)
+                                    <option value="{{ $instructor->id }}" {{ $course->assistants->contains($instructor->id) ? 'selected' : '' }}>
+                                        {{ $instructor->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Tekan CTRL (Windows) atau CMD (Mac) untuk memilih lebih dari satu.</p>
                             </div>
 
                             <div class="grid grid-cols-2 gap-6">
@@ -280,9 +293,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
+        // Modified: Always block display, logic handled in controller for requirement
         function toggleInstructorField(type) {
-            const field = document.getElementById('instructorField');
-            field.style.display = (type === 'Hybrid' || type === 'Tatap Muka') ? 'block' : 'none';
+            // Kita biarkan field selalu visible agar admin bisa assign kapan saja
+            // Validasi 'Required' dihandle di backend atau form submit jika perlu
         }
 
         const imageInput = document.getElementById('imageInput');

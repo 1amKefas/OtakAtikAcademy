@@ -5,7 +5,6 @@
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-4xl mx-auto px-4">
-        <!-- Header -->
         <div class="mb-6">
             <a href="{{ route('admin.courses.manage') }}" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,7 +15,6 @@
             <h1 class="text-3xl font-bold text-gray-800 mt-4">Create New Course</h1>
         </div>
 
-        <!-- Error Messages -->
         @if($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
             <strong class="font-bold">Oops! Ada kesalahan:</strong>
@@ -34,12 +32,10 @@
         </div>
         @endif
 
-        <!-- Form -->
         <div class="bg-white rounded-lg shadow-md p-8">
             <form action="{{ route('admin.courses.create') }}" method="POST" enctype="multipart/form-data" id="createCourseForm">
                 @csrf
 
-                <!-- Course Title -->
                 <div class="mb-6">
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
                         Course Title <span class="text-red-500">*</span>
@@ -55,7 +51,6 @@
                     >
                 </div>
 
-                <!-- Description -->
                 <div class="mb-6">
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
                         Description <span class="text-red-500">*</span>
@@ -70,7 +65,6 @@
                     >{{ old('description') }}</textarea>
                 </div>
 
-                <!-- Course Type -->
                 <div class="mb-6">
                     <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
                         Course Type <span class="text-red-500">*</span>
@@ -86,30 +80,54 @@
                         <option value="Hybrid" {{ old('type') == 'Hybrid' ? 'selected' : '' }}>Hybrid</option>
                         <option value="Tatap Muka" {{ old('type') == 'Tatap Muka' ? 'selected' : '' }}>Tatap Muka</option>
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">Full Online tidak memerlukan instructor</p>
+                    <p class="text-xs text-gray-500 mt-1">Full Online opsional memiliki instructor, Hybrid/Tatap Muka wajib.</p>
                 </div>
 
-                <!-- Instructor -->
-                <div class="mb-6" id="instructor-field">
-                    <label for="instructor_id" class="block text-sm font-medium text-gray-700 mb-2">
-                        Instructor <span class="text-red-500" id="instructor-required">*</span>
-                    </label>
-                    <select 
-                        name="instructor_id" 
-                        id="instructor_id"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                        <option value="">Select Instructor</option>
-                        @foreach($instructors as $instructor)
-                        <option value="{{ $instructor->id }}" {{ old('instructor_id') == $instructor->id ? 'selected' : '' }}>
-                            {{ $instructor->name }} ({{ $instructor->email }})
-                        </option>
-                        @endforeach
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1" id="instructor-note">Required for Hybrid and Tatap Muka courses</p>
+                <div class="mb-6 border border-gray-200 rounded-xl p-5 bg-gray-50">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        Tim Pengajar
+                    </h3>
+
+                    <div class="mb-4" id="instructor-field">
+                        <label for="instructor_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Instruktur Utama (Primary) <span class="text-red-500" id="instructor-required">*</span>
+                        </label>
+                        <select 
+                            name="instructor_id" 
+                            id="instructor_id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Pilih Instruktur Utama</option>
+                            @foreach($instructors as $instructor)
+                            <option value="{{ $instructor->id }}" {{ old('instructor_id') == $instructor->id ? 'selected' : '' }}>
+                                {{ $instructor->name }} ({{ $instructor->email }})
+                            </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1" id="instructor-note">Akan tampil sebagai pengajar utama.</p>
+                    </div>
+
+                    <div>
+                        <label for="assistants" class="block text-sm font-medium text-gray-700 mb-2">
+                            Instruktur Tambahan (Assistants)
+                        </label>
+                        <select 
+                            name="assistants[]" 
+                            id="assistants"
+                            multiple
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
+                        >
+                            @foreach($instructors as $instructor)
+                            <option value="{{ $instructor->id }}" {{ (collect(old('assistants'))->contains($instructor->id)) ? 'selected' : '' }}>
+                                {{ $instructor->name }} ({{ $instructor->email }})
+                            </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Tahan tombol CTRL (Windows) atau Command (Mac) untuk memilih lebih dari satu.</p>
+                    </div>
                 </div>
 
-                <!-- Price & Discount -->
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
@@ -142,7 +160,6 @@
                     </div>
                 </div>
 
-                <!-- Discount Code -->
                 <div class="mb-6">
                     <label for="discount_code" class="block text-sm font-medium text-gray-700 mb-2">
                         Discount Code (Optional)
@@ -157,7 +174,6 @@
                     >
                 </div>
 
-                <!-- Quota -->
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="min_quota" class="block text-sm font-medium text-gray-700 mb-2">
@@ -191,7 +207,6 @@
                     </div>
                 </div>
 
-                <!-- Duration -->
                 <div class="mb-6">
                     <label for="duration_days" class="block text-sm font-medium text-gray-700 mb-2">
                         Duration (Days) <span class="text-red-500">*</span>
@@ -208,7 +223,6 @@
                     >
                 </div>
 
-                <!-- Start & End Date -->
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
@@ -237,7 +251,6 @@
                     </div>
                 </div>
 
-                <!-- Image Upload -->
                 <div class="mb-6">
                     <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
                         Course Image (Optional)
@@ -252,7 +265,6 @@
                     <p class="text-xs text-gray-500 mt-1">Max 2MB (jpeg, png, jpg, gif)</p>
                 </div>
 
-                <!-- Is Active -->
                 <div class="mb-6">
                     <label class="flex items-center">
                         <input 
@@ -268,7 +280,6 @@
                     </label>
                 </div>
 
-                <!-- Categories -->
                 <div class="mb-6">
                     <label for="categories" class="block text-sm font-medium text-gray-700 mb-2">
                         Categories <span class="text-red-500">*</span>
@@ -293,7 +304,6 @@
                     <p class="text-xs text-gray-500 mt-1">Select one or more categories (Hold Ctrl/Cmd to select multiple)</p>
                 </div>
 
-                <!-- Buttons -->
                 <div class="flex items-center gap-4 pt-6 border-t">
                     <button 
                         type="submit"
@@ -325,15 +335,18 @@ document.getElementById('type').addEventListener('change', function() {
     const instructorNote = document.getElementById('instructor-note');
     
     if (type === 'Full Online') {
+        // Untuk Full Online, instruktur opsional (TAPI BISA DIISI)
         instructorField.removeAttribute('required');
         instructorRequired.style.display = 'none';
-        instructorNote.textContent = 'Not required for Full Online courses';
+        instructorNote.textContent = 'Opsional untuk Full Online (Bisa dipilih jika ada)';
         instructorNote.classList.add('text-blue-500');
-        instructorField.value = '';
+        // KITA HAPUS LINE YANG MENGOSONGKAN VALUE, SUPAYA ADMIN BISA PILIH
+        // instructorField.value = ''; 
     } else {
+        // Untuk Hybrid/Tatap Muka, instruktur wajib
         instructorField.setAttribute('required', 'required');
         instructorRequired.style.display = 'inline';
-        instructorNote.textContent = 'Required for Hybrid and Tatap Muka courses';
+        instructorNote.textContent = 'Wajib untuk Hybrid dan Tatap Muka';
         instructorNote.classList.remove('text-blue-500');
     }
 });
