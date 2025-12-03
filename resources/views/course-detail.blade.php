@@ -249,6 +249,7 @@
                         <button class="text-gray-400 hover:text-green-600 transition"><i class="fab fa-whatsapp text-xl"></i></button>
                         <button class="text-gray-400 hover:text-gray-600 transition"><i class="fas fa-link text-xl"></i></button>
                     </div>
+                    
 
                 </div>
             </div>
