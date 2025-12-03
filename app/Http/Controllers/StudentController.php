@@ -60,26 +60,24 @@ class StudentController extends Controller
      */
     public function courseDetail($registrationId)
     {
-        // 1. Ambil data registrasi milik user yang sedang login
         $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
             ->where('id', $registrationId)
             ->where('status', 'paid')
             ->firstOrFail();
 
-        // 2. Ambil data course dari relasi registrasi
-        // Kita perlu eager load modules, materials, quizzes, dan instructor biar query efisien
+        // [UPDATE] Tambahkan 'forums.user' dan 'forums.replies' di eager loading
         $course = $registration->course()->with([
             'instructor',
-            'modules' => function($q) {
-                $q->orderBy('order');
+            'modules' => function($q) { $q->orderBy('order'); },
+            'modules.materials',
+            'modules.quizzes',
+            'forums' => function($q) { // Load 5 diskusi terbaru
+                $q->orderBy('created_at', 'desc')->take(5);
             },
-            'modules.materials' => function($q) {
-                $q->orderBy('order');
-            },
-            'modules.quizzes'
+            'forums.user',   // Siapa yg posting
+            'forums.replies' // Hitung balasan
         ])->first();
 
-        // 3. Kirim variabel $course dan $registration ke view
         return view('student.course-detail', compact('course', 'registration'));
     }
 
