@@ -83,6 +83,26 @@ class Course extends Model
     }
 
     /**
+     * Relasi ke Instruktur Tambahan (Sesuai Migration course_instructors)
+     */
+    public function assistants()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'course_instructors', // Nama tabel harus PLURAL (pakai 's')
+            'course_id',
+            'user_id'             // Nama kolom di migration kamu adalah 'user_id'
+        );
+    }
+
+    /**
+     * Helper untuk cek akses instruktur
+     */
+    public function hasInstructor(User $user)
+    {
+        return $this->instructor_id === $user->id || $this->assistants->contains($user->id);
+    }
+    /**
      * Many-to-Many: Course punya banyak categories
      */
     public function categories()
@@ -437,11 +457,11 @@ public function getCheckoutUrlAttribute()
         parent::boot();
 
         // Set default instructor_id for online courses
-        static::saving(function ($course) {
-            if ($course->type === 'online') {
-                $course->instructor_id = null;
-            }
-        });
+        // static::saving(function ($course) {
+        //    if ($course->type === 'online') {
+        //        $course->instructor_id = null;
+        //    }
+        // });
 
         // Validate max_quota > min_quota
         static::saving(function ($course) {

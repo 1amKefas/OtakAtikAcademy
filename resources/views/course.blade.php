@@ -51,13 +51,21 @@
                     <div class="p-5 flex flex-col flex-1">
                         
                         <div class="flex items-center gap-2 mb-3">
-                            @if($course->instructor)
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode($course->instructor->name) }}&background=random&color=fff" class="w-6 h-6 rounded-full border border-white shadow-sm">
-                                <span class="text-xs font-semibold text-gray-500 truncate">{{ $course->instructor->name }}</span>
-                            @else
-                                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] text-blue-600 font-bold">OA</div>
-                                <span class="text-xs font-semibold text-gray-500">OtakAtik Team</span>
-                            @endif
+                            {{-- LOGIKA BARU: Cek Utama dulu, kalau kosong cek Asisten --}}
+                            @php
+                                $instructorName = 'OtakAtik Team';
+                                // Cek Instruktur Utama
+                                if ($course->instructor && $course->instructor->name !== 'Tidak tersedia') {
+                                    $instructorName = $course->instructor->name;
+                                } 
+                                // Cek Instruktur Tambahan (Assistants)
+                                elseif ($course->assistants && $course->assistants->count() > 0) {
+                                    $instructorName = $course->assistants->first()->name;
+                                }
+                            @endphp
+
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($instructorName) }}&background=random&color=fff" class="w-6 h-6 rounded-full border border-white shadow-sm">
+                            <span class="text-xs font-semibold text-gray-500 truncate">{{ $instructorName }}</span>
                         </div>
 
                         <h3 class="text-lg font-bold text-gray-900 leading-snug mb-2 line-clamp-2 min-h-[3.5rem]" title="{{ $course->title }}">

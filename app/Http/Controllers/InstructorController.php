@@ -29,9 +29,16 @@ class InstructorController extends Controller
         }
 
         $instructor = Auth::user();
-        $taughtCourses = $instructor->taughtCourses()->withCount(['registrations' => function($query) {
-            $query->where('status', 'paid');
-        }])->get();
+        $taughtCourses = Course::where(function($q) use ($instructor) {
+                $q->where('instructor_id', $instructor->id)
+                  ->orWhereHas('assistants', function($sq) use ($instructor) {
+                      $sq->where('users.id', $instructor->id);
+                  });
+            })
+            ->withCount(['registrations' => function($query) {
+                $query->where('status', 'paid');
+            }])
+            ->get();
 
         $totalStudents = 0;
         $totalAssignments = 0;
@@ -181,9 +188,17 @@ class InstructorController extends Controller
         }
 
         $instructor = Auth::user();
-        $courses = $instructor->taughtCourses()->withCount(['registrations' => function($query) {
-            $query->where('status', 'paid');
-        }])->latest()->get();
+        $courses = Course::where(function($q) use ($instructor) {
+                $q->where('instructor_id', $instructor->id)
+                  ->orWhereHas('assistants', function($sq) use ($instructor) {
+                      $sq->where('users.id', $instructor->id);
+                  });
+            })
+            ->withCount(['registrations' => function($query) {
+                $query->where('status', 'paid');
+            }])
+            ->latest()
+            ->get();
 
         return view('instructor.courses', compact('courses'));
     }
