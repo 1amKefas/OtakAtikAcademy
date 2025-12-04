@@ -30,6 +30,27 @@ class ModuleController extends Controller
     }
 
     /**
+     * Reorder Modules via AJAX
+     */
+    public function reorder(Request $request, Course $course)
+    {
+        // 1. Validasi input
+        $request->validate([
+            'ordered_ids' => 'required|array',
+            'ordered_ids.*' => 'exists:course_modules,id',
+        ]);
+
+        // 2. Loop dan update urutan
+        foreach ($request->ordered_ids as $index => $moduleId) {
+            \App\Models\CourseModule::where('id', $moduleId)
+                ->where('course_id', $course->id) // Pastikan modul milik course ini
+                ->update(['sort_order' => $index + 1]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Store a newly created module
      */
     public function store(Request $request, Course $course)

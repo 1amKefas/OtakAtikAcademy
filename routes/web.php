@@ -292,6 +292,8 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::get('/courses/{course}/modules', [ModuleController::class, 'index'])->name('modules.index');
     Route::get('/courses/{course}/modules/create', [ModuleController::class, 'create'])->name('modules.create');
     Route::post('/courses/{course}/modules', [ModuleController::class, 'store'])->name('modules.store');
+    // [BARU] Route Reorder Modul
+    Route::post('/courses/{course}/modules/reorder', [ModuleController::class, 'reorder'])->name('modules.reorder');
     Route::get('/courses/{course}/modules/{module}', [ModuleController::class, 'show'])->name('modules.show');
     Route::get('/courses/{course}/modules/{module}/edit', [ModuleController::class, 'edit'])->name('modules.edit');
     Route::put('/courses/{course}/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');

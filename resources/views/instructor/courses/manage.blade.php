@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Course - {{ $course->title }}</title>
     
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -27,6 +31,11 @@
         
         /* TinyMCE Fixes */
         .tox-tinymce { border-radius: 0.5rem !important; border-color: #e2e8f0 !important; }
+        
+        /* [ADD] Styling Drag Handle */
+        .handle { cursor: grab; }
+        .handle:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
     </style>
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden" x-data="contentManager">
@@ -87,13 +96,13 @@
                 </button>
             </div>
 
-            <div class="space-y-6 pb-20">
-                @forelse($course->modules as $module)
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" x-data="{ open: true }">
+            <div id="modules-list" class="space-y-6 pb-20">
+                @forelse($course->modules->sortBy('order') as $module)
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden module-item" data-id="{{ $module->id }}" x-data="{ open: true }">
                     
                     <div class="p-4 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between group transition hover:bg-gray-100">
                         <div class="flex items-center gap-4 cursor-pointer flex-1" @click="open = !open">
-                            <div class="text-gray-400 cursor-move hover:text-gray-600">
+                            <div class="text-gray-400 cursor-move hover:text-gray-600 handle" @click.stop>
                                 <i class="fas fa-grip-vertical"></i>
                             </div>
                             <div>
@@ -185,23 +194,6 @@
                                         @csrf @method('DELETE')
                                         <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded opacity-0 group-hover:opacity-100 transition"><i class="fas fa-times"></i></button>
                                     </form>
-                                </div>
-                            </div>
-                            @endforeach
-
-                            @foreach($module->quizzes as $quiz)
-                            <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-purple-200 hover:bg-purple-50 group transition mt-1">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
-                                        <i class="fas fa-question-circle"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-gray-800">{{ $quiz->title }}</p>
-                                        <p class="text-xs text-gray-500">Kuis • {{ $quiz->duration_minutes }} Menit</p>
-                                    </div>
-                                </div>
-                                <div class="opacity-0 group-hover:opacity-100 transition">
-                                    <a href="#" class="text-gray-400 hover:text-purple-600 p-2"><i class="fas fa-cog"></i></a>
                                 </div>
                             </div>
                             @endforeach
@@ -336,8 +328,6 @@
             Alpine.data('contentManager', () => ({
                 showModuleModal: false,
                 showContentModal: false,
-                
-                // [ADD] State baru untuk Quiz
                 showQuizModal: false, 
                 activeModuleId: null,
                 
@@ -345,23 +335,20 @@
                     this.activeModuleId = moduleId;
                     this.showContentModal = true;
                     
-                    // Init TinyMCE with delay to ensure DOM is ready
                     setTimeout(() => {
                         if (tinymce.get('richEditor')) {
-                            tinymce.get('richEditor').remove(); // Clear previous instance
+                            tinymce.get('richEditor').remove();
                         }
                         
                         tinymce.init({
                             selector: '#richEditor',
                             height: 400,
                             menubar: false,
-                            // [BARU] Tambahkan baris ini biar aman dari warning lisensi
                             license_key: 'gpl',
                             plugins: 'image media link lists table code preview wordcount',
                             toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image media | code',
                             branding: false,
                             promotion: false,
-                            // Enable Base64 Image Upload (Drag & Drop)
                             images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
                                 const reader = new FileReader();
                                 reader.readAsDataURL(blobInfo.blob());
@@ -372,15 +359,52 @@
                     }, 100);
                 },
                 
-                // [ADD] Fungsi Buka Modal Quiz
                 openQuizModal(moduleId) {
                     this.activeModuleId = moduleId;
                     this.showQuizModal = true;
                 },
-
             }))
         });
+
+        // [ADD] Script SortableJS Reorder
+        document.addEventListener('DOMContentLoaded', function () {
+            var el = document.getElementById('modules-list');
+            
+            if(el) {
+                var sortable = Sortable.create(el, {
+                    handle: '.handle', // Hanya bisa drag dari icon grip
+                    animation: 150,
+                    ghostClass: 'sortable-ghost', // Class saat elemen di-drag
+                    
+                    onEnd: function (evt) {
+                        // Ambil urutan ID baru
+                        var orderedIds = sortable.toArray();
+                        
+                        // Kirim ke Server via Fetch
+                        fetch("{{ route('instructor.modules.reorder', $course->id) }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                ordered_ids: orderedIds
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.success) {
+                                console.log('Urutan modul diperbarui');
+                                // Opsional: Toast notifikasi sukses kecil
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    }
+                });
+            }
+        });
     </script>
+
     <div x-show="showQuizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in" @click.outside="showQuizModal = false">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
