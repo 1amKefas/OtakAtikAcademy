@@ -162,6 +162,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/courses/create', [AdminController::class, 'createCourse'])->name('courses.create');
     Route::get('/courses/export', [AdminController::class, 'exportCourses'])->name('courses.export');
     
+    // [BARU] Route Admin Reorder Modul
+    Route::post('/courses/{course}/modules/reorder', [ModuleController::class, 'reorder'])->name('modules.reorder');
+    
+    // [BARU] Route Admin Reorder Konten (Materi & Quiz)
+    Route::post('/courses/{course}/modules/{module}/contents/reorder', [ModuleController::class, 'reorderContents'])->name('modules.contents.reorder');
+    
     // COURSES: Route dengan parameter {id} HARUS di BAWAH
     Route::get('/courses/{id}/edit', [AdminController::class, 'editCourse'])->name('courses.edit');
     Route::put('/courses/{id}', [AdminController::class, 'updateCourse'])->name('courses.update');

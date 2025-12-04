@@ -526,6 +526,21 @@ class AdminController extends Controller
     }
 
     /**
+     * Tampilkan form untuk membuat course baru
+     */
+    public function create()
+    {
+        // Ambil data yang dibutuhkan untuk dropdown form
+        $instructors = \App\Models\User::where('is_instructor', true)->get();
+        $categories = \App\Models\Category::all();
+        $certificates = \App\Models\CertificateTemplate::all();
+
+        // Return ke view form create
+        // Pastikan kamu punya file resources/views/admin/create.blade.php
+        return view('admin.create', compact('instructors', 'categories', 'certificates'));
+    }
+
+    /**
      * Create new course
      */
     public function createCourse(Request $request)
