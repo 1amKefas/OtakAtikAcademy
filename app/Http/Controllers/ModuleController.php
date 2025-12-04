@@ -69,6 +69,36 @@ class ModuleController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Urutan quiz diperbarui']);
     }
+
+    /**
+     * Reorder Mixed Contents (Material & Quiz)
+     */
+    public function reorderContents(Request $request, Course $course, CourseModule $module)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required',
+            'items.*.type' => 'required|in:material,quiz', // Wajib kirim type
+        ]);
+
+        // Loop urutan dari frontend (0, 1, 2, ...)
+        foreach ($request->items as $index => $item) {
+            $sortOrder = $index + 1;
+
+            if ($item['type'] === 'material') {
+                \App\Models\CourseMaterial::where('id', $item['id'])
+                    ->where('course_module_id', $module->id)
+                    ->update(['sort_order' => $sortOrder]);
+            } 
+            elseif ($item['type'] === 'quiz') {
+                \App\Models\Quiz::where('id', $item['id'])
+                    ->where('course_module_id', $module->id)
+                    ->update(['sort_order' => $sortOrder]);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
     /**
      * Store a newly created module
      */
