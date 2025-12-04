@@ -270,8 +270,35 @@
                         <button class="text-gray-400 hover:text-green-600 transition"><i class="fab fa-whatsapp text-xl"></i></button>
                         <button class="text-gray-400 hover:text-gray-600 transition"><i class="fas fa-link text-xl"></i></button>
                     </div>
-                    
 
+                    @if(in_array(strtolower($course->type), ['hybrid', 'offline', 'tatap muka']))
+                        <div class="mt-6 pt-4 border-t border-gray-100 text-center">
+                            @php
+                                // Cek apakah sudah pernah mengajukan refund
+                                $existingRefund = \App\Models\Refund::where('course_registration_id', $registration->id)->first();
+                            @endphp
+
+                            @if(!$existingRefund)
+                                <p class="text-xs text-gray-500 mb-2">Tidak puas dengan kursus ini?</p>
+                                <a href="{{ route('refund.create', $registration->id) }}" class="text-sm font-medium text-red-500 hover:text-red-700 hover:underline transition">
+                                    Ajukan Pengembalian Dana (Refund)
+                                </a>
+                            @else
+                                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 inline-block w-full">
+                                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Status Refund</p>
+                                    
+                                    @if($existingRefund->status == 'pending')
+                                        <span class="text-sm font-bold text-yellow-600"><i class="fas fa-clock mr-1"></i> Menunggu Konfirmasi</span>
+                                    @elseif($existingRefund->status == 'approved')
+                                        <span class="text-sm font-bold text-green-600"><i class="fas fa-check-circle mr-1"></i> Disetujui</span>
+                                    @elseif($existingRefund->status == 'rejected')
+                                        <span class="text-sm font-bold text-red-600"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                    
                 </div>
             </div>
 
