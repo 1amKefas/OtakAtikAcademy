@@ -51,6 +51,25 @@ class ModuleController extends Controller
     }
 
     /**
+     * Reorder Quizzes via AJAX
+     */
+    public function reorderQuizzes(Request $request, Course $course, CourseModule $module)
+    {
+        $request->validate([
+            'quizzes' => 'required|array',
+            'quizzes.*.id' => 'required|integer|exists:quizzes,id',
+            'quizzes.*.sort_order' => 'required|integer|min:0',
+        ]);
+
+        foreach ($request->quizzes as $q) {
+            \App\Models\Quiz::where('id', $q['id'])
+                ->where('course_module_id', $module->id)
+                ->update(['sort_order' => $q['sort_order']]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Urutan quiz diperbarui']);
+    }
+    /**
      * Store a newly created module
      */
     public function store(Request $request, Course $course)

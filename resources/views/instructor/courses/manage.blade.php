@@ -10,6 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
@@ -30,8 +31,8 @@
         .tox-tinymce { border-radius: 0.5rem !important; border-color: #e2e8f0 !important; }
         
         /* Drag Handles */
-        .handle, .handle-material { cursor: grab; }
-        .handle:active, .handle-material:active { cursor: grabbing; }
+        .handle, .handle-material, .handle-quiz { cursor: grab; }
+        .handle:active, .handle-material:active, .handle-quiz:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
     </style>
 </head>
@@ -63,6 +64,7 @@
     </aside>
 
     <div class="flex-1 flex flex-col overflow-hidden">
+        
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="flex items-center gap-4">
                 <a href="{{ route('instructor.courses') }}" class="text-gray-500 hover:text-gray-800 transition">
@@ -89,19 +91,24 @@
                     <p class="text-gray-500 text-sm mt-1">Susun modul, materi bacaan, video, dan kuis Anda di sini.</p>
                 </div>
                 <button @click="showModuleModal = true" class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2 font-medium">
-                    <i class="fas fa-plus-circle"></i> Modul 
+                    <i class="fas fa-plus-circle"></i> Tambah Modul Baru
                 </button>
             </div>
 
             <div id="modules-list" class="space-y-6 pb-20">
                 @forelse($course->modules->sortBy('sort_order') as $module)
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden module-item" data-id="{{ $module->id }}" x-data="{ open: true }">
+                
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden module-item transition hover:shadow-md" 
+                     data-id="{{ $module->id }}" 
+                     x-data="{ open: true }">
                     
-                    <div class="p-4 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between group transition hover:bg-gray-100">
-                        <div class="flex items-center gap-4 cursor-pointer flex-1" @click="open = !open">
-                            <div class="text-gray-400 cursor-move hover:text-gray-600 handle" @click.stop>
+                    <div class="p-4 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between group">
+                        
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="text-gray-400 cursor-move hover:text-gray-600 handle p-2">
                                 <i class="fas fa-grip-vertical"></i>
                             </div>
+                            
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">{{ $module->title }}</h4>
                                 <p class="text-xs text-gray-500 mt-0.5">
@@ -111,34 +118,36 @@
                         </div>
                         
                         <div class="flex items-center gap-2">
-                            <button class="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">
+                            <button class="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition" title="Edit Nama">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
 
                             <form action="{{ route('instructor.course.module.delete', $module->id) }}" method="POST" onsubmit="return confirm('Hapus modul ini beserta isinya?');">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition">
+                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Hapus">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
 
-                            <div class="ml-2 text-gray-400 transition-transform duration-300" :class="{'rotate-180': open}">
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
+                            <button 
+                                @click="open = !open" 
+                                class="ml-2 p-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-transform duration-300 focus:outline-none" 
+                                :class="{'rotate-180': !open}"
+                                title="Buka/Tutup Modul">
+                                <i class="fas fa-chevron-down text-lg"></i>
+                            </button>
                         </div>
                     </div>
 
                     <div x-show="open" x-collapse class="bg-white p-2">
                         
-                        <div class="space-y-1 materials-list" data-reorder-url="{{ route('instructor.modules.materials.reorder', ['course' => $course->id, 'module' => $module->id]) }}">
-                            
+                        <div class="space-y-1 materials-list mb-2" data-reorder-url="{{ route('instructor.modules.materials.reorder', ['course' => $course->id, 'module' => $module->id]) }}">
                             @forelse($module->materials->sortBy('sort_order') as $material)
                             <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-blue-200 hover:bg-blue-50 group transition material-item" data-id="{{ $material->id }}">
                                 <div class="flex items-center gap-3 overflow-hidden flex-1">
-                                    <div class="text-gray-300 cursor-grab hover:text-gray-500 handle-material">
+                                    <div class="text-gray-300 cursor-grab hover:text-gray-500 handle-material p-1">
                                         <i class="fas fa-grip-vertical"></i>
                                     </div>
-
                                     <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-book-open"></i>
                                     </div>
@@ -154,29 +163,23 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                                    <button class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded transition">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
                                     <form action="{{ route('instructor.course.material.delete', $material->id) }}" method="POST" onsubmit="return confirm('Hapus materi ini?');">
                                         @csrf @method('DELETE')
-                                        <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded transition">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                                        <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded transition"><i class="fas fa-times"></i></button>
                                     </form>
                                 </div>
                             </div>
                             @empty
-                                @if($module->quizzes->isEmpty())
-                                    <div class="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-lg m-2">
-                                        <i class="fas fa-inbox text-xl mb-1"></i>
-                                        <p>Belum ada konten.</p>
-                                    </div>
-                                @endif
-                            @endforelse
+                                @endforelse
+                        </div>
 
-                            @foreach($module->quizzes as $quiz)
-                            <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-purple-200 hover:bg-purple-50 group transition mt-1">
-                                <div class="flex items-center gap-3">
+                        <div class="space-y-1 quizzes-list" data-reorder-url="{{ route('instructor.modules.quizzes.reorder', ['course' => $course->id, 'module' => $module->id]) }}">
+                            @foreach($module->quizzes->sortBy('sort_order') as $quiz)
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-purple-200 hover:bg-purple-50 group transition quiz-item" data-id="{{ $quiz->id }}">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="text-gray-300 cursor-grab hover:text-gray-500 handle-quiz p-1">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </div>
                                     <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-clipboard-check"></i>
                                     </div>
@@ -185,19 +188,24 @@
                                         <p class="text-xs text-gray-500">Quiz • {{ $quiz->duration_minutes }} Menit</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('instructor.quiz.edit', [$course->id, $quiz->id]) }}" class="px-3 py-1 bg-white border border-purple-200 text-purple-700 text-xs rounded hover:bg-purple-600 hover:text-white transition">
-                                        <i class="fas fa-cog mr-1"></i> Kelola
-                                    </a>
+                                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                    <a href="{{ route('instructor.quiz.edit', [$course->id, $quiz->id]) }}" class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-white rounded transition"><i class="fas fa-cog"></i></a>
                                     <form action="{{ route('instructor.course.module.quiz.delete', ['courseId' => $course->id, 'quizId' => $quiz->id]) }}" method="POST" onsubmit="return confirm('Hapus quiz ini?');">
                                         @csrf @method('DELETE')
-                                        <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded opacity-0 group-hover:opacity-100 transition"><i class="fas fa-times"></i></button>
+                                        <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded transition"><i class="fas fa-times"></i></button>
                                     </form>
                                 </div>
                             </div>
                             @endforeach
                         </div>
 
+                        @if($module->materials->isEmpty() && $module->quizzes->isEmpty())
+                            <div class="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-lg m-2">
+                                <i class="fas fa-inbox text-xl mb-1"></i>
+                                <p>Belum ada konten.</p>
+                            </div>
+                        @endif
+                        
                         <div class="mt-3 pt-3 border-t border-gray-100 flex gap-3 px-2">
                             <button @click="openModal({{ $module->id }})" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2">
                                 <i class="fas fa-plus-circle"></i> Tambah Materi
@@ -222,7 +230,6 @@
                 </div>
                 @endforelse
             </div>
-
         </main>
     </div>
 
@@ -383,14 +390,14 @@
             }))
         });
 
-        // 2. Init Drag & Drop (Modules & Materials)
+        // 2. Init Drag & Drop Logic
         document.addEventListener('DOMContentLoaded', function () {
             
-            // A. Reorder Modules (Parent)
+            // A. Reorder Modules (Parent List)
             var moduleList = document.getElementById('modules-list');
             if(moduleList) {
                 Sortable.create(moduleList, {
-                    handle: '.handle', // Drag via grip icon module
+                    handle: '.handle', // Drag via grip icon
                     animation: 150,
                     ghostClass: 'sortable-ghost',
                     onEnd: function (evt) {
@@ -407,40 +414,46 @@
                 });
             }
 
-            // B. Reorder Materials (Children)
-            // Kita loop semua container materi yang punya class 'materials-list'
-            document.querySelectorAll('.materials-list').forEach(function(el) {
-                Sortable.create(el, {
-                    handle: '.handle-material', // Drag via grip icon material
-                    animation: 150,
-                    ghostClass: 'sortable-ghost',
-                    group: 'materials', // (Opsional) Biar bisa drag antar modul kalau mau
-                    onEnd: function (evt) {
-                        // Ambil URL dari attribute data
-                        var url = el.getAttribute('data-reorder-url');
-                        var materialsData = [];
-                        
-                        // Loop item di dalam container ini untuk ambil urutan baru
-                        el.querySelectorAll('.material-item').forEach((item, index) => {
-                            materialsData.push({
-                                id: item.getAttribute('data-id'),
-                                sort_order: index + 1
+            // Helper: Child Reorder (Shared Logic)
+            function initChildSortable(selector, itemClass, handleClass, dataKey) {
+                document.querySelectorAll(selector).forEach(function(el) {
+                    Sortable.create(el, {
+                        handle: handleClass,
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        group: selector, // Allow dragging between lists of same type
+                        onEnd: function (evt) {
+                            var url = el.getAttribute('data-reorder-url');
+                            var itemsData = [];
+                            
+                            el.querySelectorAll(itemClass).forEach((item, index) => {
+                                itemsData.push({
+                                    id: item.getAttribute('data-id'),
+                                    sort_order: index + 1
+                                });
                             });
-                        });
 
-                        // Kirim ke Controller
-                        fetch(url, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({ materials: materialsData })
-                        }).then(res => res.json())
-                          .then(data => console.log('Reorder success'));
-                    }
+                            var payload = {};
+                            payload[dataKey] = itemsData;
+
+                            fetch(url, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                                },
+                                body: JSON.stringify(payload)
+                            }).then(res => res.json()).then(data => console.log(data.message));
+                        }
+                    });
                 });
-            });
+            }
+
+            // B. Reorder Materials
+            initChildSortable('.materials-list', '.material-item', '.handle-material', 'materials');
+
+            // C. Reorder Quizzes
+            initChildSortable('.quizzes-list', '.quiz-item', '.handle-quiz', 'quizzes');
 
         });
     </script>

@@ -302,6 +302,8 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::put('/courses/{course}/modules/{module}/materials/{material}', [ModuleController::class, 'updateMaterial'])->name('modules.materials.update');
     Route::delete('/courses/{course}/modules/{module}/materials/{material}', [ModuleController::class, 'deleteMaterial'])->name('modules.materials.delete');
     Route::post('/courses/{course}/modules/{module}/materials/reorder', [ModuleController::class, 'reorderMaterials'])->name('modules.materials.reorder');
+    // [BARU] Route Reorder Quiz
+    Route::post('/courses/{course}/modules/{module}/quizzes/reorder', [ModuleController::class, 'reorderQuizzes'])->name('modules.quizzes.reorder');
 });
 
 // Student routes with refund
