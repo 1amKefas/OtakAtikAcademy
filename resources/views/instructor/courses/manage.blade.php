@@ -72,8 +72,12 @@
                 </span>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('course.show.detail', $course->id) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
-                    <i class="fas fa-external-link-alt"></i> Preview Course
+                <button onclick="window.location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i> Selesai & Simpan
+                </button>
+                
+                <a href="{{ route('course.show.detail', $course->id) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 ml-2">
+                    <i class="fas fa-external-link-alt"></i> Preview
                 </a>
             </div>
         </header>

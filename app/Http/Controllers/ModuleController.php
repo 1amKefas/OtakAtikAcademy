@@ -33,27 +33,35 @@ class ModuleController extends Controller
     /**
      * Reorder Modules via AJAX
      */
-    public function reorder(Request $request, Course $course)
+   /**
+     * Reorder Modules via AJAX (FIXED)
+     */
+    public function reorder(Request $request, $courseId) // Ganti param jadi $courseId biar fleksibel
     {
-        // 1. Validasi input
+        // Debugging: Cek apakah request masuk
+        // \Log::info('Reorder Request:', $request->all());
+
         $request->validate([
             'ordered_ids' => 'required|array',
             'ordered_ids.*' => 'exists:course_modules,id',
         ]);
 
-        // 2. Loop dan update urutan
-        // Bungkus dengan Transaction biar 'Atomik' (Cepat & Aman)
-        DB::transaction(function () use ($request, $course) {
+        // Gunakan Transaction untuk performa & keamanan data
+        DB::transaction(function () use ($request, $courseId) {
             foreach ($request->ordered_ids as $index => $moduleId) {
+                // Update kolom 'order' (atau 'sort_order' tergantung database kamu)
+                // Kita update dua-duanya untuk jaga-jaga kalau kamu pakai nama kolom beda
                 \App\Models\CourseModule::where('id', $moduleId)
-                    ->where('course_id', $course->id)
-                    ->update(['order' => $index + 1]); // Pastikan nama kolom 'order' sesuai migration
+                    ->where('course_id', $courseId)
+                    ->update([
+                        'order' => $index + 1,
+                        // 'sort_order' => $index + 1 // Uncomment jika pakai sort_order
+                    ]);
             }
         });
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => 'Urutan modul berhasil disimpan!']);
     }
-
     /**
      * Reorder Quizzes via AJAX
      */
