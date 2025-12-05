@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -19,6 +21,11 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* [ADD] Handle Style */
+        .handle { cursor: grab; }
+        .handle:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
     </style>
 </head>
 <body class="bg-gray-50 h-screen overflow-hidden">
@@ -122,10 +129,10 @@
                                 
                                 <div class="mb-6">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Struktur Modul</label>
-                                    <p class="text-xs text-gray-500 mb-3">Tambahkan modul/bab untuk kursus ini. Konten detail akan diisi oleh Instruktur.</p>
+                                    <p class="text-xs text-gray-500 mb-3">Tambahkan modul/bab untuk kursus ini. Drag icon untuk urutkan.</p>
                                     
                                     <div id="modules-container" class="space-y-3">
-                                        </div>
+                                    </div>
 
                                     <button type="button" onclick="addModuleInput()" class="mt-3 text-sm flex items-center text-blue-600 hover:text-blue-800 font-medium">
                                         <i class="fas fa-plus-circle mr-2"></i> Tambah Modul
@@ -190,7 +197,7 @@
                                             <p class="text-[10px] text-gray-400 mt-1">Tahan CTRL/CMD untuk pilih banyak</p>
                                         </div>
                                     </div>
-                                    </div>
+                                </div>
                                 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
@@ -520,6 +527,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             const typeSelect = document.querySelector('select[name="type"]');
             if (typeSelect) toggleInstructorField(typeSelect.value);
+
+            // [ADD] SortableJS Init for Modules
+            var el = document.getElementById('modules-container');
+            if(el) {
+                Sortable.create(el, {
+                    handle: '.handle', // Class handle ada di input module
+                    animation: 150,
+                    ghostClass: 'sortable-ghost'
+                });
+            }
         });
     </script>
     <script>
@@ -532,7 +549,7 @@
         const html = `
             <div class="flex items-center gap-2 group" id="module-row-${index}">
                 <div class="flex-1 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3">
-                    <span class="text-gray-400 font-bold px-2">::</span>
+                    <span class="text-gray-400 font-bold px-2 cursor-grab handle"><i class="fas fa-grip-vertical"></i></span>
                     <input type="text" name="modules[${index}][title]" placeholder="Nama Modul (Contoh: Pengenalan HTML)" 
                            class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800 placeholder-gray-400" required>
                 </div>
