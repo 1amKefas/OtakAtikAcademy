@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\CourseModule;
 use App\Models\ModuleMaterial;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ModuleController extends Controller
 {
@@ -41,11 +42,14 @@ class ModuleController extends Controller
         ]);
 
         // 2. Loop dan update urutan
-        foreach ($request->ordered_ids as $index => $moduleId) {
-            \App\Models\CourseModule::where('id', $moduleId)
-                ->where('course_id', $course->id) // Pastikan modul milik course ini
-                ->update(['sort_order' => $index + 1]);
-        }
+        // Bungkus dengan Transaction biar 'Atomik' (Cepat & Aman)
+        DB::transaction(function () use ($request, $course) {
+            foreach ($request->ordered_ids as $index => $moduleId) {
+                \App\Models\CourseModule::where('id', $moduleId)
+                    ->where('course_id', $course->id)
+                    ->update(['order' => $index + 1]); // Pastikan nama kolom 'order' sesuai migration
+            }
+        });
 
         return response()->json(['success' => true]);
     }
