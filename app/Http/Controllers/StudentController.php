@@ -521,13 +521,64 @@ class StudentController extends Controller
     /**
      * Tandai Materi Selesai & Lanjut
      */
+    /**
+     * Tandai Materi Selesai & Hitung Progress Global
+     */
     public function completeMaterial(Request $request, $courseId, $materialId)
     {
-        // Logic simpan progress di sini (nanti kita tambahkan tabel progress)
-        
-        // Cari Next Content
-        // Ini butuh algoritma pencarian "Next Item" berdasarkan urutan modul & order item
-        // Sementara redirect back dulu
-        return back()->with('success', 'Materi selesai!');
+        $registration = CourseRegistration::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('status', 'paid')
+            ->firstOrFail();
+
+        $material = \App\Models\CourseMaterial::findOrFail($materialId);
+
+        // 1. Simpan/Update Progress Materi ini jadi Completed
+        \App\Models\CourseProgress::updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'course_id' => $courseId,
+                'content_id' => $materialId,
+                'content_type' => 'material',
+            ],
+            [
+                'course_module_id' => $material->course_module_id, // Pastikan kolom ini ada di tabel progress
+                'is_completed' => true,
+                'completed_at' => now(),
+            ]
+        );
+
+        // 2. HITUNG PROGRESS BARU (Gabungan Materi + Quiz)
+        // Hitung Total Item (Materi + Quiz) di Course ini
+        $totalMaterials = \App\Models\CourseMaterial::where('course_id', $courseId)->where('is_published', true)->count();
+        $totalQuizzes = \App\Models\Quiz::where('course_id', $courseId)->where('is_published', true)->count();
+        $totalItems = $totalMaterials + $totalQuizzes;
+
+        // Hitung Item yang SUDAH Selesai (Materi + Quiz)
+        $completedItems = \App\Models\CourseProgress::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('is_completed', true)
+            ->count();
+
+        // Kalkulasi Persentase
+        if ($totalItems > 0) {
+            $progress = min(100, round(($completedItems / $totalItems) * 100));
+            
+            // Update di tabel registrasi
+            $registration->update(['progress' => $progress]);
+            
+            // Jika 100%, tandai course selesai
+            if ($progress == 100 && !$registration->completed_at) {
+                $registration->update(['completed_at' => now()]);
+            }
+        }
+
+        // 3. Cari Next Content untuk Redirect (Opsional, kalau mau auto redirect di backend)
+        // Tapi karena kita pakai tombol "Lanjut" di frontend, kita cukup return success json atau redirect back
+        if($request->ajax()) {
+            return response()->json(['success' => true, 'progress' => $progress]);
+        }
+
+        return back();
     }
 }
