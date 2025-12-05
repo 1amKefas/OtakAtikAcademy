@@ -641,10 +641,13 @@ class AdminController extends Controller
      */
     public function editCourse($id)
     {
-        $course = Course::with('modules')->findOrFail($id);
+        // [UPDATE] Tambahkan sorting by 'order'
+        $course = Course::with(['modules' => function($q) {
+            $q->orderBy('order', 'asc');
+        }])->findOrFail($id);
+        
         $instructors = User::where('is_instructor', true)->get();
         
-        // [BARU] Ambil data kategori & sertifikat
         $categories = \App\Models\Category::all();
         $certificates = \App\Models\CertificateTemplate::all();
 

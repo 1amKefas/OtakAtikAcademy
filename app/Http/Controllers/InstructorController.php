@@ -71,11 +71,15 @@ class InstructorController extends Controller
         $course = Course::where('instructor_id', Auth::id())
             ->with([
                 'modules' => function($q) {
-                    $q->orderBy('order');
+                    $q->orderBy('order', 'asc'); // [UPDATE] Pastikan 'asc'
                 },
-                'modules.materials',   // Eager load materi
-                'modules.assignments', // Eager load tugas
-                'modules.quizzes'      // Eager load kuis
+                'modules.materials' => function($q) {
+                    $q->orderBy('order', 'asc'); // [UPDATE] Materi juga diurutkan
+                },
+                'modules.assignments',
+                'modules.quizzes' => function($q) {
+                    $q->orderBy('sort_order', 'asc'); // [UPDATE] Quiz pakai sort_order
+                }
             ])
             ->findOrFail($id);
 

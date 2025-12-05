@@ -192,15 +192,19 @@ class CourseController extends Controller
         }
 
         // [UPDATE] Load Modules beserta isinya (Materials, Assignments, Quizzes)
-        $course = Course::where('is_active', true)
+       $course = Course::where('is_active', true)
             ->with([
                 'instructor', 
                 'modules' => function($query) {
-                    $query->orderBy('order');
+                    $query->orderBy('order', 'asc'); // [UPDATE] Sorting Modul
                 },
-                'modules.materials', 
+                'modules.materials' => function($q) {
+                    $q->orderBy('order', 'asc'); // [UPDATE] Sorting Materi
+                },
                 'modules.assignments', 
-                'modules.quizzes'
+                'modules.quizzes' => function($q) {
+                    $q->orderBy('sort_order', 'asc'); // [UPDATE] Sorting Quiz
+                }
             ])
             ->findOrFail($id);
         

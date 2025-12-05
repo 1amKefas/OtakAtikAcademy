@@ -65,17 +65,22 @@ class StudentController extends Controller
             ->where('status', 'paid')
             ->firstOrFail();
 
-        // [UPDATE] Tambahkan 'forums.user' dan 'forums.replies' di eager loading
         $course = $registration->course()->with([
             'instructor',
-            'modules' => function($q) { $q->orderBy('order'); },
-            'modules.materials',
-            'modules.quizzes',
-            'forums' => function($q) { // Load 5 diskusi terbaru
+            'modules' => function($q) { 
+                $q->orderBy('order', 'asc'); // [UPDATE] Sorting Modul
+            },
+            'modules.materials' => function($q) {
+                $q->orderBy('order', 'asc'); // [UPDATE] Sorting Materi
+            },
+            'modules.quizzes' => function($q) {
+                $q->orderBy('sort_order', 'asc'); // [UPDATE] Sorting Quiz
+            },
+            'forums' => function($q) {
                 $q->orderBy('created_at', 'desc')->take(5);
             },
-            'forums.user',   // Siapa yg posting
-            'forums.replies' // Hitung balasan
+            'forums.user',
+            'forums.replies'
         ])->first();
 
         return view('student.course-detail', compact('course', 'registration'));
@@ -484,9 +489,17 @@ class StudentController extends Controller
             ->where('status', 'paid')
             ->firstOrFail();
 
-        $course = Course::with(['modules' => function($q) {
-            $q->orderBy('order');
-        }, 'modules.materials', 'modules.quizzes'])->findOrFail($courseId);
+       $course = Course::with([
+            'modules' => function($q) {
+                $q->orderBy('order', 'asc'); // [UPDATE]
+            }, 
+            'modules.materials' => function($q) {
+                $q->orderBy('order', 'asc'); // [UPDATE]
+            }, 
+            'modules.quizzes' => function($q) {
+                $q->orderBy('sort_order', 'asc'); // [UPDATE]
+            }
+        ])->findOrFail($courseId);
 
         // Ambil konten yang diminta
         $currentContent = null;
