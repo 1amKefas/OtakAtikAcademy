@@ -108,6 +108,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // User Course Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/course', [CourseController::class, 'showCourse'])->name('course.index');
+    // [BARU] Route untuk Search Suggestions (Ajax)
+    Route::get('/courses/search', [CourseController::class, 'searchSuggestions'])->name('courses.search');
     Route::get('/course/{id}', [CourseController::class, 'show'])->name('course.show.detail');
     Route::delete('/course/{id}', [CourseController::class, 'destroy'])->name('course.destroy');
     Route::get('/my-courses', [CourseController::class, 'myCourses'])->name('my.courses');

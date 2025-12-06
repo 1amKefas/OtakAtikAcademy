@@ -12,12 +12,21 @@ use Illuminate\Support\Facades\Response;
 class CourseController extends Controller
 {
     /**
-     * Show course registration page - HANYA COURSE AKTIF dengan filter category
+     * Show course registration page - HANYA COURSE AKTIF dengan filter category & SEARCH
      */
     public function showCourse(Request $request)
     {
         $query = Course::where('is_active', true)->with('instructor');
         
+        // [TAMBAHAN] Filter Search by Title
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'ILIKE', "%{$search}%") // ILIKE = Case insensitive (PostgreSQL)
+                  ->orWhere('description', 'ILIKE', "%{$search}%");
+            });
+        }
+
         // Filter by category jika ada
         if ($request->has('category') && $request->category) {
             $query->whereHas('categories', function ($q) use ($request) {
@@ -270,5 +279,25 @@ class CourseController extends Controller
         }
 
         return back()->with('success', 'Progress berhasil diupdate!');
+    }
+
+    /**
+     * AJAX Search Suggestions
+     */
+    public function searchSuggestions(Request $request)
+    {
+        $query = $request->get('query');
+        
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $courses = Course::where('is_active', true)
+            ->where('title', 'ILIKE', "%{$query}%") // ILIKE untuk PostgreSQL (Case Insensitive)
+            ->select('id', 'title', 'image_url', 'type') // Ambil kolom yg perlu aja biar ringan
+            ->limit(5) // Batasi 5 hasil aja biar rapi
+            ->get();
+
+        return response()->json($courses);
     }
 }
