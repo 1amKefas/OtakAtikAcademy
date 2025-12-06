@@ -220,25 +220,25 @@ class QuizController extends Controller
      */
     public function addQuestion(Request $request, $courseId, $quizId)
     {
+        // Validasi
         $request->validate([
             'question' => 'required|string',
-            'type' => 'required|in:multiple_choice,true_false,essay,multiple_select',
+            'question_type' => 'required|in:multiple_choice,true_false,essay,multiple_select', 
             'points' => 'nullable|integer|min:1',
         ]);
 
-        // Pastikan quiz milik course yang benar
         $quiz = Quiz::where('course_id', $courseId)->findOrFail($quizId);
 
         $questionData = [
             'quiz_id' => $quiz->id,
-            'question_text' => $request->question,
-            'type' => $request->type,
+            'question' => $request->question, // [FIX] Ganti 'question_text' jadi 'question'
+            'question_type' => $request->question_type, 
             'points' => $request->points ?? 10,
         ];
 
-        // --- Logic Simpan Jawaban ---
+        // --- Logic Simpan Jawaban (Sama seperti sebelumnya) ---
         
-        if ($request->type === 'multiple_choice') {
+        if ($request->question_type === 'multiple_choice') {
             $request->validate([
                 'options' => 'required|array|min:2',
                 'correct_answer' => 'required|integer',
@@ -246,24 +246,23 @@ class QuizController extends Controller
             $questionData['options'] = json_encode($request->options);
             $questionData['correct_answer'] = $request->correct_answer;
 
-        } elseif ($request->type === 'multiple_select') {
+        } elseif ($request->question_type === 'multiple_select') {
             $request->validate([
                 'options' => 'required|array|min:2',
                 'correct_answers' => 'required|array|min:1',
             ]);
             $questionData['options'] = json_encode($request->options);
             
-            // Simpan array jawaban benar sebagai JSON
             $answers = $request->correct_answers;
-            sort($answers); // Urutkan biar rapi (0, 1, 2)
+            sort($answers); 
             $questionData['correct_answer'] = json_encode($answers);
 
-        } elseif ($request->type === 'true_false') {
+        } elseif ($request->question_type === 'true_false') {
             $request->validate(['correct_answer' => 'required|in:true,false']);
             $questionData['options'] = null;
             $questionData['correct_answer'] = $request->correct_answer;
 
-        } elseif ($request->type === 'essay') {
+        } elseif ($request->question_type === 'essay') {
             $questionData['options'] = null;
             $questionData['correct_answer'] = $request->answer_explanation;
         }

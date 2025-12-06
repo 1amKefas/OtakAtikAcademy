@@ -53,8 +53,8 @@
                                    {{ old('question_type', $question->question_type ?? 'multiple_choice') === 'multiple_choice' ? 'checked' : '' }}
                                    class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                             <span class="ml-3">
-                                <p class="font-semibold text-gray-800">Pilihan Ganda</p>
-                                <p class="text-sm text-gray-600">Siswa memilih satu jawaban dari beberapa pilihan</p>
+                                <p class="font-semibold text-gray-800">Pilihan Ganda (1 Jawaban)</p>
+                                <p class="text-sm text-gray-600">Siswa memilih satu jawaban benar</p>
                             </span>
                         </label>
 
@@ -64,8 +64,8 @@
                                    {{ old('question_type', $question->question_type ?? '') === 'multiple_select' ? 'checked' : '' }}
                                    class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                             <span class="ml-3">
-                                <p class="font-semibold text-gray-800">Multiple Choice</p>
-                                <p class="text-sm text-gray-600">Siswa bisa memilih lebih dari satu jawaban benar</p>
+                                <p class="font-semibold text-gray-800">Pilihan Ganda (Banyak Jawaban)</p>
+                                <p class="text-sm text-gray-600">Siswa bisa mencentang lebih dari satu jawaban benar</p>
                             </span>
                         </label>
 
@@ -87,7 +87,7 @@
                                    class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                             <span class="ml-3">
                                 <p class="font-semibold text-gray-800">Essay</p>
-                                <p class="text-sm text-gray-600">Siswa menulis jawaban (dinilai manual oleh instruktur)</p>
+                                <p class="text-sm text-gray-600">Penilaian manual oleh instruktur</p>
                             </span>
                         </label>
                     </div>
@@ -106,35 +106,22 @@
                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                    placeholder="Masukkan pilihan...">
                             <button type="button" onclick="removeOption(this)" 
-                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition">
-                                🗑️
-                            </button>
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition">🗑️</button>
                         </div>
                         @empty
                         <div class="flex items-center gap-3 optionItem">
                             <span class="text-sm font-bold text-gray-600 w-6">A</span>
-                            <input type="text" name="options[]"
-                                   class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                   placeholder="Masukkan pilihan...">
-                            <button type="button" onclick="removeOption(this)" 
-                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition">
-                                🗑️
-                            </button>
+                            <input type="text" name="options[]" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg" placeholder="Masukkan pilihan...">
+                            <button type="button" onclick="removeOption(this)" class="bg-red-500 text-white px-3 py-2 rounded">🗑️</button>
                         </div>
                         <div class="flex items-center gap-3 optionItem">
                             <span class="text-sm font-bold text-gray-600 w-6">B</span>
-                            <input type="text" name="options[]"
-                                   class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                   placeholder="Masukkan pilihan...">
-                            <button type="button" onclick="removeOption(this)" 
-                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition">
-                                🗑️
-                            </button>
+                            <input type="text" name="options[]" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg" placeholder="Masukkan pilihan...">
+                            <button type="button" onclick="removeOption(this)" class="bg-red-500 text-white px-3 py-2 rounded">🗑️</button>
                         </div>
                         @endforelse
                     </div>
-                    <button type="button" onclick="addOption()" 
-                            class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition">
+                    <button type="button" onclick="addOption()" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition">
                         + Tambah Pilihan
                     </button>
                 </div>
@@ -144,67 +131,43 @@
                     
                     <div id="mcCorrectAnswer" class="space-y-3">
                         <p class="text-sm text-gray-600 mb-3">Pilih SATU jawaban yang benar:</p>
-                        <div id="correctAnswerOptions" class="space-y-2">
-                            </div>
+                        <div id="correctAnswerOptions" class="space-y-2"></div>
                     </div>
 
                     <div id="msCorrectAnswer" class="space-y-3 hidden">
                         <p class="text-sm text-gray-600 mb-3">Centang SEMUA jawaban yang benar:</p>
-                        <div id="correctAnswerCheckboxes" class="space-y-2">
-                            </div>
+                        <div id="correctAnswerCheckboxes" class="space-y-2"></div>
                     </div>
 
                     <div id="tfCorrectAnswer" class="space-y-3 hidden">
-                        <p class="text-sm text-gray-600 mb-3">Jawaban yang benar adalah:</p>
                         <div class="flex gap-4">
                             <label class="flex items-center">
-                                <input type="radio" name="correct_answer" value="true" 
-                                       {{ old('correct_answer', $question->correct_answer ?? '') === 'true' ? 'checked' : '' }}
-                                       class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500">
-                                <span class="ml-2 text-gray-800">✓ Benar</span>
+                                <input type="radio" name="correct_answer" value="true" class="w-4 h-4 text-green-600"> <span class="ml-2">Benar</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="radio" name="correct_answer" value="false" 
-                                       {{ old('correct_answer', $question->correct_answer ?? '') === 'false' ? 'checked' : '' }}
-                                       class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500">
-                                <span class="ml-2 text-gray-800">✗ Salah</span>
+                                <input type="radio" name="correct_answer" value="false" class="w-4 h-4 text-red-600"> <span class="ml-2">Salah</span>
                             </label>
                         </div>
                     </div>
 
                     <div id="essayCorrectAnswer" class="hidden bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p class="text-blue-800 text-sm">
-                            ℹ️ Essay questions don't have a predefined correct answer. <br>
-                            Students' responses will be reviewed manually by the instructor.
-                        </p>
+                        <p class="text-blue-800 text-sm">Soal Essay dinilai secara manual.</p>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">🔢 Urutan Soal</h3>
-                    <input type="number" name="order" min="1"
-                           value="{{ old('order', $question->order ?? ($quiz->questions()->count() + 1)) }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                           placeholder="Urutan soal">
+                    <input type="number" name="order" min="1" value="{{ old('order', $question->order ?? ($quiz->questions()->count() + 1)) }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
                 </div>
 
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">⚖️ Bobot Nilai</h3>
-                    <input type="number" name="points" min="1" max="100"
-                           value="{{ old('points', $question->points ?? 10) }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                           placeholder="Nilai untuk soal ini">
+                    <input type="number" name="points" min="1" max="100" value="{{ old('points', $question->points ?? 10) }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
                 </div>
 
                 <div class="flex gap-4 pt-6 border-t border-gray-200">
-                    <button type="submit" 
-                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-                        ✓ {{ isset($question) ? 'Update Soal' : 'Tambah Soal' }}
-                    </button>
-                    <a href="{{ route('instructor.quiz.edit', [$course->id, $quiz->id]) }}" 
-                       class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
-                        ✕ Batal
-                    </a>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg">Simpan Soal</button>
+                    <a href="{{ route('instructor.quiz.edit', [$course->id, $quiz->id]) }}" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg">Batal</a>
                 </div>
             </div>
         </form>
@@ -213,125 +176,77 @@
 
 <script>
     function changeQuestionType(type) {
-        const mcSection = document.getElementById('mcCorrectAnswer');
-        const msSection = document.getElementById('msCorrectAnswer'); // Baru
-        const tfSection = document.getElementById('tfCorrectAnswer');
-        const essaySection = document.getElementById('essayCorrectAnswer');
-        const optionsSection = document.getElementById('optionsSection');
-
         // Hide all sections
-        mcSection.classList.add('hidden');
-        msSection.classList.add('hidden');
-        tfSection.classList.add('hidden');
-        essaySection.classList.add('hidden');
-        optionsSection.classList.add('hidden');
+        ['mcCorrectAnswer', 'msCorrectAnswer', 'tfCorrectAnswer', 'essayCorrectAnswer', 'optionsSection'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
 
-        // Show relevant sections
+        // Show active section
         if (type === 'multiple_choice') {
-            mcSection.classList.remove('hidden');
-            optionsSection.classList.remove('hidden');
-        } else if (type === 'multiple_select') { // Baru
-            msSection.classList.remove('hidden');
-            optionsSection.classList.remove('hidden');
+            document.getElementById('mcCorrectAnswer').classList.remove('hidden');
+            document.getElementById('optionsSection').classList.remove('hidden');
+        } else if (type === 'multiple_select') { // [BARU]
+            document.getElementById('msCorrectAnswer').classList.remove('hidden');
+            document.getElementById('optionsSection').classList.remove('hidden');
         } else if (type === 'true_false') {
-            tfSection.classList.remove('hidden');
+            document.getElementById('tfCorrectAnswer').classList.remove('hidden');
         } else if (type === 'essay') {
-            essaySection.classList.remove('hidden');
+            document.getElementById('essayCorrectAnswer').classList.remove('hidden');
         }
     }
 
     function addOption() {
         const container = document.getElementById('optionsContainer');
-        const itemCount = container.children.length;
-        const letter = String.fromCharCode(65 + itemCount);
-        
+        const count = container.children.length;
+        const letter = String.fromCharCode(65 + count);
         const html = `
             <div class="flex items-center gap-3 optionItem">
                 <span class="text-sm font-bold text-gray-600 w-6">${letter}</span>
-                <input type="text" name="options[]"
-                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                       placeholder="Masukkan pilihan...">
-                <button type="button" onclick="removeOption(this)" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition">
-                    🗑️
-                </button>
-            </div>
-        `;
+                <input type="text" name="options[]" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg" placeholder="Masukkan pilihan...">
+                <button type="button" onclick="removeOption(this)" class="bg-red-500 text-white px-3 py-2 rounded">🗑️</button>
+            </div>`;
         container.insertAdjacentHTML('beforeend', html);
         updateCorrectAnswerOptions();
     }
 
     function removeOption(btn) {
         btn.closest('.optionItem').remove();
+        // Re-index
+        document.querySelectorAll('.optionItem').forEach((el, idx) => {
+            el.querySelector('span').innerText = String.fromCharCode(65 + idx);
+        });
         updateCorrectAnswerOptions();
     }
 
     function updateCorrectAnswerOptions() {
         const options = Array.from(document.querySelectorAll('input[name="options[]"]')).map(el => el.value);
-        const container = document.getElementById('correctAnswerOptions');
-        const containerMulti = document.getElementById('correctAnswerCheckboxes'); // Baru
+        const containerRadio = document.getElementById('correctAnswerOptions');
+        const containerCheck = document.getElementById('correctAnswerCheckboxes');
         
-        if (options.length === 0) {
-            container.innerHTML = '<p class="text-gray-600 text-sm italic">Tambahkan pilihan terlebih dahulu</p>';
-            containerMulti.innerHTML = '<p class="text-gray-600 text-sm italic">Tambahkan pilihan terlebih dahulu</p>';
-            return;
-        }
-
-        // Generate Radio Buttons (Untuk Single Choice)
         let htmlRadio = '';
-        // Generate Checkboxes (Untuk Multiple Select)
-        let htmlCheckbox = '';
+        let htmlCheck = '';
 
-        options.forEach((option, index) => {
-            if (option) {
+        options.forEach((opt, idx) => {
+            if(opt) {
                 // Radio
-                htmlRadio += `
-                    <label class="flex items-center">
-                        <input type="radio" name="correct_answer" value="${index}" 
-                               class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                        <span class="ml-2 text-gray-800">${String.fromCharCode(65 + index)}: ${option}</span>
-                    </label>
-                `;
-
+                htmlRadio += `<label class="flex items-center"><input type="radio" name="correct_answer" value="${idx}" class="w-4 h-4 text-indigo-600"><span class="ml-2 text-gray-800">${String.fromCharCode(65 + idx)}: ${opt}</span></label>`;
                 // Checkbox
-                htmlCheckbox += `
-                    <label class="flex items-center">
-                        <input type="checkbox" name="correct_answers[]" value="${index}" 
-                               class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                        <span class="ml-2 text-gray-800">${String.fromCharCode(65 + index)}: ${option}</span>
-                    </label>
-                `;
+                htmlCheck += `<label class="flex items-center"><input type="checkbox" name="correct_answers[]" value="${idx}" class="w-4 h-4 text-indigo-600 rounded"><span class="ml-2 text-gray-800">${String.fromCharCode(65 + idx)}: ${opt}</span></label>`;
             }
         });
-        
-        container.innerHTML = htmlRadio;
-        containerMulti.innerHTML = htmlCheckbox;
+
+        containerRadio.innerHTML = htmlRadio;
+        containerCheck.innerHTML = htmlCheck;
     }
 
-    // Initialize on page load
     document.addEventListener('DOMContentLoaded', () => {
-        const checkedType = document.querySelector('input[name="question_type"]:checked');
-        const type = checkedType ? checkedType.value : 'multiple_choice';
+        const type = document.querySelector('input[name="question_type"]:checked')?.value || 'multiple_choice';
         changeQuestionType(type);
-        
-        // Initial populate
         updateCorrectAnswerOptions();
-
-        // Add event listeners to existing option inputs
-        document.querySelectorAll('input[name="options[]"]').forEach(input => {
-            input.addEventListener('input', updateCorrectAnswerOptions);
+        
+        document.getElementById('optionsContainer').addEventListener('input', (e) => {
+            if(e.target.name === 'options[]') updateCorrectAnswerOptions();
         });
     });
-    
-    // Update listener when adding new option
-    const originalAddOption = window.addOption;
-    window.addOption = function() {
-        originalAddOption();
-        // Add listener to newly added input
-        const latestInput = document.querySelector('#optionsContainer input[name="options[]"]:last-of-type');
-        if (latestInput) {
-            latestInput.addEventListener('input', updateCorrectAnswerOptions);
-        }
-    };
 </script>
 @endsection
