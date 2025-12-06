@@ -18,7 +18,7 @@
     
     <script>
         tailwind.config = {
-            darkMode: 'class', // Wajib 'class' agar toggle manual berfungsi
+            darkMode: 'class',
             theme: { 
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -67,18 +67,25 @@
         
         .locked { cursor: not-allowed; opacity: 0.5; filter: grayscale(100%); }
 
-        /* Circle Progress Animation */
         .progress-ring__circle {
             transition: stroke-dashoffset 0.35s ease-out;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
         
-        /* Prose Dark Mode Override (Manual Fix) */
+        /* Dark Mode Typography & Width Fix */
+        .prose { 
+            max-width: 100% !important; /* [FIXED] Stretch Text Full Width */
+            color: #374151; 
+        }
         .dark .prose { color: #cbd5e1; }
         .dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4, .dark .prose strong { color: #f1f5f9; }
         .dark .prose a { color: #60a5fa; }
         .dark .prose code { color: #e2e8f0; background-color: #1e293b; }
+        
+        /* Video aspect ratio container */
+        .aspect-w-16 { position: relative; padding-bottom: 56.25%; }
+        .aspect-w-16 iframe { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
     </style>
 </head>
 
@@ -171,7 +178,6 @@
                             @endphp
                             <a href="{{ route('student.learning.content', [$course->id, 'material', $mat->id]) }}" 
                                class="flex items-center gap-3 px-4 py-2.5 text-sm transition relative {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-100 dark:hover:bg-slate-700' }}">
-                                
                                 <div class="flex-shrink-0 w-5 text-center">
                                     @if($isCompleted)
                                         <i class="fas fa-check-circle text-green-500 text-sm"></i>
@@ -181,9 +187,7 @@
                                         <i class="far fa-circle text-gray-400 dark:text-slate-500 text-xs"></i>
                                     @endif
                                 </div>
-                                
                                 <span class="flex-1 truncate">{{ $mat->title }}</span>
-                                
                                 @if($mat->type == 'video') 
                                     <i class="fas fa-play text-[10px] text-gray-400"></i> 
                                 @else
@@ -210,11 +214,11 @@
             </div>
         </aside>
 
-        <main id="mainScrollContainer" class="flex-1 overflow-y-auto bg-gray-100 dark:bg-slate-900 p-4 md:p-8 relative transition-colors scroll-smooth">
+        <main id="mainScrollContainer" class="flex-1 overflow-y-auto bg-white dark:bg-slate-900 relative transition-colors scroll-smooth">
             
-            <div class="max-w-4xl mx-auto flex flex-col min-h-full">
+            <div class="w-full min-h-full flex flex-col">
                 
-                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden flex-1 flex flex-col transition-colors">
+                <div class="bg-white dark:bg-slate-800 shadow-none border-0 flex-1 flex flex-col transition-colors">
                     
                     <div class="px-6 py-5 md:px-10 md:py-6 border-b border-gray-100 dark:border-gray-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur sticky top-0 z-20 transition-colors flex items-center justify-between gap-4">
                         <div>
@@ -236,89 +240,90 @@
                     </div>
 
                     <div id="contentBody" class="p-6 md:p-10 flex-1">
-                        @if($type == 'material')
-                            @if($currentContent->type == 'video' && $currentContent->external_url)
-                                <div class="aspect-w-16 aspect-h-9 mb-8 bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-gray-900/5">
-                                    <iframe src="{{ str_replace('watch?v=', 'embed/', $currentContent->external_url) }}" frameborder="0" allowfullscreen class="w-full h-full"></iframe>
-                                </div>
-                            @endif
+                        <div class="w-full"> @if($type == 'material')
+                                @if($currentContent->type == 'video' && $currentContent->external_url)
+                                    <div class="aspect-w-16 aspect-h-9 mb-8 bg-black rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-900/5 w-full">
+                                        <iframe src="{{ str_replace('watch?v=', 'embed/', $currentContent->external_url) }}" frameborder="0" allowfullscreen class="w-full h-full"></iframe>
+                                    </div>
+                                @endif
 
-                            @if($currentContent->description)
-                                <div class="prose dark:prose-invert max-w-none text-lg leading-relaxed">
-                                    {!! $currentContent->description !!}
-                                </div>
-                            @endif
+                                @if($currentContent->description)
+                                    <div class="prose dark:prose-invert max-w-none text-lg leading-relaxed w-full">
+                                        {!! $currentContent->description !!}
+                                    </div>
+                                @endif
 
-                            @if($currentContent->file_path)
-                                <div class="mt-10 p-5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-blue-300 dark:hover:border-blue-600 transition">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center shadow-sm text-blue-600 dark:text-blue-400 text-2xl group-hover:scale-110 transition">
-                                            <i class="fas fa-file-alt"></i>
+                                @if($currentContent->file_path)
+                                    <div class="mt-10 p-5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-blue-300 dark:hover:border-blue-600 transition w-full">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center shadow-sm text-blue-600 dark:text-blue-400 text-2xl group-hover:scale-110 transition">
+                                                <i class="fas fa-file-alt"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-gray-800 dark:text-gray-200">Lampiran Materi</h4>
+                                                <p class="text-sm text-blue-600 dark:text-blue-400 truncate max-w-[200px]">{{ $currentContent->file_name ?? 'Download File' }}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 class="font-bold text-gray-800 dark:text-gray-200">Lampiran Materi</h4>
-                                            <p class="text-sm text-blue-600 dark:text-blue-400 truncate max-w-[200px]">{{ $currentContent->file_name ?? 'Download File' }}</p>
+                                        <a href="{{ Storage::url($currentContent->file_path) }}" target="_blank" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                    </div>
+                                @endif
+                                
+                                <div class="h-32 flex items-center justify-center">
+                                    <p class="text-xs text-gray-400 uppercase tracking-widest animate-pulse">Scroll to complete</p>
+                                </div>
+
+                            @elseif($type == 'quiz')
+                                <div class="flex flex-col items-center justify-center py-20 text-center w-full">
+                                    <div class="w-28 h-28 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 animate-bounce-slow">
+                                        <i class="fas fa-laptop-code text-5xl text-purple-600 dark:text-purple-400"></i>
+                                    </div>
+                                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">Quiz: {{ $currentContent->title }}</h3>
+                                    <p class="text-gray-600 dark:text-gray-400 mb-10 max-w-lg text-lg leading-relaxed">{{ $currentContent->description ?? 'Siap menguji pemahamanmu? Kerjakan kuis ini dengan teliti.' }}</p>
+                                    
+                                    <div class="flex flex-wrap justify-center gap-6 mb-10 w-full max-w-2xl">
+                                        <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Durasi</p>
+                                            <p class="text-xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-2">
+                                                <i class="far fa-clock text-blue-500"></i> {{ $currentContent->duration_minutes }}m
+                                            </p>
+                                        </div>
+                                        <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Passing Score</p>
+                                            <p class="text-xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
+                                                <i class="fas fa-check-circle"></i> {{ $currentContent->passing_score }}%
+                                            </p>
                                         </div>
                                     </div>
-                                    <a href="{{ Storage::url($currentContent->file_path) }}" target="_blank" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                                        <i class="fas fa-download"></i> Download
+
+                                    <a href="{{ route('student.quiz.start', [$course->id, $currentContent->id]) }}" class="group relative px-10 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-purple-500/50 transition-all transform hover:-translate-y-1">
+                                        <span class="relative z-10 flex items-center gap-2">Mulai Quiz Sekarang <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i></span>
                                     </a>
                                 </div>
                             @endif
-                            
-                            <div class="h-24 flex items-center justify-center">
-                                <p class="text-xs text-gray-400 uppercase tracking-widest animate-pulse">Scroll to complete</p>
-                            </div>
-
-                        @elseif($type == 'quiz')
-                            <div class="flex flex-col items-center justify-center py-12 text-center">
-                                <div class="w-28 h-28 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 animate-bounce-slow">
-                                    <i class="fas fa-laptop-code text-5xl text-purple-600 dark:text-purple-400"></i>
-                                </div>
-                                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mb-3">Quiz: {{ $currentContent->title }}</h3>
-                                <p class="text-gray-600 dark:text-gray-400 mb-10 max-w-lg text-lg leading-relaxed">{{ $currentContent->description ?? 'Siap menguji pemahamanmu? Kerjakan kuis ini dengan teliti.' }}</p>
-                                
-                                <div class="flex flex-wrap justify-center gap-6 mb-10 w-full max-w-2xl">
-                                    <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Durasi</p>
-                                        <p class="text-xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-2">
-                                            <i class="far fa-clock text-blue-500"></i> {{ $currentContent->duration_minutes }}m
-                                        </p>
-                                    </div>
-                                    <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Passing Score</p>
-                                        <p class="text-xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
-                                            <i class="fas fa-check-circle"></i> {{ $currentContent->passing_score }}%
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <a href="{{ route('student.quiz.start', [$course->id, $currentContent->id]) }}" class="group relative px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all transform hover:-translate-y-1">
-                                    <span class="relative z-10 flex items-center gap-2">Mulai Quiz Sekarang <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i></span>
-                                </a>
-                            </div>
-                        @endif
+                        </div>
                     </div>
 
-                    @php
-                        $flatList = [];
-                        foreach($course->modules as $m) {
-                            foreach($m->materials as $mat) { $flatList[] = ['type' => 'material', 'id' => $mat->id]; }
-                            foreach($m->quizzes as $q) { $flatList[] = ['type' => 'quiz', 'id' => $q->id]; }
-                        }
-                        $currentIndex = -1;
-                        foreach($flatList as $idx => $item) {
-                            if($item['type'] == $type && $item['id'] == $currentContent->id) {
-                                $currentIndex = $idx;
-                                break;
+                    <div class="px-6 py-5 md:px-10 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 backdrop-blur flex justify-between items-center sticky bottom-0 z-20">
+                        @php
+                            $flatList = [];
+                            foreach($course->modules as $m) {
+                                foreach($m->materials as $mat) { $flatList[] = ['type' => 'material', 'id' => $mat->id]; }
+                                foreach($m->quizzes as $q) { $flatList[] = ['type' => 'quiz', 'id' => $q->id]; }
                             }
-                        }
-                        $prevUrl = ($currentIndex > 0) ? route('student.learning.content', [$course->id, $flatList[$currentIndex-1]['type'], $flatList[$currentIndex-1]['id']]) : '#';
-                        $nextUrl = ($currentIndex < count($flatList) - 1) ? route('student.learning.content', [$course->id, $flatList[$currentIndex+1]['type'], $flatList[$currentIndex+1]['id']]) : route('student.courses');
-                    @endphp
+                            $currentIndex = -1;
+                            foreach($flatList as $idx => $item) {
+                                if($item['type'] == $type && $item['id'] == $currentContent->id) {
+                                    $currentIndex = $idx;
+                                    break;
+                                }
+                            }
+                            $prevUrl = ($currentIndex > 0) ? route('student.learning.content', [$course->id, $flatList[$currentIndex-1]['type'], $flatList[$currentIndex-1]['id']]) : '#';
+                            $nextUrl = ($currentIndex < count($flatList) - 1) ? route('student.learning.content', [$course->id, $flatList[$currentIndex+1]['type'], $flatList[$currentIndex+1]['id']]) : route('student.courses');
+                        @endphp
 
-                    <div class="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 backdrop-blur flex justify-between items-center sticky bottom-0 z-10">
-                        <a href="{{ $prevUrl }}" class="px-6 py-3 text-gray-600 dark:text-gray-400 font-bold hover:bg-white dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition flex items-center gap-2 {{ $currentIndex <= 0 ? 'opacity-50 pointer-events-none' : '' }}">
+                        <a href="{{ $prevUrl }}" class="px-6 py-3 text-gray-600 dark:text-gray-400 font-bold hover:bg-white dark:hover:bg-slate-700 rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition flex items-center gap-2 {{ $currentIndex <= 0 ? 'opacity-50 pointer-events-none' : '' }}">
                             <i class="fas fa-arrow-left"></i> <span>Sebelumnya</span>
                         </a>
                         
@@ -331,10 +336,7 @@
                         @endif
                     </div>
                 </div>
-
-                <div class="mt-8 text-center text-gray-400 dark:text-gray-600 text-xs pb-8">
-                    &copy; {{ date('Y') }} OtakAtik Academy. All rights reserved.
-                </div>
+                
             </div>
         </main>
     </div>
@@ -366,20 +368,16 @@
                     ->exists();
             @endphp
 
-            if (@json($alreadyDone)) {
-                unlockNextButton();
-            }
+            if (@json($alreadyDone)) unlockNextButton();
 
             function unlockNextButton() {
                 isCompleted = true;
                 if(btnNext) {
                     btnNext.disabled = false;
-                    // Modern Button Style
                     btnNext.classList.remove('bg-gray-300', 'dark:bg-slate-700', 'text-gray-500', 'dark:text-gray-400', 'cursor-not-allowed', 'shadow-none');
                     btnNext.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'text-white', 'hover:shadow-lg', 'hover:shadow-blue-500/30', 'transform', 'hover:-translate-y-0.5');
                     btnNext.innerHTML = `<span>Selesai & Lanjut</span> <i class="fas fa-check-circle animate-pulse"></i>`;
                 }
-                
                 if(progressCircle) {
                     progressCircle.style.strokeDashoffset = 0;
                     progressIcon.innerHTML = '<i class="fas fa-check text-green-500 text-xl"></i>';
@@ -389,37 +387,22 @@
             if(scrollContainer && progressCircle) {
                 scrollContainer.addEventListener('scroll', () => {
                     if (isCompleted) return;
-
                     const scrollTop = scrollContainer.scrollTop;
                     const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-                    
-                    let scrollPercent = scrollHeight > 0 ? (scrollTop / scrollHeight) : 1;
-                    if (scrollPercent > 1) scrollPercent = 1;
-
-                    const offset = circumference - (scrollPercent * circumference);
+                    let percent = scrollHeight > 0 ? (scrollTop / scrollHeight) : 1;
+                    if (percent > 1) percent = 1;
+                    const offset = circumference - (percent * circumference);
                     progressCircle.style.strokeDashoffset = offset;
-                    progressIcon.innerText = Math.round(scrollPercent * 100) + '%';
-
-                    // Toleransi 50px dari bawah
+                    progressIcon.innerText = Math.round(percent * 100) + '%';
                     if (scrollHeight - scrollTop <= 50) {
                         unlockNextButton();
-                        fetch(completeUrl, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({})
-                        });
+                        fetch(completeUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
                     }
                 });
             }
 
             if(btnNext) {
-                btnNext.addEventListener('click', () => {
-                    if (!isCompleted) return;
-                    window.location.href = nextUrl;
-                });
+                btnNext.addEventListener('click', () => { if(isCompleted) window.location.href = nextUrl; });
             }
         });
     </script>
