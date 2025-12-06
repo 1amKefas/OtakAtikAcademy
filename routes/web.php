@@ -255,7 +255,9 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     
     // Ini Route yang Error tadi (Route Lama) -> Tetap pertahankan untuk backward compatibility
     // Perhatikan: storeMaterialContent dan deleteMaterialContent
-    Route::post('/courses/{courseId}/modules/{moduleId}/materials', [InstructorController::class, 'storeMaterialContent'])->name('course.material.store');
+    // [BARU] Route Update Materi
+    Route::put('/materials/{id}', [InstructorController::class, 'updateMaterialContent'])->name('course.material.update');
+    
     Route::delete('/materials/content/{id}', [InstructorController::class, 'deleteMaterialContent'])->name('course.material.delete');
 
     // --- ASSIGNMENTS & QUIZZES ---

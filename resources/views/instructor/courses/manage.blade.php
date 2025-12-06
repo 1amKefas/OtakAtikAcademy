@@ -14,7 +14,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <style>
@@ -59,7 +58,6 @@
     </aside>
 
     <div class="flex-1 flex flex-col overflow-hidden">
-        
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="flex items-center gap-4">
                 <a href="{{ route('instructor.courses') }}" class="text-gray-500 hover:text-gray-800 transition">
@@ -75,7 +73,6 @@
                 <button onclick="window.location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                     <i class="fas fa-check-circle"></i> Selesai & Simpan
                 </button>
-                
                 <a href="{{ route('course.show.detail', $course->id) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 ml-2">
                     <i class="fas fa-external-link-alt"></i> Preview
                 </a>
@@ -83,28 +80,24 @@
         </header>
 
         <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
-            
             <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">Kurikulum & Konten</h3>
-                    <p class="text-gray-500 text-sm mt-1">Susun modul, materi bacaan, video, dan kuis secara fleksibel.</p>
+                    <p class="text-gray-500 text-sm mt-1">Drag icon untuk mengubah urutan Modul atau Materi.</p>
                 </div>
                 <button @click="showModuleModal = true" class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2 font-medium">
                     <i class="fas fa-plus-circle"></i> Tambah Modul Baru
                 </button>
             </div>
 
-            <div id="modules-list" class="space-y-6 pb-20">
-                @forelse($course->modules->sortBy('sort_order') as $module)
-                
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden module-item transition hover:shadow-md" 
-                     data-id="{{ $module->id }}" 
-                     x-data="{ open: true }">
+            <div id="modules-list" class="space-y-6 pb-20" data-course-id="{{ $course->id }}">
+                @forelse($course->modules->sortBy('order') as $module)
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden module-item transition hover:shadow-md" data-id="{{ $module->id }}" x-data="{ open: true }">
                     
                     <div class="p-4 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between group">
                         <div class="flex items-center gap-4 flex-1">
                             <div class="text-gray-400 cursor-move hover:text-gray-600 handle p-2">
-                                <i class="fas fa-grip-vertical"></i>
+                                <i class="fas fa-grip-vertical text-lg"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">{{ $module->title }}</h4>
@@ -115,107 +108,79 @@
                         </div>
                         
                         <div class="flex items-center gap-2">
-                            <button class="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition" title="Edit Nama">
+                            <button @click="openUpdateModuleModal({{ $module->id }}, '{{ addslashes($module->title) }}')" class="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
-
-                            <form action="{{ route('instructor.course.module.delete', $module->id) }}" method="POST" onsubmit="return confirm('Hapus modul ini beserta isinya?');">
+                            <form action="{{ route('instructor.course.module.delete', $module->id) }}" method="POST" onsubmit="return confirm('Hapus modul ini?');">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Hapus">
+                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
-
-                            <button @click="open = !open" class="ml-2 p-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-transform duration-300 focus:outline-none" :class="{'rotate-180': !open}">
+                            <button @click="open = !open" class="ml-2 p-2 rounded-full text-gray-500 hover:bg-gray-200 transition" :class="{'rotate-180': !open}">
                                 <i class="fas fa-chevron-down text-lg"></i>
                             </button>
                         </div>
                     </div>
 
                     <div x-show="open" x-collapse class="bg-white p-2">
-                        
                         @php
-                            // GABUNGKAN MATERI & QUIZ LALU SORT
                             $mergedContents = collect();
-                            
-                            foreach($module->materials as $m) {
-                                $m->type = 'material';
-                                $mergedContents->push($m);
-                            }
-                            
-                            foreach($module->quizzes as $q) {
-                                $q->type = 'quiz';
-                                $mergedContents->push($q);
-                            }
-                            
-                            // Sort berdasarkan sort_order
+                            foreach($module->materials as $m) { $m->type = 'material'; $mergedContents->push($m); }
+                            foreach($module->quizzes as $q) { $q->type = 'quiz'; $mergedContents->push($q); }
                             $sortedContents = $mergedContents->sortBy('sort_order');
                         @endphp
 
-                        <div class="space-y-1 contents-list mb-2" 
-                             data-reorder-url="{{ route('instructor.modules.contents.reorder', ['course' => $course->id, 'module' => $module->id]) }}">
-                            
+                        <div class="space-y-1 contents-list mb-2" data-reorder-url="{{ route('instructor.modules.contents.reorder', ['course' => $course->id, 'module' => $module->id]) }}">
                             @forelse($sortedContents as $item)
-                                @if($item->type == 'material')
-                                    <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-blue-200 hover:bg-blue-50 group transition content-item" 
-                                         data-id="{{ $item->id }}" 
-                                         data-type="material">
-                                        
-                                        <div class="flex items-center gap-3 overflow-hidden flex-1">
-                                            <div class="text-gray-300 cursor-grab hover:text-gray-500 handle-content p-1">
-                                                <i class="fas fa-grip-vertical"></i>
-                                            </div>
-                                            <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                                                <i class="fas fa-book-open"></i>
-                                            </div>
-                                            <div class="min-w-0">
-                                                <p class="font-medium text-gray-800 truncate">{{ $item->title }}</p>
-                                                <div class="flex items-center gap-2 text-xs text-gray-500">
-                                                    <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold">MATERI</span>
-                                                    @if($item->file_path)
-                                                        <span class="text-blue-500"><i class="fas fa-paperclip mr-1"></i>File</span>
-                                                    @endif
-                                                </div>
-                                            </div>
+                                <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-blue-200 hover:bg-blue-50 group transition content-item" 
+                                     data-id="{{ $item->id }}" data-type="{{ $item->type }}">
+                                    
+                                    <div class="flex items-center gap-3 overflow-hidden flex-1">
+                                        <div class="text-gray-300 cursor-grab hover:text-gray-500 handle-content p-1">
+                                            <i class="fas fa-grip-vertical"></i>
                                         </div>
-                                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                                            <form action="{{ route('instructor.course.material.delete', $item->id) }}" method="POST" onsubmit="return confirm('Hapus materi ini?');">
-                                                @csrf @method('DELETE')
-                                                <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded transition"><i class="fas fa-times"></i></button>
-                                            </form>
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 {{ $item->type == 'quiz' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600' }}">
+                                            <i class="fas {{ $item->type == 'quiz' ? 'fa-clipboard-check' : 'fa-book-open' }}"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="font-medium text-gray-800 truncate">{{ $item->title }}</p>
+                                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                                <span class="{{ $item->type == 'quiz' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }} px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                                    {{ strtoupper($item->type) }}
+                                                </span>
+                                                @if($item->type == 'material' && $item->file_path)
+                                                    <i class="fas fa-paperclip text-gray-400"></i>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
-
-                                @else
-                                    <div class="flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-purple-200 hover:bg-purple-50 group transition content-item" 
-                                         data-id="{{ $item->id }}" 
-                                         data-type="quiz">
-                                        
-                                        <div class="flex items-center gap-3 flex-1">
-                                            <div class="text-gray-300 cursor-grab hover:text-gray-500 handle-content p-1">
-                                                <i class="fas fa-grip-vertical"></i>
-                                            </div>
-                                            <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
-                                                <i class="fas fa-clipboard-check"></i>
-                                            </div>
-                                            <div>
-                                                <p class="font-medium text-gray-800">{{ $item->title }}</p>
-                                                <div class="flex items-center gap-2 text-xs text-gray-500">
-                                                    <span class="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-bold">QUIZ</span>
-                                                    <span>{{ $item->duration_minutes }} Min</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                                            <a href="{{ route('instructor.quiz.edit', [$course->id, $item->id]) }}" class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-white rounded transition"><i class="fas fa-cog"></i></a>
+                                    
+                                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                        @if($item->type == 'quiz')
+                                            <button @click="openEditQuizModal({{ $item->id }}, '{{ addslashes($item->title) }}', '{{ addslashes($item->description) }}', {{ $item->duration_minutes }}, {{ $item->passing_score }})" 
+                                                    class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-white rounded" title="Edit Pengaturan Quiz">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <a href="{{ route('instructor.quiz.edit', [$course->id, $item->id]) }}" class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-white rounded" title="Kelola Soal">
+                                                <i class="fas fa-list-ol"></i>
+                                            </a>
                                             <form action="{{ route('instructor.course.module.quiz.delete', ['courseId' => $course->id, 'quizId' => $item->id]) }}" method="POST" onsubmit="return confirm('Hapus quiz ini?');">
                                                 @csrf @method('DELETE')
-                                                <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded transition"><i class="fas fa-times"></i></button>
+                                                <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded"><i class="fas fa-times"></i></button>
                                             </form>
-                                        </div>
+                                        @else
+                                            <button @click="openEditMaterialModal({{ $item->id }}, '{{ addslashes($item->title) }}', `{{ base64_encode($item->description) }}`, '{{ $item->external_url }}')"
+                                                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded transition" title="Edit Konten">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <form action="{{ route('instructor.course.material.delete', $item->id) }}" method="POST" onsubmit="return confirm('Hapus materi ini?');">
+                                                @csrf @method('DELETE')
+                                                <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded"><i class="fas fa-times"></i></button>
+                                            </form>
+                                        @endif
                                     </div>
-                                @endif
-
+                                </div>
                             @empty
                                 <div class="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-lg m-2">
                                     <i class="fas fa-inbox text-xl mb-1"></i>
@@ -225,14 +190,13 @@
                         </div>
 
                         <div class="mt-3 pt-3 border-t border-gray-100 flex gap-3 px-2">
-                            <button @click="openModal({{ $module->id }})" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2">
+                            <button @click="openCreateMaterialModal({{ $module->id }})" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2">
                                 <i class="fas fa-plus-circle"></i> Tambah Materi
                             </button>
-                            <button @click="openQuizModal({{ $module->id }})" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
+                            <button @click="openCreateQuizModal({{ $module->id }})" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
                                 <i class="fas fa-question-circle"></i> Quiz
                             </button>
                         </div>
-
                     </div>
                 </div>
                 @empty
@@ -241,7 +205,6 @@
                         <i class="fas fa-layer-group text-3xl"></i>
                     </div>
                     <h3 class="text-xl font-bold text-gray-800">Mulai Menyusun Kursus</h3>
-                    <p class="text-gray-500 mt-2 max-w-md mx-auto">Kursus ini masih kosong. Buat modul pertama Anda untuk mulai menambahkan materi pembelajaran.</p>
                     <button @click="showModuleModal = true" class="mt-6 text-blue-600 font-medium hover:text-blue-800 hover:underline">
                         + Buat Modul Pertama
                     </button>
@@ -252,61 +215,53 @@
     </div>
 
     <div x-show="showModuleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all" 
-             @click.outside="showModuleModal = false"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Buat Modul Baru</h3>
-            <form action="{{ route('instructor.course.module.store', $course->id) }}" method="POST">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6" @click.outside="showModuleModal = false">
+            <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="moduleEditMode ? 'Edit Modul' : 'Buat Modul Baru'"></h3>
+            <form :action="moduleFormAction" method="POST">
                 @csrf
+                <input type="hidden" name="_method" :value="moduleEditMode ? 'PUT' : 'POST'">
                 <div class="mb-5">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Judul Modul / Bab</label>
-                    <input type="text" name="title" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: Pengenalan Dasar">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Judul Modul</label>
+                    <input type="text" name="title" x-model="moduleTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" @click="showModuleModal = false" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg">Simpan Modul</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div x-show="showContentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]" 
-             @click.outside="showContentModal = false"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 translate-y-4"
-             x-transition:enter-end="opacity-100 translate-y-0">
-            
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]" @click.outside="showContentModal = false">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800">Buat Materi Pembelajaran</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Isi konten materi dengan teks, gambar, atau video.</p>
-                </div>
-                <button @click="showContentModal = false" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded-full"><i class="fas fa-times text-xl"></i></button>
+                <h3 class="text-xl font-bold text-gray-800" x-text="contentEditMode ? 'Edit Materi' : 'Buat Materi Baru'"></h3>
+                <button @click="showContentModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
             </div>
-            
             <div class="p-6 overflow-y-auto custom-scrollbar bg-white">
-                <form :action="`/instructor/courses/${courseId}/modules/${activeModuleId}/materials`" method="POST" enctype="multipart/form-data">
+                <form :action="contentFormAction" method="POST" enctype="multipart/form-data" id="contentForm">
                     @csrf
-                    <input type="hidden" name="type" value="mixed">
-
+                    <input type="hidden" name="_method" :value="contentEditMode ? 'PUT' : 'POST'">
+                    
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Judul Materi</label>
-                        <input type="text" name="title" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition font-medium">
+                        <input type="text" name="title" x-model="contentTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div class="mb-6">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Konten Materi (Canvas)</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Konten Materi (Teks/Gambar/Penjelasan)</label>
                         <textarea id="richEditor" name="content"></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">URL Video / Eksternal (Opsional)</label>
+                        <input type="text" name="external_url" x-model="contentUrl" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="https://youtube.com/...">
                     </div>
 
                     <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <label class="block text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
-                            <i class="fas fa-paperclip"></i> Lampiran File (Opsional)
-                        </label>
+                        <label class="block text-sm font-bold text-blue-800 mb-2"><i class="fas fa-paperclip"></i> Lampiran File (Opsional)</label>
                         <input type="file" name="attachment" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white cursor-pointer">
+                        <p x-show="contentEditMode" class="text-xs text-gray-500 mt-2">*Biarkan kosong jika tidak ingin mengubah file.</p>
                     </div>
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -321,36 +276,38 @@
     <div x-show="showQuizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in" @click.outside="showQuizModal = false">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 class="text-xl font-bold text-gray-800">Buat Quiz Baru</h3>
+                <h3 class="text-xl font-bold text-gray-800" x-text="quizEditMode ? 'Edit Pengaturan Quiz' : 'Buat Quiz Baru'"></h3>
                 <button @click="showQuizModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
             
-            <form :action="`/instructor/courses/${courseId}/modules/${activeModuleId}/quiz`" method="POST">
+            <form :action="quizFormAction" method="POST">
                 @csrf
+                <input type="hidden" name="_method" :value="quizEditMode ? 'PUT' : 'POST'">
+                
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Judul Quiz</label>
-                    <input type="text" name="title" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
+                    <input type="text" name="title" x-model="quizTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
                 </div>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi</label>
-                    <textarea name="description" rows="2" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"></textarea>
+                    <textarea name="description" x-model="quizDesc" rows="2" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Durasi (Menit)</label>
-                        <input type="number" name="duration_minutes" value="30" min="1" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
+                        <input type="number" name="duration_minutes" x-model="quizDuration" min="1" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">KKM (0-100)</label>
-                        <input type="number" name="passing_score" value="70" min="0" max="100" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
+                        <input type="number" name="passing_score" x-model="quizScore" min="0" max="100" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <button type="button" @click="showQuizModal = false" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg">Buat Quiz</button>
+                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg" x-text="quizEditMode ? 'Update Pengaturan' : 'Buat Quiz'"></button>
                 </div>
             </form>
         </div>
@@ -361,57 +318,112 @@
         <i class="fas fa-check-circle"></i>
         <span class="font-medium">{{ session('success') }}</span>
     </div>
-    <script>
-        setTimeout(() => {
-            const alert = document.querySelector('.fixed.bottom-6');
-            if(alert) alert.remove();
-        }, 4000);
-    </script>
+    <script>setTimeout(() => document.querySelector('.fixed.bottom-6').remove(), 4000);</script>
     @endif
 
     <script>
         const courseId = {{ $course->id }};
 
-        // 1. Init Alpine & TinyMCE
         document.addEventListener('alpine:init', () => {
             Alpine.data('contentManager', () => ({
+                // Modal States
                 showModuleModal: false,
                 showContentModal: false,
-                showQuizModal: false, 
-                activeModuleId: null,
+                showQuizModal: false,
                 
-                openModal(moduleId) {
-                    this.activeModuleId = moduleId;
-                    this.showContentModal = true;
-                    setTimeout(() => {
-                        if (tinymce.get('richEditor')) tinymce.get('richEditor').remove();
-                        tinymce.init({
-                            selector: '#richEditor',
-                            height: 400,
-                            menubar: false,
-                            license_key: 'gpl',
-                            plugins: 'image media link lists table code preview',
-                            toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code',
-                            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.readAsDataURL(blobInfo.blob());
-                                reader.onload = () => resolve(reader.result);
-                                reader.onerror = error => reject(error);
-                            })
-                        });
-                    }, 100);
+                // Edit Mode Flags
+                moduleEditMode: false,
+                contentEditMode: false,
+                quizEditMode: false,
+
+                // Data Models
+                moduleTitle: '',
+                moduleFormAction: '',
+                
+                contentTitle: '',
+                contentUrl: '',
+                contentFormAction: '',
+                
+                quizTitle: '',
+                quizDesc: '',
+                quizDuration: 30,
+                quizScore: 70,
+                quizFormAction: '',
+                
+                // -- Module Functions --
+                openCreateModuleModal() {
+                    this.moduleEditMode = false;
+                    this.moduleTitle = '';
+                    this.moduleFormAction = `{{ route('instructor.course.module.store', $course->id) }}`;
+                    this.showModuleModal = true;
                 },
-                openQuizModal(moduleId) {
-                    this.activeModuleId = moduleId;
+                openUpdateModuleModal(id, title) {
+                    this.moduleEditMode = true;
+                    this.moduleTitle = title;
+                    this.moduleFormAction = `/instructor/modules/${id}`;
+                    this.showModuleModal = true;
+                },
+
+                // -- Content (Material) Functions --
+                openCreateMaterialModal(moduleId) {
+                    this.contentEditMode = false;
+                    this.contentTitle = '';
+                    this.contentUrl = '';
+                    this.contentFormAction = `/instructor/courses/${courseId}/modules/${moduleId}/materials`;
+                    
+                    // Reset TinyMCE
+                    if(tinymce.get('richEditor')) tinymce.get('richEditor').setContent('');
+                    this.showContentModal = true;
+                },
+                openEditMaterialModal(id, title, encodedContent, url) {
+                    this.contentEditMode = true;
+                    this.contentTitle = title;
+                    this.contentUrl = url || '';
+                    this.contentFormAction = `/materials/${id}`;
+                    
+                    // Decode & Set Content
+                    if(tinymce.get('richEditor')) {
+                        tinymce.get('richEditor').setContent(atob(encodedContent));
+                    }
+                    this.showContentModal = true;
+                },
+
+                // -- Quiz Functions --
+                openCreateQuizModal(moduleId) {
+                    this.quizEditMode = false;
+                    this.quizTitle = '';
+                    this.quizDesc = '';
+                    this.quizDuration = 30;
+                    this.quizScore = 70;
+                    this.quizFormAction = `/instructor/courses/${courseId}/modules/${moduleId}/quiz`;
                     this.showQuizModal = true;
                 },
+                openEditQuizModal(id, title, desc, dur, score) {
+                    this.quizEditMode = true;
+                    this.quizTitle = title;
+                    this.quizDesc = desc;
+                    this.quizDuration = dur;
+                    this.quizScore = score;
+                    this.quizFormAction = `/instructor/courses/${courseId}/quiz/${id}`;
+                    this.showQuizModal = true;
+                }
             }))
         });
 
-        // 2. Init Drag & Drop Logic
+        // SortableJS (Tetap sama seperti sebelumnya)
         document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             
-            // A. Reorder Modules (Parent List)
+            // TinyMCE Init
+            tinymce.init({
+                selector: '#richEditor',
+                height: 400,
+                menubar: false,
+                plugins: 'image media link lists table code preview',
+                toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code'
+            });
+
+            // Sortable Modules
             var moduleList = document.getElementById('modules-list');
             if(moduleList) {
                 Sortable.create(moduleList, {
@@ -420,50 +432,36 @@
                     ghostClass: 'sortable-ghost',
                     onEnd: function (evt) {
                         var orderedIds = this.toArray();
-                        fetch("{{ route('instructor.modules.reorder', $course->id) }}", {
+                        fetch(`/instructor/courses/${courseId}/modules/reorder`, {
                             method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                            },
+                            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
                             body: JSON.stringify({ ordered_ids: orderedIds })
                         });
                     }
                 });
             }
 
-            // B. Reorder Contents (MIXED LIST: Materials & Quizzes)
-            // Menggunakan data-type (material/quiz) untuk dikirim ke controller
+            // Sortable Contents
             document.querySelectorAll('.contents-list').forEach(function(el) {
                 Sortable.create(el, {
-                    handle: '.handle-content', // Handle khusus konten
+                    handle: '.handle-content',
                     animation: 150,
                     ghostClass: 'sortable-ghost',
-                    group: 'contents', // Bisa drag antar modul
+                    group: 'contents', 
                     onEnd: function (evt) {
                         var url = el.getAttribute('data-reorder-url');
                         var itemsData = [];
-                        
-                        // Loop items dalam list setelah di-sort
                         el.querySelectorAll('.content-item').forEach((item, index) => {
-                            itemsData.push({
-                                id: item.getAttribute('data-id'),
-                                type: item.getAttribute('data-type') // Ambil 'material' atau 'quiz'
-                            });
+                            itemsData.push({ id: item.getAttribute('data-id'), type: item.getAttribute('data-type') });
                         });
-
                         fetch(url, {
                             method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({ items: itemsData }) // Kirim mixed data
-                        }).then(res => res.json()).then(data => console.log('Content reordered'));
+                            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
+                            body: JSON.stringify({ items: itemsData })
+                        });
                     }
                 });
             });
-
         });
     </script>
 </body>
