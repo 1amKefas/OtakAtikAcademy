@@ -215,46 +215,62 @@ class QuizController extends Controller
     }
 
     /**
-     * Add question to quiz (Instructor)
+     * Store new question
+     * [FIXED] Ditambahkan $courseId di parameter pertama
      */
     public function addQuestion(Request $request, $courseId, $quizId)
     {
-        if (!Auth::check() || !Auth::user()->is_instructor) {
-            abort(403, 'Unauthorized access.');
-        }
-
-        $course = Course::findOrFail($courseId);
-        $quiz = Quiz::findOrFail($quizId);
-
-        if ($course->instructor_id !== Auth::id() || $quiz->course_id !== $course->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $validated = $request->validate([
+        $request->validate([
             'question' => 'required|string',
-            'question_type' => ['required', Rule::in(['multiple_choice', 'true_false', 'essay'])],
-            'options' => 'nullable|array',
-            'options.*' => 'nullable|string|max:255',
-            'correct_answer' => 'nullable',
-            'points' => 'required|integer|min:1|max:100',
-            'order' => 'nullable|integer|min:1',
+            'type' => 'required|in:multiple_choice,true_false,essay,multiple_select',
+            'points' => 'nullable|integer|min:1',
         ]);
 
-        [$options, $correctAnswer] = $this->prepareQuestionPayload($validated);
+        // Pastikan quiz milik course yang benar
+        $quiz = Quiz::where('course_id', $courseId)->findOrFail($quizId);
 
-        $question = QuizQuestion::create([
+        $questionData = [
             'quiz_id' => $quiz->id,
-            'question' => $validated['question'],
-            'question_type' => $validated['question_type'],
-            'options' => $options,
-            'correct_answer' => $correctAnswer,
-            'points' => $validated['points'],
-            'order' => $validated['order'] ?? ($quiz->questions()->count() + 1),
-        ]);
+            'question_text' => $request->question,
+            'type' => $request->type,
+            'points' => $request->points ?? 10,
+        ];
 
-        return redirect()
-            ->route('instructor.quiz.edit', [$courseId, $quizId])
-            ->with('success', 'Soal berhasil ditambahkan!');
+        // --- Logic Simpan Jawaban ---
+        
+        if ($request->type === 'multiple_choice') {
+            $request->validate([
+                'options' => 'required|array|min:2',
+                'correct_answer' => 'required|integer',
+            ]);
+            $questionData['options'] = json_encode($request->options);
+            $questionData['correct_answer'] = $request->correct_answer;
+
+        } elseif ($request->type === 'multiple_select') {
+            $request->validate([
+                'options' => 'required|array|min:2',
+                'correct_answers' => 'required|array|min:1',
+            ]);
+            $questionData['options'] = json_encode($request->options);
+            
+            // Simpan array jawaban benar sebagai JSON
+            $answers = $request->correct_answers;
+            sort($answers); // Urutkan biar rapi (0, 1, 2)
+            $questionData['correct_answer'] = json_encode($answers);
+
+        } elseif ($request->type === 'true_false') {
+            $request->validate(['correct_answer' => 'required|in:true,false']);
+            $questionData['options'] = null;
+            $questionData['correct_answer'] = $request->correct_answer;
+
+        } elseif ($request->type === 'essay') {
+            $questionData['options'] = null;
+            $questionData['correct_answer'] = $request->answer_explanation;
+        }
+
+        \App\Models\QuizQuestion::create($questionData);
+
+        return back()->with('success', 'Soal berhasil ditambahkan!');
     }
 
     /**
