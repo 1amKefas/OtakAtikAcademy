@@ -14,60 +14,78 @@
         }
     </script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    
     <script>
         tailwind.config = {
-            darkMode: 'class', // Wajib biar dark mode jalan manual
-            theme: { extend: {} }
+            darkMode: 'class', // Wajib 'class' agar toggle manual berfungsi
+            theme: { 
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { 
+                        slate: { 
+                            850: '#1e293b', 
+                            900: '#0f172a' 
+                        } 
+                    }
+                } 
+            }
         }
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* Scrollbar Custom (Dark Mode Friendly) */
-        .sidebar-scroll::-webkit-scrollbar { width: 6px; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
-        .dark .sidebar-scroll::-webkit-scrollbar-thumb { background-color: #4b5563; }
-        
-        /* Active State Styling */
+        /* Scrollbar Halus */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+
+        /* Nav Item Active Styling */
         .nav-item-active {
-            background-color: #eff6ff; /* blue-50 */
-            border-left: 4px solid #3b82f6; /* blue-500 */
-            color: #1d4ed8; /* blue-700 */
+            background: linear-gradient(to right, #eff6ff, #ffffff);
+            border-left: 4px solid #3b82f6;
+            color: #1d4ed8;
         }
-        /* Dark Mode Active State */
         .dark .nav-item-active {
-            background-color: rgba(59, 130, 246, 0.15); /* blue-500 with opacity */
-            border-left: 4px solid #60a5fa; /* blue-400 */
-            color: #60a5fa; /* blue-400 */
+            background: linear-gradient(to right, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0));
+            border-left: 4px solid #60a5fa;
+            color: #60a5fa;
         }
 
         .nav-item-inactive {
             border-left: 4px solid transparent;
-            color: #4b5563; /* gray-600 */
+            color: #64748b;
         }
         .dark .nav-item-inactive {
-            color: #9ca3af; /* gray-400 */
+            color: #94a3b8;
         }
         
-        .locked { cursor: not-allowed; opacity: 0.6; }
+        .locked { cursor: not-allowed; opacity: 0.5; filter: grayscale(100%); }
 
+        /* Circle Progress Animation */
         .progress-ring__circle {
-            transition: stroke-dashoffset 0.35s;
+            transition: stroke-dashoffset 0.35s ease-out;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
+        
+        /* Prose Dark Mode Override (Manual Fix) */
+        .dark .prose { color: #cbd5e1; }
+        .dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4, .dark .prose strong { color: #f1f5f9; }
+        .dark .prose a { color: #60a5fa; }
+        .dark .prose code { color: #e2e8f0; background-color: #1e293b; }
     </style>
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 h-screen flex flex-col transition-colors duration-300"
+<body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col transition-colors duration-300 font-sans"
       x-data="{ 
           theme: localStorage.getItem('theme') || 'system',
+          sidebarOpen: false,
           setTheme(val) {
               this.theme = val;
               localStorage.setItem('theme', val);
@@ -80,225 +98,244 @@
       }"
       x-init="$watch('theme', val => setTheme(val))">
 
-    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 shadow-sm z-20 flex-shrink-0 transition-colors">
+    <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 md:px-8 shadow-sm z-30 flex-shrink-0 transition-colors fixed w-full top-0">
         <div class="flex items-center gap-4">
-            <a href="{{ route('student.course-detail', $registration->id) }}" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition">
-                <i class="fas fa-chevron-left mr-1"></i> Kembali
-            </a>
-            <div class="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-            <h1 class="text-lg font-bold text-gray-800 dark:text-white truncate max-w-md">{{ $course->title }}</h1>
-        </div>
-        
-        <div class="flex items-center gap-4">
-            
-            <button @click="setTheme(theme === 'dark' ? 'light' : 'dark')" 
-                    class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                    title="Ganti Tema">
-                <i class="fas" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+            <button @click="sidebarOpen = !sidebarOpen" class="md:hidden text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white">
+                <i class="fas fa-bars text-xl"></i>
             </button>
 
-            <div class="hidden md:flex items-center gap-3 w-64">
-                <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">{{ $registration->progress }}% Selesai</span>
-                <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: {{ $registration->progress }}%"></div>
+            <a href="{{ route('student.course-detail', $registration->id) }}" class="group flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition">
+                    <i class="fas fa-arrow-left text-sm"></i>
                 </div>
-                @if($registration->progress == 100)
-                    <i class="fas fa-trophy text-yellow-500 text-lg animate-bounce"></i>
-                @endif
+                <span class="text-sm font-medium hidden sm:inline">Kembali</span>
+            </a>
+            
+            <div class="h-6 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div>
+            <h1 class="text-base md:text-lg font-bold text-gray-800 dark:text-white truncate max-w-[200px] md:max-w-md">{{ $course->title }}</h1>
+        </div>
+        
+        <div class="flex items-center gap-3 md:gap-6">
+            <button @click="setTheme(theme === 'dark' ? 'light' : 'dark')" 
+                    class="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition focus:outline-none bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700"
+                    title="Ganti Tema">
+                <i class="fas transition-transform duration-500 hover:rotate-45" :class="theme === 'dark' ? 'fa-sun text-yellow-400' : 'fa-moon text-slate-400'"></i>
+            </button>
+
+            <div class="hidden md:flex flex-col items-end w-48">
+                <div class="flex justify-between w-full text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    <span>Progress</span>
+                    <span>{{ $registration->progress }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full transition-all duration-1000 ease-out" style="width: {{ $registration->progress }}%"></div>
+                </div>
             </div>
         </div>
     </header>
 
-    <div class="flex-1 flex overflow-hidden">
+    <div class="h-16"></div>
+
+    <div class="flex-1 flex overflow-hidden relative">
         
-        <aside class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden z-10 hidden md:flex transition-colors">
-            <div class="p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Daftar Modul</h3>
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition.opacity class="fixed inset-0 bg-black/50 z-30 md:hidden"></div>
+
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed md:static inset-y-0 left-0 w-72 md:w-80 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-40 md:translate-x-0 transition-transform duration-300 shadow-2xl md:shadow-none pt-16 md:pt-0">
+            <div class="p-5 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-gray-800 dark:text-white text-sm uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-list-ul text-blue-500"></i> Daftar Modul
+                </h3>
             </div>
             
-            <div class="flex-1 overflow-y-auto sidebar-scroll p-2 space-y-2">
-                @foreach($course->modules as $module)
-                <div x-data="{ open: true }" class="mb-2">
-                    <button @click="open = !open" class="w-full flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition text-left">
-                        <span class="font-bold text-gray-800 dark:text-gray-200 text-sm">{{ $module->title }}</span>
-                        <i class="fas fa-chevron-down text-gray-500 dark:text-gray-400 text-xs transition-transform" :class="{'rotate-180': !open}"></i>
+            <div class="flex-1 overflow-y-auto p-3 space-y-3">
+                @foreach($course->modules as $index => $module)
+                <div x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }" class="bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <button @click="open = !open" class="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-slate-700 transition text-left group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-md bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-xs font-bold group-hover:bg-blue-500 group-hover:text-white transition">{{ $index + 1 }}</span>
+                            <span class="font-bold text-gray-700 dark:text-gray-300 text-sm">{{ $module->title }}</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-300" :class="{'rotate-180': !open}"></i>
                     </button>
 
-                    <div x-show="open" class="mt-1 space-y-1 ml-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
-                        
-                        @foreach($module->materials as $mat)
-                        @php
-                            $isActive = ($type == 'material' && $currentContent->id == $mat->id);
-                            $isCompleted = \App\Models\CourseProgress::where('user_id', Auth::id())
-                                ->where('content_id', $mat->id)
-                                ->where('content_type', 'material')
-                                ->where('is_completed', true)
-                                ->exists();
-                        @endphp
-                        <a href="{{ route('student.learning.content', [$course->id, 'material', $mat->id]) }}" 
-                           class="flex items-center gap-3 p-3 rounded-md text-sm transition {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                            
-                            <div class="w-5 flex justify-center">
-                                @if($isCompleted)
-                                    <i class="fas fa-check-circle text-green-500 text-sm"></i>
-                                @elseif($isActive)
-                                    <i class="fas fa-play-circle text-blue-600 dark:text-blue-400"></i>
+                    <div x-show="open" x-collapse class="border-t border-gray-100 dark:border-gray-700">
+                        <div class="py-1">
+                            @foreach($module->materials as $mat)
+                            @php
+                                $isActive = ($type == 'material' && $currentContent->id == $mat->id);
+                                $isCompleted = \App\Models\CourseProgress::where('user_id', Auth::id())
+                                    ->where('content_id', $mat->id)
+                                    ->where('content_type', 'material')
+                                    ->where('is_completed', true)
+                                    ->exists();
+                            @endphp
+                            <a href="{{ route('student.learning.content', [$course->id, 'material', $mat->id]) }}" 
+                               class="flex items-center gap-3 px-4 py-2.5 text-sm transition relative {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-100 dark:hover:bg-slate-700' }}">
+                                
+                                <div class="flex-shrink-0 w-5 text-center">
+                                    @if($isCompleted)
+                                        <i class="fas fa-check-circle text-green-500 text-sm"></i>
+                                    @elseif($isActive)
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse mx-auto"></div>
+                                    @else
+                                        <i class="far fa-circle text-gray-400 dark:text-slate-500 text-xs"></i>
+                                    @endif
+                                </div>
+                                
+                                <span class="flex-1 truncate">{{ $mat->title }}</span>
+                                
+                                @if($mat->type == 'video') 
+                                    <i class="fas fa-play text-[10px] text-gray-400"></i> 
                                 @else
-                                    <i class="far fa-circle text-gray-400 dark:text-gray-500 text-xs"></i>
+                                    <i class="fas fa-align-left text-[10px] text-gray-400"></i>
                                 @endif
-                            </div>
-                            
-                            <span class="flex-1 truncate">{{ $mat->title }}</span>
-                            
-                            @if($mat->type == 'video') <i class="fas fa-video text-gray-400 dark:text-gray-500 text-xs"></i> @endif
-                        </a>
-                        @endforeach
+                            </a>
+                            @endforeach
 
-                        @foreach($module->quizzes as $quiz)
-                        @php $isActive = ($type == 'quiz' && $currentContent->id == $quiz->id); @endphp
-                        <a href="{{ route('student.learning.content', [$course->id, 'quiz', $quiz->id]) }}" 
-                           class="flex items-center gap-3 p-3 rounded-md text-sm transition {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                            <div class="w-5 flex justify-center">
-                                <i class="fas fa-question-circle {{ $isActive ? 'text-blue-600 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400' }}"></i>
-                            </div>
-                            <span class="flex-1 truncate">{{ $quiz->title }}</span>
-                            <span class="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded">Quiz</span>
-                        </a>
-                        @endforeach
-
+                            @foreach($module->quizzes as $quiz)
+                            @php $isActive = ($type == 'quiz' && $currentContent->id == $quiz->id); @endphp
+                            <a href="{{ route('student.learning.content', [$course->id, 'quiz', $quiz->id]) }}" 
+                               class="flex items-center gap-3 px-4 py-2.5 text-sm transition {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-100 dark:hover:bg-slate-700' }}">
+                                <div class="flex-shrink-0 w-5 text-center">
+                                    <i class="fas fa-question-circle {{ $isActive ? 'text-blue-600 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400' }}"></i>
+                                </div>
+                                <span class="flex-1 truncate">{{ $quiz->title }}</span>
+                                <span class="text-[10px] font-bold bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded">QUIZ</span>
+                            </a>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
                 @endforeach
             </div>
         </aside>
 
-        <main id="mainScrollContainer" class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 lg:p-10 relative transition-colors">
+        <main id="mainScrollContainer" class="flex-1 overflow-y-auto bg-gray-100 dark:bg-slate-900 p-4 md:p-8 relative transition-colors scroll-smooth">
             
-            <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[80vh] flex flex-col transition-colors">
+            <div class="max-w-4xl mx-auto flex flex-col min-h-full">
                 
-                <div class="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10 transition-colors">
-                    <div class="flex items-center gap-4">
-                        @if($type == 'material')
-                        <div class="relative w-10 h-10 flex items-center justify-center flex-shrink-0">
-                            <svg class="progress-ring" width="40" height="40">
-                                <circle class="text-gray-200 dark:text-gray-700" stroke="currentColor" stroke-width="3" fill="transparent" r="16" cx="20" cy="20"/>
-                                <circle id="progressCircle" class="text-green-500 progress-ring__circle" stroke="currentColor" stroke-width="3" fill="transparent" r="16" cx="20" cy="20" stroke-dasharray="100 100" stroke-dashoffset="100"/>
-                            </svg>
-                            <div id="progressIcon" class="absolute text-[10px] font-bold text-gray-600 dark:text-gray-300">0%</div>
-                        </div>
-                        @endif
-
-                        <div>
-                            <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{{ $currentContent->title }}</h2>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="contentBody" class="p-6 md:p-8 flex-1">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden flex-1 flex flex-col transition-colors">
                     
-                    @if($type == 'material')
-                        
-                        @if($currentContent->type == 'video' && $currentContent->external_url)
-                            <div class="aspect-w-16 aspect-h-9 mb-6 bg-black rounded-xl overflow-hidden shadow-lg">
-                                <iframe src="{{ str_replace('watch?v=', 'embed/', $currentContent->external_url) }}" frameborder="0" allowfullscreen class="w-full h-full"></iframe>
-                            </div>
-                        @endif
+                    <div class="px-6 py-5 md:px-10 md:py-6 border-b border-gray-100 dark:border-gray-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur sticky top-0 z-20 transition-colors flex items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block">
+                                {{ $type == 'material' ? 'Materi Pembelajaran' : 'Evaluasi' }}
+                            </span>
+                            <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight">{{ $currentContent->title }}</h2>
+                        </div>
 
-                        @if($currentContent->description)
-                            <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
-                                {!! $currentContent->description !!}
-                            </div>
+                        @if($type == 'material')
+                        <div class="relative w-12 h-12 flex items-center justify-center flex-shrink-0" title="Scroll Progress">
+                            <svg class="progress-ring" width="44" height="44">
+                                <circle class="text-gray-100 dark:text-slate-700" stroke="currentColor" stroke-width="4" fill="transparent" r="18" cx="22" cy="22"/>
+                                <circle id="progressCircle" class="text-green-500 progress-ring__circle" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="transparent" r="18" cx="22" cy="22" stroke-dasharray="100 100" stroke-dashoffset="100"/>
+                            </svg>
+                            <div id="progressIcon" class="absolute text-[10px] font-bold text-gray-600 dark:text-gray-300 transition-all">0%</div>
+                        </div>
                         @endif
+                    </div>
 
-                        @if($currentContent->file_path)
-                            <div class="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex items-center justify-between">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 bg-white dark:bg-gray-700 rounded-lg flex items-center justify-center shadow-sm text-blue-600 dark:text-blue-400 text-xl">
-                                        <i class="fas fa-file-alt"></i>
+                    <div id="contentBody" class="p-6 md:p-10 flex-1">
+                        @if($type == 'material')
+                            @if($currentContent->type == 'video' && $currentContent->external_url)
+                                <div class="aspect-w-16 aspect-h-9 mb-8 bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-gray-900/5">
+                                    <iframe src="{{ str_replace('watch?v=', 'embed/', $currentContent->external_url) }}" frameborder="0" allowfullscreen class="w-full h-full"></iframe>
+                                </div>
+                            @endif
+
+                            @if($currentContent->description)
+                                <div class="prose dark:prose-invert max-w-none text-lg leading-relaxed">
+                                    {!! $currentContent->description !!}
+                                </div>
+                            @endif
+
+                            @if($currentContent->file_path)
+                                <div class="mt-10 p-5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-blue-300 dark:hover:border-blue-600 transition">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center shadow-sm text-blue-600 dark:text-blue-400 text-2xl group-hover:scale-110 transition">
+                                            <i class="fas fa-file-alt"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 dark:text-gray-200">Lampiran Materi</h4>
+                                            <p class="text-sm text-blue-600 dark:text-blue-400 truncate max-w-[200px]">{{ $currentContent->file_name ?? 'Download File' }}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-800 dark:text-gray-200">Materi Tambahan</h4>
-                                        <p class="text-sm text-blue-600 dark:text-blue-400">{{ $currentContent->file_name ?? 'Document' }}</p>
+                                    <a href="{{ Storage::url($currentContent->file_path) }}" target="_blank" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                            @endif
+                            
+                            <div class="h-24 flex items-center justify-center">
+                                <p class="text-xs text-gray-400 uppercase tracking-widest animate-pulse">Scroll to complete</p>
+                            </div>
+
+                        @elseif($type == 'quiz')
+                            <div class="flex flex-col items-center justify-center py-12 text-center">
+                                <div class="w-28 h-28 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 animate-bounce-slow">
+                                    <i class="fas fa-laptop-code text-5xl text-purple-600 dark:text-purple-400"></i>
+                                </div>
+                                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mb-3">Quiz: {{ $currentContent->title }}</h3>
+                                <p class="text-gray-600 dark:text-gray-400 mb-10 max-w-lg text-lg leading-relaxed">{{ $currentContent->description ?? 'Siap menguji pemahamanmu? Kerjakan kuis ini dengan teliti.' }}</p>
+                                
+                                <div class="flex flex-wrap justify-center gap-6 mb-10 w-full max-w-2xl">
+                                    <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Durasi</p>
+                                        <p class="text-xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-2">
+                                            <i class="far fa-clock text-blue-500"></i> {{ $currentContent->duration_minutes }}m
+                                        </p>
+                                    </div>
+                                    <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Passing Score</p>
+                                        <p class="text-xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
+                                            <i class="fas fa-check-circle"></i> {{ $currentContent->passing_score }}%
+                                        </p>
                                     </div>
                                 </div>
-                                <a href="{{ Storage::url($currentContent->file_path) }}" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-md">
-                                    <i class="fas fa-download mr-2"></i> Download
+
+                                <a href="{{ route('student.quiz.start', [$course->id, $currentContent->id]) }}" class="group relative px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all transform hover:-translate-y-1">
+                                    <span class="relative z-10 flex items-center gap-2">Mulai Quiz Sekarang <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i></span>
                                 </a>
                             </div>
                         @endif
+                    </div>
 
-                        <div class="h-20"></div>
-
-                    @elseif($type == 'quiz')
-                        <div class="text-center py-10">
-                            <div class="w-24 h-24 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <i class="fas fa-clipboard-list text-4xl text-purple-600 dark:text-purple-400"></i>
-                            </div>
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Quiz: {{ $currentContent->title }}</h3>
-                            <p class="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">{{ $currentContent->description ?? 'Uji pemahaman Anda dengan mengerjakan kuis ini.' }}</p>
-                            
-                            <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-8 text-left">
-                                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Durasi</p>
-                                    <p class="font-bold text-gray-800 dark:text-gray-200">{{ $currentContent->duration_minutes }} Menit</p>
-                                </div>
-                                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Passing Score</p>
-                                    <p class="font-bold text-green-600 dark:text-green-400">{{ $currentContent->passing_score }}%</p>
-                                </div>
-                            </div>
-
-                            <a href="{{ route('student.quiz.start', [$course->id, $currentContent->id]) }}" class="inline-block px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-lg shadow-lg hover:-translate-y-1 transition transform">
-                                Mulai Quiz Sekarang
-                            </a>
-                        </div>
-                    @endif
-
-                </div>
-
-                @php
-                    $flatList = [];
-                    foreach($course->modules as $m) {
-                        foreach($m->materials as $mat) { $flatList[] = ['type' => 'material', 'id' => $mat->id]; }
-                        foreach($m->quizzes as $q) { $flatList[] = ['type' => 'quiz', 'id' => $q->id]; }
-                    }
-
-                    $currentIndex = -1;
-                    foreach($flatList as $idx => $item) {
-                        if($item['type'] == $type && $item['id'] == $currentContent->id) {
-                            $currentIndex = $idx;
-                            break;
+                    @php
+                        $flatList = [];
+                        foreach($course->modules as $m) {
+                            foreach($m->materials as $mat) { $flatList[] = ['type' => 'material', 'id' => $mat->id]; }
+                            foreach($m->quizzes as $q) { $flatList[] = ['type' => 'quiz', 'id' => $q->id]; }
                         }
-                    }
+                        $currentIndex = -1;
+                        foreach($flatList as $idx => $item) {
+                            if($item['type'] == $type && $item['id'] == $currentContent->id) {
+                                $currentIndex = $idx;
+                                break;
+                            }
+                        }
+                        $prevUrl = ($currentIndex > 0) ? route('student.learning.content', [$course->id, $flatList[$currentIndex-1]['type'], $flatList[$currentIndex-1]['id']]) : '#';
+                        $nextUrl = ($currentIndex < count($flatList) - 1) ? route('student.learning.content', [$course->id, $flatList[$currentIndex+1]['type'], $flatList[$currentIndex+1]['id']]) : route('student.courses');
+                    @endphp
 
-                    $prevUrl = ($currentIndex > 0) 
-                        ? route('student.learning.content', [$course->id, $flatList[$currentIndex-1]['type'], $flatList[$currentIndex-1]['id']]) 
-                        : '#';
+                    <div class="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 backdrop-blur flex justify-between items-center sticky bottom-0 z-10">
+                        <a href="{{ $prevUrl }}" class="px-6 py-3 text-gray-600 dark:text-gray-400 font-bold hover:bg-white dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition flex items-center gap-2 {{ $currentIndex <= 0 ? 'opacity-50 pointer-events-none' : '' }}">
+                            <i class="fas fa-arrow-left"></i> <span>Sebelumnya</span>
+                        </a>
                         
-                    $nextUrl = ($currentIndex < count($flatList) - 1)
-                        ? route('student.learning.content', [$course->id, $flatList[$currentIndex+1]['type'], $flatList[$currentIndex+1]['id']])
-                        : route('student.courses');
-                @endphp
+                        @if($type == 'material')
+                            <button id="btnNext" type="button" disabled 
+                                class="px-8 py-3 bg-gray-300 dark:bg-slate-700 text-gray-500 dark:text-gray-400 font-bold rounded-xl cursor-not-allowed transition-all flex items-center gap-3 shadow-none">
+                                <span>Lanjut Materi</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
 
-                <div class="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center sticky bottom-0 z-10 transition-colors">
-                    <a href="{{ $prevUrl }}" class="px-5 py-2.5 text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition {{ $currentIndex <= 0 ? 'opacity-50 pointer-events-none' : '' }}">
-                        <i class="fas fa-arrow-left mr-2"></i> Sebelumnya
-                    </a>
-                    
-                    @if($type == 'material')
-                        <button id="btnNext" type="button" disabled 
-                            class="px-6 py-2.5 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold rounded-lg cursor-not-allowed transition flex items-center gap-2">
-                            <span>Selesai & Lanjut</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    @endif
+                <div class="mt-8 text-center text-gray-400 dark:text-gray-600 text-xs pb-8">
+                    &copy; {{ date('Y') }} OtakAtik Academy. All rights reserved.
                 </div>
             </div>
-
-            <div class="mt-8 text-center text-gray-400 dark:text-gray-500 text-sm">
-                &copy; {{ date('Y') }} OtakAtik Academy Learning Platform
-            </div>
-
         </main>
     </div>
 
@@ -337,13 +374,15 @@
                 isCompleted = true;
                 if(btnNext) {
                     btnNext.disabled = false;
-                    btnNext.classList.remove('bg-gray-300', 'dark:bg-gray-700', 'text-gray-500', 'dark:text-gray-400', 'cursor-not-allowed');
-                    btnNext.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700', 'shadow-md');
+                    // Modern Button Style
+                    btnNext.classList.remove('bg-gray-300', 'dark:bg-slate-700', 'text-gray-500', 'dark:text-gray-400', 'cursor-not-allowed', 'shadow-none');
+                    btnNext.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'text-white', 'hover:shadow-lg', 'hover:shadow-blue-500/30', 'transform', 'hover:-translate-y-0.5');
+                    btnNext.innerHTML = `<span>Selesai & Lanjut</span> <i class="fas fa-check-circle animate-pulse"></i>`;
                 }
                 
                 if(progressCircle) {
                     progressCircle.style.strokeDashoffset = 0;
-                    progressIcon.innerHTML = '<i class="fas fa-check text-green-600"></i>';
+                    progressIcon.innerHTML = '<i class="fas fa-check text-green-500 text-xl"></i>';
                 }
             }
 
@@ -361,7 +400,8 @@
                     progressCircle.style.strokeDashoffset = offset;
                     progressIcon.innerText = Math.round(scrollPercent * 100) + '%';
 
-                    if (scrollHeight - scrollTop <= 10) {
+                    // Toleransi 50px dari bawah
+                    if (scrollHeight - scrollTop <= 50) {
                         unlockNextButton();
                         fetch(completeUrl, {
                             method: 'POST',

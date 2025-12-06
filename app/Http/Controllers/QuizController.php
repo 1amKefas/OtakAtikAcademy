@@ -541,46 +541,81 @@ class QuizController extends Controller
      */
     public function submit(Request $request, $courseId, $quizId, $submissionId)
     {
-        $course = Course::findOrFail($courseId);
-        $quiz = Quiz::findOrFail($quizId);
-        $submission = QuizSubmission::findOrFail($submissionId);
+        $quiz = Quiz::where('course_id', $courseId)->findOrFail($quizId);
+        
+        // Cari Submission
+        $submission = \App\Models\QuizSubmission::where('quiz_id', $quizId)
+            ->where('user_id', Auth::id())
+            ->where('id', $submissionId)
+            ->firstOrFail();
 
-        // Check if student owns this submission
-        if ($submission->user_id !== Auth::id() || $submission->quiz_id !== $quiz->id) {
-            abort(403, 'Unauthorized access.');
+        // [FIX 1] Tambahkan $courseId di sini
+        if ($submission->status === 'submitted') {
+            return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId]);
         }
 
-        // Check if already submitted
-        if ($submission->submitted_at) {
-            return response()->json(['success' => false, 'message' => 'Quiz sudah disubmit.']);
+        // Simpan Jawaban
+        $answers = $request->input('answers', []);
+        $submission->answers = $answers;
+        $submission->submitted_at = now();
+        $submission->status = 'submitted'; 
+        $submission->save();
+
+        // Logic Grading (Hitung Nilai)
+        $score = 0;
+        $totalPoints = $quiz->questions->sum('points');
+        $earnedPoints = 0;
+        $correctCount = 0;
+
+        foreach ($quiz->questions as $question) {
+            $userAns = $answers[$question->id] ?? null;
+            
+            if (!$userAns) continue;
+
+            $isCorrect = false;
+            
+            if ($question->question_type == 'multiple_choice' || $question->question_type == 'true_false') {
+                if ((string)$userAns === (string)$question->correct_answer) $isCorrect = true;
+            } elseif ($question->question_type == 'multiple_select') {
+                $keyArr = json_decode($question->correct_answer, true) ?? [];
+                $ansArr = is_array($userAns) ? $userAns : [];
+                sort($keyArr); sort($ansArr);
+                if ($keyArr == $ansArr) $isCorrect = true;
+            }
+            
+            if ($isCorrect) {
+                $earnedPoints += $question->points;
+                $correctCount++;
+            }
         }
-
-        // Validate answers
-        $answers = $request->validate([
-            'answers' => 'required|array'
-        ])['answers'];
-
-        DB::beginTransaction();
-        try {
-            // Grade submission
-            $result = $this->gradingService->gradeSubmission($submission, $answers);
-
-            $submission->update([
-                'submitted_at' => now(),
-                'answers' => $answers
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Quiz berhasil disubmit!',
-                'result' => $result
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Terjadi error: ' . $e->getMessage()], 500);
+        
+        // Hitung Skor (0-100)
+        if ($totalPoints > 0) {
+            $score = round(($earnedPoints / $totalPoints) * 100);
         }
+        
+        $submission->score = $score;
+        $submission->correct_answers_count = $correctCount;
+        $submission->save();
+
+        // Update Progress di CourseProgress (Tandai Selesai)
+        \App\Models\CourseProgress::updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'course_id' => $courseId,
+                'content_id' => $quizId,
+                'content_type' => 'quiz',
+            ],
+            [
+                'course_module_id' => $quiz->course_module_id,
+                'is_completed' => true,
+                'completed_at' => now(),
+            ]
+        );
+
+        // [FIX 2] Tambahkan $courseId di sini juga
+        return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId])
+            ->with('success', 'Jawaban berhasil dikirim!');
     }
 
     /**

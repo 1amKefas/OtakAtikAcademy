@@ -1,232 +1,209 @@
 @extends('layouts.app')
 
-@section('title', 'Hasil Quiz - ' . $quiz->title)
-
 @section('content')
-<div class="bg-white">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-8">
-        <div class="max-w-5xl mx-auto">
-            <div class="mb-4">
-                <a href="{{ route('student.quiz.index', $course->id) }}" class="hover:opacity-80">
-                    ← Kembali
+<div class="min-h-screen bg-gray-50 dark:bg-slate-900 py-12 transition-colors">
+    <div class="max-w-4xl mx-auto px-4">
+        
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden text-center p-8 mb-8 border border-gray-100 dark:border-gray-700">
+            
+            @if($submission->score >= $quiz->passing_score)
+                <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                    <i class="fas fa-trophy text-4xl text-green-600 dark:text-green-400"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Selamat! Anda Lulus</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Hasil kerja keras Anda memuaskan.</p>
+            @else
+                <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-times-circle text-4xl text-red-600 dark:text-red-400"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Belum Lulus</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Tetap semangat, silakan coba lagi.</p>
+            @endif
+
+            <div class="mt-6">
+                <span class="text-5xl font-extrabold {{ $submission->score >= $quiz->passing_score ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                    {{ $submission->score }}
+                </span>
+                <span class="text-gray-400 text-lg">/ 100</span>
+            </div>
+
+            <div class="mt-8 flex justify-center gap-3">
+                <a href="{{ route('student.learning.index', $quiz->course_id) }}" 
+                   class="px-6 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-bold rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i> Kembali ke Materi
                 </a>
+                @if($submission->score < $quiz->passing_score)
+                    <a href="{{ route('student.quiz.start', [$quiz->course_id, $quiz->id]) }}" 
+                       class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg transition transform hover:-translate-y-0.5 text-sm">
+                        <i class="fas fa-redo mr-2"></i> Coba Lagi
+                    </a>
+                @endif
             </div>
-            <h1 class="text-3xl font-bold mb-2">Hasil Quiz</h1>
-            <p class="text-blue-100">{{ $quiz->title }}</p>
         </div>
-    </div>
 
-    <!-- Main Content -->
-    <div class="max-w-5xl mx-auto px-6 py-8">
         @php
-            // Calculate correct answers from submission (moved to top for use in all sections)
-            $correctCount = 0;
-            if ($submission->answers) {
-                foreach ($quiz->questions as $question) {
-                    $userAnswer = $submission->answers[$question->id] ?? null;
-                    $correctAnswer = (string)$question->correct_answer;
-                    $userAnswerStr = (string)$userAnswer;
-                    
-                    if ($question->question_type === 'multiple_choice' && $userAnswerStr === $correctAnswer) {
-                        $correctCount++;
-                    } elseif ($question->question_type === 'true_false') {
-                        $userNorm = strtolower($userAnswerStr);
-                        $correctNorm = strtolower($correctAnswer);
-                        if ($userNorm === $correctNorm) {
-                            $correctCount++;
-                        }
-                    }
-                }
-            }
+            $totalQuestions = $quiz->questions->count();
+            $answeredCount = count($submission->answers ?? []);
+            $correctCount = $submission->correct_answers_count;
+            $wrongCount = $answeredCount - $correctCount; // Asumsi: Terjawab - Benar = Salah (utk PG)
+            $unansweredCount = $totalQuestions - $answeredCount;
         @endphp
-        <div class="grid grid-cols-3 gap-8">
-            <!-- Sidebar Stats -->
-            <div class="col-span-1">
-                <div class="sticky top-6 space-y-4">
-                    <!-- Score Card -->
-                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-6 text-center">
-                        <p class="text-sm text-gray-600 mb-2">Skor Anda</p>
-                        @php
-                            // Calculate score from correct answers
-                            $score = ($correctCount / $quiz->questions()->count()) * 100;
-                            $score = round($score, 2);
-                        @endphp
-                        <p class="text-5xl font-bold text-blue-600">{{ $score }}</p>
-                        <p class="text-sm text-gray-600">dari 100</p>
-                        
-                        @if($score >= $quiz->passing_score)
-                            <div class="mt-4 bg-green-100 text-green-800 rounded-lg py-2 font-bold">
-                                LULUS
-                            </div>
-                        @else
-                            <div class="mt-4 bg-red-100 text-red-800 rounded-lg py-2 font-bold">
-                                TIDAK LULUS
-                            </div>
-                        @endif
-                    </div>
 
-                    <!-- Quiz Info -->
-                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                        <h4 class="font-semibold text-gray-800 mb-3">Informasi Quiz</h4>
-                        <div class="text-sm text-gray-700 space-y-2">
-                            <div class="flex justify-between">
-                                <span>Total Soal:</span>
-                                <strong>{{ $quiz->questions()->count() }}</strong>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Benar:</span>
-                                <strong class="text-green-600">{{ $correctCount }}</strong>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Salah:</span>
-                                <strong class="text-red-600">{{ ($quiz->questions()->count() - $correctCount) }}</strong>
-                            </div>
-                            <div class="flex justify-between border-t border-gray-300 pt-2 mt-2">
-                                <span>Nilai Minimal Lulus:</span>
-                                <strong>{{ $quiz->passing_score }}%</strong>
-                            </div>
-                        </div>
-                    </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Total Soal</p>
+                <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1">{{ $totalQuestions }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Terjawab</p>
+                <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{{ $answeredCount }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-green-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Jawaban Benar</p>
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{{ $correctCount }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border-l-4 border-red-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Jawaban Salah</p>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{{ $wrongCount }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold"><i class="far fa-clock mr-1"></i> Mulai</p>
+                <p class="text-sm font-semibold text-gray-800 dark:text-white mt-1">{{ $submission->created_at->format('H:i:s') }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold"><i class="fas fa-flag-checkered mr-1"></i> Selesai</p>
+                <p class="text-sm font-semibold text-gray-800 dark:text-white mt-1">{{ $submission->submitted_at ? $submission->submitted_at->format('H:i:s') : '-' }}</p>
+            </div>
+        </div>
 
-                    <!-- Timing -->
-                    <div class="bg-purple-50 rounded-lg border border-purple-200 p-4">
-                        <h4 class="font-semibold text-purple-800 mb-3">Waktu</h4>
-                        <div class="text-sm text-purple-700 space-y-2">
-                            <div>
-                                <p class="text-xs">Mulai:</p>
-                                <p class="font-semibold">{{ $submission->created_at->format('H:i:s') }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs">Selesai:</p>
-                                <p class="font-semibold">{{ $submission->submitted_at->format('H:i:s') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-gray-700">
+                <h3 class="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-list-check text-blue-500"></i> Review Jawaban
+                </h3>
             </div>
 
-            <!-- Main Content -->
-            <div class="col-span-2">
-                <!-- Performance Bar -->
-                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 Performa</h3>
-                    <div class="space-y-3">
-                        <!-- Correct -->
-                        <div>
-                            <div class="flex justify-between mb-2">
-                                <span class="text-gray-700">Jawaban Benar</span>
-                                <span class="font-bold text-green-600">{{ $correctCount }}/{{ $quiz->questions()->count() }}</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="bg-green-500 h-3 rounded-full" 
-                                     style="width: {{ (($correctCount / $quiz->questions()->count()) * 100) }}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                @foreach($quiz->questions as $index => $question)
+                    @php
+                        // Ambil Jawaban User
+                        $userAnswer = $submission->answers[$question->id] ?? null;
+                        $isCorrect = false;
+                        
+                        // Logic Cek Kebenaran (Sederhana)
+                        if ($question->question_type === 'multiple_choice' || $question->question_type === 'true_false') {
+                            $isCorrect = (string)$userAnswer === (string)$question->correct_answer;
+                        } elseif ($question->question_type === 'multiple_select') {
+                            // Bandingkan array
+                            $correctArr = json_decode($question->correct_answer, true) ?? [];
+                            $userArr = is_array($userAnswer) ? $userAnswer : [];
+                            sort($correctArr);
+                            sort($userArr);
+                            $isCorrect = ($correctArr == $userArr);
+                        }
+                        
+                        // Decode Options
+                        $options = json_decode($question->options, true) ?? [];
+                    @endphp
 
-                <!-- Questions Review -->
-                <div class="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Ulasan Soal</h3>
-                    
-                    <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
-                        @foreach($quiz->questions()->orderBy('order')->get() as $index => $question)
-                        @php
-                            $userAnswer = $submission->answers[$question->id] ?? null;
-                            $isCorrect = false;
+                    <div x-data="{ open: false }" class="group">
+                        <button @click="open = !open" class="w-full px-6 py-4 flex items-start gap-4 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
                             
-                            if($question->question_type !== 'essay') {
-                                $correctAnswer = $question->correct_answer;
-                                $isCorrect = $userAnswer == $correctAnswer;
-                            }
-                        @endphp
-                        <div class="border border-gray-200 rounded-lg p-4 {{ $isCorrect ? 'bg-green-50' : 'bg-red-50' }}">
-                            <!-- Question Header -->
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex-1">
-                                    <p class="text-sm font-semibold text-gray-600 mb-1">Soal {{ $index + 1 }}</p>
-                                    <p class="text-gray-800 font-medium">{{ $question->question_text }}</p>
-                                </div>
+                            <div class="mt-0.5 flex-shrink-0">
                                 @if($question->question_type === 'essay')
-                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-semibold">Essay</span>
+                                    <span class="text-orange-500" title="Menunggu Penilaian"><i class="fas fa-hourglass-half"></i></span>
                                 @elseif($isCorrect)
-                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">Benar</span>
+                                    <span class="text-green-500" title="Benar"><i class="fas fa-check-circle"></i></span>
                                 @else
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">Salah</span>
+                                    <span class="text-red-500" title="Salah"><i class="fas fa-times-circle"></i></span>
                                 @endif
                             </div>
 
-                            <!-- Answer Display -->
-                            @if($question->question_type === 'multiple_choice')
-                                <div class="bg-white rounded p-3 text-sm">
-                                    @php
-                                        // Handle both string JSON and array formats
-                                        $options = is_string($question->options) 
-                                            ? json_decode($question->options, true) 
-                                            : $question->options;
-                                        $options = $options ?? [];
-                                        $correctAnswer = $question->correct_answer;
-                                    @endphp
-                                    
-                                    <p class="text-gray-700 mb-2"><strong>Jawaban Anda:</strong></p>
-                                    <p class="text-gray-800 mb-2">{{ $options[$userAnswer] ?? 'Tidak dijawab' }}</p>
-                                    
-                                    @if(!$isCorrect)
-                                        <p class="text-green-700 mt-2"><strong>Jawaban Benar:</strong></p>
-                                        <p class="text-green-800">{{ $options[$correctAnswer] ?? 'N/A' }}</p>
-                                    @endif
-                                </div>
-                            
-                            @elseif($question->question_type === 'true_false')
-                                <div class="bg-white rounded p-3 text-sm">
-                                    <p class="text-gray-700 mb-2"><strong>Jawaban Anda:</strong></p>
-                                    <p class="text-gray-800 mb-2">
-                                        {{ $userAnswer === 'true' ? 'Benar' : ($userAnswer === 'false' ? 'Salah' : 'Tidak dijawab') }}
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 line-clamp-2">
+                                    <span class="font-bold mr-1">{{ $index + 1 }}.</span> {!! strip_tags($question->question_text) !!}
+                                </p>
+                                <div class="flex gap-3 mt-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        Jawabanmu: 
+                                        <span class="font-medium {{ $isCorrect ? 'text-green-600' : 'text-red-600' }}">
+                                            @if(is_array($userAnswer))
+                                                {{ implode(', ', array_map(fn($k) => chr(65+$k), $userAnswer)) }}
+                                            @elseif($question->question_type == 'true_false')
+                                                {{ $userAnswer == 'true' ? 'Benar' : 'Salah' }}
+                                            @elseif($question->question_type == 'essay')
+                                                (Essay)
+                                            @else
+                                                {{ isset($userAnswer) ? chr(65 + $userAnswer) : '-' }}
+                                            @endif
+                                        </span>
                                     </p>
-                                    
-                                    @if(!$isCorrect)
-                                        <p class="text-green-700 mt-2"><strong>Jawaban Benar:</strong></p>
-                                        <p class="text-green-800">
-                                            {{ $question->correct_answer === 'true' ? 'Benar' : 'Salah' }}
-                                        </p>
-                                    @endif
                                 </div>
+                            </div>
+
+                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200" :class="{'rotate-180': open}"></i>
+                        </button>
+
+                        <div x-show="open" x-collapse class="bg-gray-50 dark:bg-slate-900/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 text-sm">
                             
-                            @elseif($question->question_type === 'essay')
-                                <div class="bg-white rounded p-3 text-sm">
-                                    <p class="text-gray-700 mb-2"><strong>Jawaban Anda:</strong></p>
-                                    <p class="text-gray-800 whitespace-pre-wrap mb-3">{{ $userAnswer ?? 'Tidak dijawab' }}</p>
-                                    
-                                    @if($submission->essay_feedback && $submission->essay_feedback[$question->id] ?? null)
-                                        <p class="text-blue-700 mt-2"><strong>Feedback Instruktur:</strong></p>
-                                        <p class="text-blue-800">{{ $submission->essay_feedback[$question->id] }}</p>
-                                    @else
-                                        <p class="text-yellow-700 italic">Menunggu feedback dari instruktur...</p>
-                                    @endif
+                            <div class="mb-4 prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 text-sm">
+                                {!! $question->question_text !!}
+                            </div>
+
+                            @if($question->question_type !== 'essay')
+                            <div class="space-y-2 mb-4">
+                                @foreach($options as $key => $opt)
+                                    @php
+                                        // Cek status opsi ini
+                                        $isUserSelected = false;
+                                        if (is_array($userAnswer)) $isUserSelected = in_array($key, $userAnswer);
+                                        else $isUserSelected = ((string)$userAnswer === (string)$key);
+
+                                        $isKeyCorrect = false;
+                                        if ($question->question_type == 'multiple_select') {
+                                            $correctArr = json_decode($question->correct_answer, true) ?? [];
+                                            $isKeyCorrect = in_array($key, $correctArr);
+                                        } elseif ($question->question_type == 'multiple_choice') {
+                                            $isKeyCorrect = ((string)$question->correct_answer === (string)$key);
+                                        }
+                                    @endphp
+
+                                    <div class="flex items-center gap-3 p-3 rounded-lg border 
+                                        {{ $isKeyCorrect ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : '' }}
+                                        {{ $isUserSelected && !$isKeyCorrect ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-200 dark:border-gray-700' }}
+                                    ">
+                                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border
+                                            {{ $isKeyCorrect ? 'bg-green-500 border-green-500 text-white' : '' }}
+                                            {{ $isUserSelected && !$isKeyCorrect ? 'bg-red-500 border-red-500 text-white' : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-gray-600 text-gray-500' }}
+                                        ">
+                                            {{ chr(65 + $key) }}
+                                        </div>
+                                        <span class="flex-1 {{ $isKeyCorrect ? 'text-green-800 dark:text-green-300 font-medium' : 'text-gray-700 dark:text-gray-300' }}">
+                                            {{ $opt }}
+                                        </span>
+                                        
+                                        @if($isKeyCorrect)
+                                            <span class="text-xs font-bold text-green-600 dark:text-green-400"><i class="fas fa-check"></i> Kunci</span>
+                                        @endif
+                                        @if($isUserSelected && !$isKeyCorrect)
+                                            <span class="text-xs font-bold text-red-600 dark:text-red-400"><i class="fas fa-times"></i> Jawabanmu</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            @else
+                                <div class="p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                    <p class="text-xs font-bold text-gray-500 uppercase mb-1">Jawaban Anda:</p>
+                                    <p class="text-gray-800 dark:text-gray-200">{{ $userAnswer ?? '-' }}</p>
                                 </div>
                             @endif
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
 
-                <!-- Action Buttons -->
-                <div class="flex gap-4 mt-6">
-                    <a href="{{ route('student.quiz.index', $submission->quiz->course->registrations()->where('user_id', auth()->id())->first()->id ?? '#') }}" 
-                       class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition">
-                        ← Kembali ke Daftar Quiz
-                    </a>
-                    
-                    @if($quiz->submissions()->where('user_id', auth()->id())->count() < $quiz->attempts_allowed)
-                    <a href="{{ route('student.quiz.start', $quiz->id) }}" 
-                       class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition">
-                        🔄 Coba Lagi
-                    </a>
-                    @endif
-                </div>
+                            </div>
+                    </div>
+                @endforeach
             </div>
         </div>
+
     </div>
 </div>
 @endsection
