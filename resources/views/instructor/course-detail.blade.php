@@ -168,7 +168,7 @@
                         <!-- Add Material Form -->
                         <div id="materialForm" class="bg-gray-50 rounded-lg p-6 mb-6 hidden">
                             <h4 class="text-lg font-semibold text-gray-800 mb-4">Add New Material</h4>
-                            <form action="{{ route('instructor.materials.store', $course->id) }}" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('course.material.store', $course->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="space-y-4">
                                     <div>

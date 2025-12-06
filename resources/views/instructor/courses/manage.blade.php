@@ -255,7 +255,8 @@
                     
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">URL Video / Eksternal (Opsional)</label>
-                        <input type="text" name="external_url" x-model="contentUrl" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="https://youtube.com/...">
+                        <input type="text" name="external_url" x-model="contentUrl" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: https://youtube.com/watch?v=...">
+                        <p class="text-xs text-gray-500 mt-1">Masukkan link YouTube untuk menampilkan video player.</p>
                     </div>
 
                     <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
@@ -410,7 +411,7 @@
             }))
         });
 
-        // SortableJS (Tetap sama seperti sebelumnya)
+        // SortableJS
         document.addEventListener('DOMContentLoaded', function () {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             
