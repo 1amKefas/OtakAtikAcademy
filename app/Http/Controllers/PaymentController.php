@@ -316,7 +316,8 @@ class PaymentController extends Controller
         $finalPrice = $base;
 
         if ($voucherCode) {
-            if ($voucherCode === $course->discount_code && $course->discount_percent > 0) {
+            // [FIX BUG 3] Pakai strtoupper biar "Diskon10" sama dengan "DISKON10"
+            if (strtoupper($voucherCode) === strtoupper($course->discount_code) && $course->discount_percent > 0) {
                 $discountAmount = $base * ($course->discount_percent / 100);
                 $finalPrice = $base - $discountAmount;
             }
