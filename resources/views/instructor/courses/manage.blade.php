@@ -6,6 +6,7 @@
     <title>Manage Course - {{ $course->title }}</title>
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="course-id" content="{{ $course->id }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,6 +16,8 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <script src="{{ asset('js/instructor-manage.js') }}"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -28,8 +31,6 @@
         .handle, .handle-content { cursor: grab; }
         .handle:active, .handle-content:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
-        
-        /* [FIX] Pastikan Dialog TinyMCE selalu di atas Modal Alpine */
         .tox-dialog-wrap { z-index: 10000 !important; }
         .tox .tox-dialog { z-index: 10001 !important; }
     </style>
@@ -174,7 +175,8 @@
                                                 <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded"><i class="fas fa-times"></i></button>
                                             </form>
                                         @else
-                                            <button @click="openEditMaterialModal({{ $item->id }}, '{{ addslashes($item->title) }}', `{{ base64_encode($item->description) }}`, '{{ $item->external_url }}')"
+                                            <button @click="openEditMaterialModal({{ $item->id }}, '{{ addslashes($item->title) }}', '{{ $item->external_url }}', $el)"
+                                                data-content="{{ base64_encode($item->description) }}"
                                                 class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded transition" title="Edit Konten">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </button>
@@ -194,10 +196,10 @@
                         </div>
 
                         <div class="mt-3 pt-3 border-t border-gray-100 flex gap-3 px-2">
-                            <button @click="openCreateMaterialModal({{ $module->id }})" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2">
+                            <button @click="openCreateMaterialModal('{{ route('instructor.course.material.store', [$course->id, $module->id]) }}')" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2">
                                 <i class="fas fa-plus-circle"></i> Tambah Materi
                             </button>
-                            <button @click="openCreateQuizModal({{ $module->id }})" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
+                            <button @click="openCreateQuizModal('{{ route('instructor.course.module.quiz.store', [$course->id, $module->id]) }}')" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
                                 <i class="fas fa-question-circle"></i> Quiz
                             </button>
                         </div>
@@ -219,7 +221,8 @@
     </div>
 
     <div x-show="showModuleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6"> <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="moduleEditMode ? 'Edit Modul' : 'Buat Modul Baru'"></h3>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="moduleEditMode ? 'Edit Modul' : 'Buat Modul Baru'"></h3>
             <form :action="moduleFormAction" method="POST">
                 @csrf
                 <input type="hidden" name="_method" :value="moduleEditMode ? 'PUT' : 'POST'">
@@ -236,7 +239,8 @@
     </div>
 
     <div x-show="showContentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]"> <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h3 class="text-xl font-bold text-gray-800" x-text="contentEditMode ? 'Edit Materi' : 'Buat Materi Baru'"></h3>
                 <button @click="showContentModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
             </div>
@@ -278,7 +282,8 @@
     </div>
 
     <div x-show="showQuizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in"> <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h3 class="text-xl font-bold text-gray-800" x-text="quizEditMode ? 'Edit Pengaturan Quiz' : 'Buat Quiz Baru'"></h3>
                 <button @click="showQuizModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
@@ -324,150 +329,5 @@
     <script>setTimeout(() => document.querySelector('.fixed.bottom-6').remove(), 4000);</script>
     @endif
 
-    <script>
-        const courseId = {{ $course->id }};
-
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('contentManager', () => ({
-                // Modal States
-                showModuleModal: false,
-                showContentModal: false,
-                showQuizModal: false,
-                
-                // Edit Mode Flags
-                moduleEditMode: false,
-                contentEditMode: false,
-                quizEditMode: false,
-
-                // Data Models
-                moduleTitle: '',
-                moduleFormAction: '',
-                
-                contentTitle: '',
-                contentUrl: '',
-                contentFormAction: '',
-                
-                quizTitle: '',
-                quizDesc: '',
-                quizDuration: 30,
-                quizScore: 70,
-                quizFormAction: '',
-                
-                // -- Module Functions --
-                openCreateModuleModal() {
-                    this.moduleEditMode = false;
-                    this.moduleTitle = '';
-                    this.moduleFormAction = `{{ route('instructor.course.module.store', $course->id) }}`;
-                    this.showModuleModal = true;
-                },
-                openUpdateModuleModal(id, title) {
-                    this.moduleEditMode = true;
-                    this.moduleTitle = title;
-                    this.moduleFormAction = `/instructor/modules/${id}`;
-                    this.showModuleModal = true;
-                },
-
-                // -- Content (Material) Functions --
-                openCreateMaterialModal(moduleId) {
-                    this.contentEditMode = false;
-                    this.contentTitle = '';
-                    this.contentUrl = '';
-                    this.contentFormAction = `/instructor/courses/${courseId}/modules/${moduleId}/materials`;
-                    
-                    // Reset TinyMCE
-                    if(tinymce.get('richEditor')) tinymce.get('richEditor').setContent('');
-                    this.showContentModal = true;
-                },
-                openEditMaterialModal(id, title, encodedContent, url) {
-                    this.contentEditMode = true;
-                    this.contentTitle = title;
-                    this.contentUrl = url || '';
-                    this.contentFormAction = `/instructor/materials/${id}`;
-                    
-                    // Decode & Set Content
-                    if(tinymce.get('richEditor')) {
-                        tinymce.get('richEditor').setContent(atob(encodedContent));
-                    }
-                    this.showContentModal = true;
-                },
-
-                // -- Quiz Functions --
-                openCreateQuizModal(moduleId) {
-                    this.quizEditMode = false;
-                    this.quizTitle = '';
-                    this.quizDesc = '';
-                    this.quizDuration = 30;
-                    this.quizScore = 70;
-                    this.quizFormAction = `/instructor/courses/${courseId}/modules/${moduleId}/quiz`;
-                    this.showQuizModal = true;
-                },
-                openEditQuizModal(id, title, desc, dur, score) {
-                    this.quizEditMode = true;
-                    this.quizTitle = title;
-                    this.quizDesc = desc;
-                    this.quizDuration = dur;
-                    this.quizScore = score;
-                    this.quizFormAction = `/instructor/courses/${courseId}/quiz/${id}`;
-                    this.showQuizModal = true;
-                }
-            }))
-        });
-
-        // SortableJS
-        document.addEventListener('DOMContentLoaded', function () {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            
-            // TinyMCE Init [UPDATED]
-            tinymce.init({
-                selector: '#richEditor',
-                height: 400,
-                menubar: false,
-                plugins: 'image media link lists table code preview', // Ada 'media'
-                toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image media | code', // Ada 'media' di toolbar
-                file_picker_types: 'image', // Basic image upload support (jika backend siap)
-                images_upload_url: '/api/upload-image', // Optional: butuh endpoint
-            });
-
-            // Sortable Modules
-            var moduleList = document.getElementById('modules-list');
-            if(moduleList) {
-                Sortable.create(moduleList, {
-                    handle: '.handle',
-                    animation: 150,
-                    ghostClass: 'sortable-ghost',
-                    onEnd: function (evt) {
-                        var orderedIds = this.toArray();
-                        fetch(`/instructor/courses/${courseId}/modules/reorder`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
-                            body: JSON.stringify({ ordered_ids: orderedIds })
-                        });
-                    }
-                });
-            }
-
-            // Sortable Contents
-            document.querySelectorAll('.contents-list').forEach(function(el) {
-                Sortable.create(el, {
-                    handle: '.handle-content',
-                    animation: 150,
-                    ghostClass: 'sortable-ghost',
-                    group: 'contents', 
-                    onEnd: function (evt) {
-                        var url = el.getAttribute('data-reorder-url');
-                        var itemsData = [];
-                        el.querySelectorAll('.content-item').forEach((item, index) => {
-                            itemsData.push({ id: item.getAttribute('data-id'), type: item.getAttribute('data-type') });
-                        });
-                        fetch(url, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
-                            body: JSON.stringify({ items: itemsData })
-                        });
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>
