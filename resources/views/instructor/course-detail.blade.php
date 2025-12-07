@@ -168,7 +168,7 @@
                         <!-- Add Material Form -->
                         <div id="materialForm" class="bg-gray-50 rounded-lg p-6 mb-6 hidden">
                             <h4 class="text-lg font-semibold text-gray-800 mb-4">Add New Material</h4>
-                            <form action="{{ route('course.material.store', $course->id) }}" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('instructor.courses.manage', $course->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="space-y-4">
                                     <div>
@@ -221,7 +221,7 @@
                                        target="_blank">
                                         Download
                                     </a>
-                                    <form action="{{ route('instructor.materials.delete', $material->id) }}" method="POST">
+                                    <form action="{{ route('instructor.course.material.delete', $material->id) }}" method="POST">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all"

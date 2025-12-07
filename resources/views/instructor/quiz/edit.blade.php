@@ -4,11 +4,10 @@
 
 @section('content')
 <div class="bg-white">
-    <!-- Header -->
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-8">
         <div class="max-w-5xl mx-auto">
             <div class="mb-4">
-                <a href="{{ route('instructor.courses.show', $course->id) }}" class="hover:opacity-80 text-sm">
+                <a href="{{ route('instructor.courses.manage', $course->id) }}" class="hover:opacity-80 text-sm">
                     ← Kembali ke Course
                 </a>
             </div>
@@ -17,7 +16,6 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="max-w-5xl mx-auto px-6 py-8">
         @if (session('success'))
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start">
@@ -41,9 +39,7 @@
         @endif
 
         <div class="grid grid-cols-3 gap-8">
-            <!-- Main Content -->
             <div class="col-span-2">
-                <!-- Quiz Info Card - EDIT FORM -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
                     <h3 class="text-xl font-semibold text-gray-800 mb-4">✏️ Edit Informasi Quiz</h3>
                     
@@ -53,7 +49,6 @@
                         @method('PUT')
 
                         <div class="space-y-6">
-                            <!-- Title -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Judul Quiz</label>
                                 <input type="text" name="title" required
@@ -62,7 +57,6 @@
                                        placeholder="Contoh: Quiz Chapter 1 - Fundamental">
                             </div>
 
-                            <!-- Description -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
                                 <textarea name="description" rows="3"
@@ -70,9 +64,7 @@
                                           placeholder="Jelaskan tujuan dan isi quiz ini...">{{ old('description', $quiz->description) }}</textarea>
                             </div>
 
-                            <!-- Settings Grid -->
                             <div class="grid grid-cols-2 gap-4">
-                                <!-- Passing Score -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Skor Kelulusan (%)</label>
                                     <input type="number" name="passing_score" required min="0" max="100"
@@ -80,7 +72,6 @@
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                 </div>
 
-                                <!-- Duration Minutes -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Durasi Pengerjaan (Menit)</label>
                                     <input type="number" name="duration_minutes" required min="5" max="300"
@@ -89,11 +80,9 @@
                                 </div>
                             </div>
 
-                            <!-- Availability Settings -->
                             <div class="border-t border-gray-200 pt-6">
                                 <h4 class="text-sm font-semibold text-gray-800 mb-4">⏱️ Jadwal Tersedia</h4>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <!-- Available From -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Mulai Tersedia</label>
                                         <input type="datetime-local" name="available_from"
@@ -102,7 +91,6 @@
                                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ada batasan</p>
                                     </div>
 
-                                    <!-- Available Until -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Selesai Tersedia</label>
                                         <input type="datetime-local" name="available_until"
@@ -113,12 +101,11 @@
                                 </div>
                             </div>
 
-                            <!-- Button -->
                             <div class="flex gap-3 pt-4 border-t border-gray-200">
                                 <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-medium transition">
                                     <i class="fas fa-save mr-2"></i> Simpan Perubahan
                                 </button>
-                                <a href="{{ route('instructor.courses.show', $course->id) }}" 
+                                <a href="{{ route('instructor.courses.manage', $course->id) }}" 
                                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-center font-medium transition">
                                     <i class="fas fa-times mr-2"></i> Batal
                                 </a>
@@ -127,7 +114,6 @@
                     </form>
                 </div>
 
-                <!-- Questions Section -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <div class="flex items-center justify-between mb-6">
                         <div>
@@ -187,7 +173,6 @@
                 </div>
             </div>
 
-            <!-- Sidebar - Quick Stats -->
             <div class="col-span-1">
                 <div class="bg-indigo-50 rounded-lg border border-indigo-200 p-6 sticky top-20">
                     <h4 class="font-semibold text-gray-800 mb-4">📊 Statistik</h4>
@@ -215,9 +200,8 @@
                             </div>
                         </div>
                         
-                        <!-- Action Buttons -->
                         <div class="pt-4 border-t border-indigo-200 space-y-2">
-                            <a href="{{ route('instructor.courses.show', $course->id) }}" 
+                            <a href="{{ route('instructor.courses.manage', $course->id) }}" 
                                class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-lg text-center font-medium transition text-xs">
                                 <i class="fas fa-arrow-left mr-1"></i> Kembali
                             </a>
