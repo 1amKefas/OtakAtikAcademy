@@ -457,6 +457,7 @@ class QuizController extends Controller
             ->map(function ($quiz) {
                 $quiz->user_submission = $quiz->submissions()
                     ->where('user_id', Auth::id())
+                    ->orderBy('score', 'desc') // Sortir dari nilai terbesar
                     ->first();
                 return $quiz;
             });
@@ -543,25 +544,22 @@ class QuizController extends Controller
     {
         $quiz = Quiz::where('course_id', $courseId)->findOrFail($quizId);
         
-        // Cari Submission
-        $submission = \App\Models\QuizSubmission::where('quiz_id', $quizId)
+        $submission = QuizSubmission::where('quiz_id', $quizId)
             ->where('user_id', Auth::id())
             ->where('id', $submissionId)
             ->firstOrFail();
 
-        // [FIX 1] Tambahkan $courseId di sini
         if ($submission->status === 'submitted') {
             return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId]);
         }
 
-        // Simpan Jawaban
         $answers = $request->input('answers', []);
         $submission->answers = $answers;
         $submission->submitted_at = now();
         $submission->status = 'submitted'; 
         $submission->save();
 
-        // Logic Grading (Hitung Nilai)
+        // Logic Grading
         $score = 0;
         $totalPoints = $quiz->questions->sum('points');
         $earnedPoints = 0;
@@ -570,16 +568,32 @@ class QuizController extends Controller
         foreach ($quiz->questions as $question) {
             $userAns = $answers[$question->id] ?? null;
             
-            if (!$userAns) continue;
+            // [FIXED] Izinkan jawaban "0" (Opsi A) untuk diproses
+            if ($userAns === null) continue;
 
             $isCorrect = false;
             
+            // Skip Essay dari penilaian otomatis (opsional, tergantung logic kamu)
+            if ($question->question_type === 'essay') {
+                continue; 
+            }
+
             if ($question->question_type == 'multiple_choice' || $question->question_type == 'true_false') {
-                if ((string)$userAns === (string)$question->correct_answer) $isCorrect = true;
+                // Bandingkan sebagai string biar aman ("0" vs 0)
+                if ((string)$userAns === (string)$question->correct_answer) {
+                    $isCorrect = true;
+                }
             } elseif ($question->question_type == 'multiple_select') {
                 $keyArr = json_decode($question->correct_answer, true) ?? [];
                 $ansArr = is_array($userAns) ? $userAns : [];
-                sort($keyArr); sort($ansArr);
+                
+                // Normalisasi ke string semua
+                $keyArr = array_map('strval', $keyArr);
+                $ansArr = array_map('strval', $ansArr);
+                
+                sort($keyArr); 
+                sort($ansArr);
+                
                 if ($keyArr == $ansArr) $isCorrect = true;
             }
             
@@ -589,7 +603,6 @@ class QuizController extends Controller
             }
         }
         
-        // Hitung Skor (0-100)
         if ($totalPoints > 0) {
             $score = round(($earnedPoints / $totalPoints) * 100);
         }
@@ -598,7 +611,7 @@ class QuizController extends Controller
         $submission->correct_answers_count = $correctCount;
         $submission->save();
 
-        // Update Progress di CourseProgress (Tandai Selesai)
+        // Update Progress Course
         \App\Models\CourseProgress::updateOrCreate(
             [
                 'user_id' => Auth::id(),
@@ -613,11 +626,9 @@ class QuizController extends Controller
             ]
         );
 
-        // [FIX 2] Tambahkan $courseId di sini juga
         return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId])
             ->with('success', 'Jawaban berhasil dikirim!');
     }
-
     /**
      * View quiz result (Student)
      */
