@@ -265,7 +265,7 @@ class InstructorController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string', // Ini isi dari Canvas/Editor
-            'attachment' => 'nullable|file|max:51200', // Opsional: File lampiran
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png,mp4|max:51200', // Maks 50MB File Lampiran
         ]);
 
         $attachmentPath = null;

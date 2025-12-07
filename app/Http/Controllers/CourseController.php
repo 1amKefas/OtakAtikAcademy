@@ -16,7 +16,7 @@ class CourseController extends Controller
      */
     public function showCourse(Request $request)
     {
-        $query = Course::where('is_active', true)->with('instructor');
+        $query = Course::where('is_active', true)->with(['instructor', 'assistants']);
         
         // [TAMBAHAN] Filter Search by Title
         if ($request->has('search') && $request->search) {
