@@ -252,7 +252,8 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::delete('/materials/content/{id}', [InstructorController::class, 'deleteMaterialContent'])->name('course.material.delete');
 
     // --- FITUR LEGACY / PENDUKUNG (JANGAN DIHAPUS DULU) ---
-    Route::get('/courses/{id}', [InstructorController::class, 'showCourse'])->name('courses.show');
+    // [UPDATE] Route ini sekarang jadi PREVIEW MODE
+    Route::get('/courses/{id}/preview/{type?}/{contentId?}', [InstructorController::class, 'showCourse'])->name('courses.show');
     Route::get('/courses/{id}/students', [InstructorController::class, 'courseStudents'])->name('courses.students');
     
     // Ini Route yang Error tadi (Route Lama) -> Tetap pertahankan untuk backward compatibility

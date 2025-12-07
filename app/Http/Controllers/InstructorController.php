@@ -211,26 +211,73 @@ class InstructorController extends Controller
     /**
      * Show specific course details for instructor
      */
-    public function showCourse($id)
+    /**
+     * Show Course PREVIEW (Tampilan seperti Siswa tapi Read-Only)
+     */
+    public function showCourse($id, $type = null, $contentId = null)
     {
         if (!Auth::check() || !Auth::user()->is_instructor) {
             abort(403, 'Unauthorized access.');
         }
 
-        $course = Course::with(['materials', 'assignments', 'quizzes', 'forums.user', 'registrations.user'])->findOrFail($id);
-        
-        // Check if instructor owns this course
+        $course = Course::with([
+            'modules' => function ($q) {
+                $q->orderBy('order', 'asc');
+            },
+            'modules.materials' => function ($q) {
+                $q->orderBy('order', 'asc');
+            },
+            'modules.quizzes' => function ($q) {
+                $q->orderBy('sort_order', 'asc');
+            }
+        ])->findOrFail($id);
+
+        // Check ownership
         if ($course->instructor_id != Auth::id()) {
-            abort(403, 'Not your course. Your ID: ' . Auth::id() . ', Course Instructor ID: ' . $course->instructor_id);
+            abort(403, 'Unauthorized action.');
         }
 
-        $students = $course->registrations()->where('status', 'paid')->with('user')->get();
-        $materials = $course->materials()->orderBy('order')->get();
-        $assignments = $course->assignments()->latest()->get();
-        $quizzes = $course->quizzes()->latest()->get();
-        $forums = $course->forums()->with('user')->latest()->get();
+        // --- LOGIC PENENTUAN KONTEN (Mirip StudentController) ---
+        
+        // 1. Ambil Flat List semua konten urut
+        $flatList = [];
+        foreach ($course->modules as $module) {
+            foreach ($module->materials as $material) {
+                $flatList[] = ['type' => 'material', 'data' => $material];
+            }
+            foreach ($module->quizzes as $quiz) {
+                $flatList[] = ['type' => 'quiz', 'data' => $quiz];
+            }
+        }
 
-        return view('instructor.course-detail', compact('course', 'students', 'materials', 'assignments', 'quizzes', 'forums'));
+        // 2. Tentukan konten aktif
+        $currentContent = null;
+        $currentType = $type;
+
+        if ($type && $contentId) {
+            // Jika ada parameter URL, cari kontennya
+            foreach ($flatList as $item) {
+                if ($item['type'] == $type && $item['data']->id == $contentId) {
+                    $currentContent = $item['data'];
+                    break;
+                }
+            }
+        }
+
+        // 3. Fallback: Jika tidak ditemukan atau baru buka, ambil konten pertama
+        if (!$currentContent && count($flatList) > 0) {
+            $firstItem = $flatList[0];
+            $currentContent = $firstItem['data'];
+            $currentType = $firstItem['type'];
+        }
+
+        // Jika course kosong melompong
+        if (!$currentContent) {
+            return redirect()->route('instructor.courses.manage', $id)
+                ->with('error', 'Belum ada konten untuk dipreview. Silakan tambah materi dulu.');
+        }
+
+        return view('instructor.course-detail', compact('course', 'currentContent', 'currentType', 'flatList'));
     }
 
     /**

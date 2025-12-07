@@ -22,12 +22,16 @@
         .sidebar { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .tox-tinymce { border-radius: 0.5rem !important; border-color: #e2e8f0 !important; }
         .handle, .handle-content { cursor: grab; }
         .handle:active, .handle-content:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
+        
+        /* [FIX] Pastikan Dialog TinyMCE selalu di atas Modal Alpine */
+        .tox-dialog-wrap { z-index: 10000 !important; }
+        .tox .tox-dialog { z-index: 10001 !important; }
     </style>
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden" x-data="contentManager">
@@ -73,7 +77,7 @@
                 <button onclick="window.location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                     <i class="fas fa-check-circle"></i> Selesai & Simpan
                 </button>
-                <a href="{{ route('course.show.detail', $course->id) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 ml-2">
+                <a href="{{ route('instructor.course.show', $course->id) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 ml-2">
                     <i class="fas fa-external-link-alt"></i> Preview
                 </a>
             </div>
@@ -215,8 +219,7 @@
     </div>
 
     <div x-show="showModuleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6" @click.outside="showModuleModal = false">
-            <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="moduleEditMode ? 'Edit Modul' : 'Buat Modul Baru'"></h3>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6"> <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="moduleEditMode ? 'Edit Modul' : 'Buat Modul Baru'"></h3>
             <form :action="moduleFormAction" method="POST">
                 @csrf
                 <input type="hidden" name="_method" :value="moduleEditMode ? 'PUT' : 'POST'">
@@ -233,8 +236,7 @@
     </div>
 
     <div x-show="showContentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]" @click.outside="showContentModal = false">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]"> <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h3 class="text-xl font-bold text-gray-800" x-text="contentEditMode ? 'Edit Materi' : 'Buat Materi Baru'"></h3>
                 <button @click="showContentModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
             </div>
@@ -249,20 +251,21 @@
                     </div>
 
                     <div class="mb-6">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Konten Materi (Teks/Gambar/Penjelasan)</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Konten Materi (Teks/Gambar/Video Embed)</label>
                         <textarea id="richEditor" name="content"></textarea>
                     </div>
                     
                     <div class="mb-6">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">URL Video / Eksternal (Opsional)</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">URL Video / Eksternal (YouTube/Vimeo Link)</label>
                         <input type="text" name="external_url" x-model="contentUrl" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: https://youtube.com/watch?v=...">
-                        <p class="text-xs text-gray-500 mt-1">Masukkan link YouTube untuk menampilkan video player.</p>
+                        <p class="text-xs text-gray-500 mt-1">Masukkan link video jika ingin materi full-screen video player.</p>
                     </div>
 
                     <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <label class="block text-sm font-bold text-blue-800 mb-2"><i class="fas fa-paperclip"></i> Lampiran File (Opsional)</label>
+                        <label class="block text-sm font-bold text-blue-800 mb-2"><i class="fas fa-paperclip"></i> Lampiran File (Dokumen / Video MP4)</label>
                         <input type="file" name="attachment" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white cursor-pointer">
                         <p x-show="contentEditMode" class="text-xs text-gray-500 mt-2">*Biarkan kosong jika tidak ingin mengubah file.</p>
+                        <p class="text-xs text-gray-500 mt-1">Format: PDF, Word, PPT, TXT, JPG, PNG, MP4. Max: 50MB.</p>
                     </div>
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -275,8 +278,7 @@
     </div>
 
     <div x-show="showQuizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in" @click.outside="showQuizModal = false">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in"> <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h3 class="text-xl font-bold text-gray-800" x-text="quizEditMode ? 'Edit Pengaturan Quiz' : 'Buat Quiz Baru'"></h3>
                 <button @click="showQuizModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
@@ -380,7 +382,7 @@
                     this.contentEditMode = true;
                     this.contentTitle = title;
                     this.contentUrl = url || '';
-                    this.contentFormAction = `/materials/${id}`;
+                    this.contentFormAction = `/instructor/materials/${id}`;
                     
                     // Decode & Set Content
                     if(tinymce.get('richEditor')) {
@@ -415,13 +417,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             
-            // TinyMCE Init
+            // TinyMCE Init [UPDATED]
             tinymce.init({
                 selector: '#richEditor',
                 height: 400,
                 menubar: false,
-                plugins: 'image media link lists table code preview',
-                toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code'
+                plugins: 'image media link lists table code preview', // Ada 'media'
+                toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image media | code', // Ada 'media' di toolbar
+                file_picker_types: 'image', // Basic image upload support (jika backend siap)
+                images_upload_url: '/api/upload-image', // Optional: butuh endpoint
             });
 
             // Sortable Modules
