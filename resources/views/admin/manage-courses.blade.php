@@ -4,16 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Course - OtakAtik Admin</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    {{-- CSS Libraries --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" crossorigin="anonymous">
     
+    {{-- JS Libraries --}}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" crossorigin="anonymous"></script>
     
-    {{-- Load External Custom Logic --}}
+    {{-- Custom JS --}}
     <script src="{{ asset('js/admin-course-manage.js') }}" defer></script>
 
+    {{-- Custom CSS --}}
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 <body class="bg-gray-50 h-screen overflow-hidden">
@@ -122,7 +127,8 @@
                                     <div id="modules-container" class="space-y-3">
                                     </div>
 
-                                    <button type="button" onclick="addModuleInput()" class="mt-3 text-sm flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                                    {{-- HAPUS onclick, GANTI DENGAN ID btnAddModule --}}
+                                    <button type="button" id="btnAddModule" class="mt-3 text-sm flex items-center text-blue-600 hover:text-blue-800 font-medium">
                                         <i class="fas fa-plus-circle mr-2"></i> Tambah Modul
                                     </button>
                                 </div>
@@ -130,7 +136,8 @@
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <label class="text-sm font-medium text-gray-700 mb-1 block">Tipe Course</label>
-                                        <select name="type" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleInstructorField(this.value)">
+                                        {{-- HAPUS onchange, LOGIC PINDAH KE JS --}}
+                                        <select name="type" id="courseType" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="Full Online">Full Online</option>
                                             <option value="Hybrid">Hybrid</option>
                                             <option value="Tatap Muka">Tatap Muka</option>
@@ -383,7 +390,8 @@
         <div class="bg-white rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl transform transition-all">
             <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                 <h3 class="text-lg font-bold text-gray-800">Potong Gambar (16:9)</h3>
-                <button type="button" onclick="closeCropper()" class="text-gray-400 hover:text-red-500 transition-colors">
+                {{-- HAPUS onclick, GANTI DENGAN CLASS btn-close-crop --}}
+                <button type="button" class="text-gray-400 hover:text-red-500 transition-colors btn-close-crop">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -391,10 +399,12 @@
                 <img id="imageToCrop" class="max-w-full max-h-full block">
             </div>
             <div class="p-4 border-t border-gray-200 flex justify-end gap-3 bg-white">
-                <button type="button" onclick="closeCropper()" class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+                {{-- HAPUS onclick, GANTI DENGAN CLASS btn-close-crop --}}
+                <button type="button" class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors btn-close-crop">
                     Batal
                 </button>
-                <button type="button" onclick="cropImage()" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-lg transition-colors flex items-center gap-2">
+                {{-- HAPUS onclick, GANTI DENGAN ID btn-do-crop --}}
+                <button type="button" id="btn-do-crop" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-lg transition-colors flex items-center gap-2">
                     <i class="fas fa-check"></i> Simpan Gambar
                 </button>
             </div>

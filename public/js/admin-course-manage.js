@@ -2,161 +2,136 @@ let cropper = null;
 let moduleCount = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Toggle Instructor Field Logic
-    const typeSelect = document.querySelector('select[name="type"]');
-    if (typeSelect) {
-        // Initial check
-        window.toggleInstructorField(typeSelect.value);
-        
-        // Listener
-        typeSelect.addEventListener('change', function() {
-            window.toggleInstructorField(this.value);
-        });
-    }
-
-    // 2. SortableJS Init (Untuk drag & drop modul)
+    // 1. Module Management
     const modulesContainer = document.getElementById('modules-container');
+    const btnAddModule = document.getElementById('btnAddModule');
+    
+    // Inisialisasi Sortable dan Logic Tambah Modul
     if (modulesContainer) {
         Sortable.create(modulesContainer, {
-            handle: '.handle',
-            animation: 150,
-            ghostClass: 'sortable-ghost'
+            handle: '.handle', animation: 150, ghostClass: 'sortable-ghost'
         });
+        
+        moduleCount = modulesContainer.children.length;
+        if (moduleCount === 0) addModuleInput(); // Default ada 1 input
 
-        // Tambah 1 modul kosong jika belum ada (saat create)
-        if (modulesContainer.children.length === 0) {
-            window.addModuleInput();
-        } else {
-             moduleCount = modulesContainer.children.length;
+        // Listener Tombol Tambah Modul
+        if (btnAddModule) {
+            btnAddModule.addEventListener('click', addModuleInput);
         }
-    }
 
-    // 3. Image Cropper Logic
-    const imageInput = document.getElementById('imageInput');
-    if (imageInput) {
-        imageInput.addEventListener('change', function(e) {
-            const files = e.target.files;
-            if (files && files.length > 0) {
-                const file = files[0];
-                
-                if (!file.type.startsWith('image/')) {
-                    alert('File harus berupa gambar!');
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const imageToCrop = document.getElementById('imageToCrop');
-                    imageToCrop.src = event.target.result;
-                    document.getElementById('cropModal').classList.remove('hidden');
-                    
-                    if (cropper) cropper.destroy();
-                    
-                    cropper = new Cropper(imageToCrop, {
-                        aspectRatio: 16 / 9,
-                        viewMode: 1,
-                        autoCropArea: 1,
-                        background: false,
-                        responsive: true,
-                    });
-                };
-                reader.readAsDataURL(file);
+        // Listener Tombol Hapus (Event Delegation)
+        modulesContainer.addEventListener('click', function(e) {
+            const btnRemove = e.target.closest('.btn-remove-module');
+            if (btnRemove) {
+                btnRemove.closest('.module-group').remove();
             }
         });
     }
 
+    // 2. Instructor Toggle
+    const typeSelect = document.getElementById('courseType');
+    if (typeSelect) {
+        typeSelect.addEventListener('change', function() {
+            toggleInstructorField(this.value);
+        });
+        // Run on load
+        toggleInstructorField(typeSelect.value);
+    }
+
+    // 3. Cropper Logic
+    const imageInput = document.getElementById('imageInput');
+    const btnDoCrop = document.getElementById('btn-do-crop');
+    const closeButtons = document.querySelectorAll('.btn-close-crop');
+
+    // Listener Input Gambar
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const img = document.getElementById('imageToCrop');
+                    img.src = evt.target.result;
+                    document.getElementById('cropModal').classList.remove('hidden');
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(img, { aspectRatio: 16/9, viewMode: 1, autoCropArea: 1 });
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        });
+    }
+
+    // Listener Tombol Crop (Simpan)
+    if (btnDoCrop) {
+        btnDoCrop.addEventListener('click', function() {
+            if (!cropper) return;
+            cropper.getCroppedCanvas({width: 800, height: 450}).toBlob((blob) => {
+                const dt = new DataTransfer();
+                dt.items.add(new File([blob], "thumb.jpg", {type: "image/jpeg"}));
+                imageInput.files = dt.files;
+                
+                const preview = document.getElementById('imagePreview');
+                preview.src = URL.createObjectURL(blob);
+                preview.classList.remove('hidden');
+                document.getElementById('imagePlaceholder').classList.add('hidden');
+                document.getElementById('imageOverlay').classList.remove('hidden');
+                
+                closeCropperModal();
+            }, 'image/jpeg', 0.85);
+        });
+    }
+
+    // Listener Tombol Close Modal
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', closeCropperModal);
+    });
+
     // 4. Auto-close Alerts
-    const successAlert = document.getElementById('alert-success');
-    const errorAlert = document.getElementById('alert-error');
-    if(successAlert) setTimeout(() => successAlert.remove(), 5000);
-    if(errorAlert) setTimeout(() => errorAlert.remove(), 5000);
+    ['alert-success', 'alert-error'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) setTimeout(() => el.remove(), 5000);
+    });
 });
 
-// --- Global Functions (Exposed for onclick attributes) ---
+// --- Helper Functions ---
 
-window.toggleInstructorField = function(type) {
-    const instructorInput = document.getElementById('instructor_id');
-    const requiredStar = document.getElementById('instructor-required');
-    const noteText = document.getElementById('instructor-note');
-    
-    if (type === 'Full Online') {
-        instructorInput.removeAttribute('required');
-        requiredStar.style.display = 'none';
-        noteText.innerHTML = 'Opsional untuk Full Online (Bisa dipilih jika ada)';
-        noteText.classList.add('text-blue-500');
-        noteText.classList.remove('text-gray-500');
-    } else {
-        instructorInput.setAttribute('required', 'required');
-        requiredStar.style.display = 'inline';
-        noteText.innerHTML = 'Wajib untuk Hybrid & Tatap Muka';
-        noteText.classList.remove('text-blue-500');
-        noteText.classList.add('text-gray-500');
-    }
-};
-
-window.cropImage = function() {
-    if (!cropper) return;
-    
-    const imageInput = document.getElementById('imageInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const imagePlaceholder = document.getElementById('imagePlaceholder');
-    const imageOverlay = document.getElementById('imageOverlay');
-
-    cropper.getCroppedCanvas({
-        width: 800, 
-        height: 450,
-        fillColor: '#fff'
-    }).toBlob((blob) => {
-        const newFile = new File([blob], "thumbnail_cropped.jpg", { type: "image/jpeg" });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(newFile);
-        imageInput.files = dataTransfer.files;
-
-        const url = URL.createObjectURL(blob);
-        imagePreview.src = url;
-        imagePreview.classList.remove('hidden');
-        imagePlaceholder.classList.add('hidden');
-        imageOverlay.classList.remove('hidden');
-        
-        window.closeCropper();
-    }, 'image/jpeg', 0.85);
-};
-
-window.closeCropper = function() {
-    document.getElementById('cropModal').classList.add('hidden');
-    if (cropper) {
-        cropper.destroy();
-        cropper = null;
-    }
-    const imagePreview = document.getElementById('imagePreview');
-    const imageInput = document.getElementById('imageInput');
-    if (imagePreview.classList.contains('hidden')) {
-        imageInput.value = '';
-    }
-};
-
-window.addModuleInput = function() {
+function addModuleInput() {
     const container = document.getElementById('modules-container');
-    const index = moduleCount;
-
+    const index = moduleCount++;
     const html = `
-        <div class="flex items-center gap-2 group" id="module-row-${index}">
+        <div class="flex items-center gap-2 group module-group">
             <div class="flex-1 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3">
                 <span class="text-gray-400 font-bold px-2 cursor-grab handle"><i class="fas fa-grip-vertical"></i></span>
-                <input type="text" name="modules[${index}][title]" placeholder="Nama Modul (Contoh: Pengenalan HTML)" 
-                       class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800 placeholder-gray-400" required>
+                <input type="text" name="modules[${index}][title]" placeholder="Nama Modul" class="flex-1 bg-transparent border-none focus:ring-0 text-sm" required>
             </div>
-            <button type="button" onclick="removeModuleRow(${index})" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+            <button type="button" class="p-2 text-red-400 hover:bg-red-50 rounded-lg btn-remove-module">
                 <i class="fas fa-trash-alt"></i>
             </button>
-        </div>
-    `;
-
+        </div>`;
     container.insertAdjacentHTML('beforeend', html);
-    moduleCount++;
-};
+}
 
-window.removeModuleRow = function(index) {
-    const row = document.getElementById(`module-row-${index}`);
-    if(row) row.remove();
-};
+function toggleInstructorField(type) {
+    const input = document.getElementById('instructor_id');
+    const req = document.getElementById('instructor-required');
+    const note = document.getElementById('instructor-note');
+    const isOnline = type === 'Full Online';
+
+    if(input) {
+        isOnline ? input.removeAttribute('required') : input.setAttribute('required', 'required');
+        if(req) req.style.display = isOnline ? 'none' : 'inline';
+        if(note) {
+            note.innerHTML = isOnline ? 'Opsional' : 'Wajib';
+            note.className = isOnline ? 'text-[10px] text-blue-500 mt-1' : 'text-[10px] text-gray-500 mt-1';
+        }
+    }
+}
+
+function closeCropperModal() {
+    document.getElementById('cropModal').classList.add('hidden');
+    if (cropper) cropper.destroy();
+    if (document.getElementById('imagePreview').classList.contains('hidden')) {
+        document.getElementById('imageInput').value = '';
+    }
+}
