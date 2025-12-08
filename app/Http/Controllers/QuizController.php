@@ -36,12 +36,15 @@ class QuizController extends Controller
 
         $course = Course::findOrFail($courseId);
         
-        // Check if instructor owns this course
         if ($course->instructor_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        $quizzes = $course->quizzes()->latest()->get();
+        // [OPTIMASI] Eager load counts biar view gak query ulang (N+1 Prevention)
+        $quizzes = $course->quizzes()
+            ->withCount(['questions', 'submissions']) 
+            ->latest()
+            ->get();
 
         return view('instructor.quiz.index', compact('course', 'quizzes'));
     }
@@ -269,6 +272,9 @@ class QuizController extends Controller
 
         \App\Models\QuizQuestion::create($questionData);
 
+        // [OPTIMASI] Hapus cache agar siswa melihat soal baru
+        \Illuminate\Support\Facades\Cache::forget("quiz_questions_{$quizId}");
+
         return back()->with('success', 'Soal berhasil ditambahkan!');
     }
 
@@ -310,6 +316,9 @@ class QuizController extends Controller
             'order' => $validated['order'] ?? $question->order,
         ]);
 
+        // [OPTIMASI] Hapus cache agar siswa melihat soal baru
+        \Illuminate\Support\Facades\Cache::forget("quiz_questions_{$quizId}");
+
         return redirect()
             ->route('instructor.quiz.edit', [$courseId, $quizId])
             ->with('success', 'Soal berhasil diupdate!');
@@ -335,6 +344,9 @@ class QuizController extends Controller
         $question->delete();
 
         $question->delete();
+
+        // [OPTIMASI] Hapus cache agar siswa melihat soal baru
+        \Illuminate\Support\Facades\Cache::forget("quiz_questions_{$quizId}");
 
         return redirect()
             ->route('instructor.quiz.edit', [$courseId, $quizId])
@@ -396,19 +408,25 @@ class QuizController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
+        // [OPTIMASI] Eager load relation 'course' di quiz biar hemat query
         $course = Course::findOrFail($courseId);
-        $quiz = Quiz::findOrFail($quizId);
+        $quiz = Quiz::with('course')->findOrFail($quizId);
 
         if ($course->instructor_id !== Auth::id() || $quiz->course_id !== $course->id) {
             abort(403, 'Unauthorized action.');
         }
 
         $submissions = $quiz->submissions()->with('user')->latest()->paginate(15);
-        $stats = [
-            'total_submissions' => $quiz->submissions()->count(),
-            'average_score' => $this->gradingService->getAverageScore($quiz),
-            'pass_rate' => $this->gradingService->getPassRate($quiz),
-        ];
+        
+        // [OPTIMASI] Cache statistik selama 1 menit. 
+        // Kalkulasi rata-rata (AVG) itu berat di DB kalau data ribuan.
+        $stats = \Illuminate\Support\Facades\Cache::remember("quiz_stats_{$quizId}", 60, function () use ($quiz) {
+            return [
+                'total_submissions' => $quiz->submissions()->count(),
+                'average_score' => $this->gradingService->getAverageScore($quiz),
+                'pass_rate' => $this->gradingService->getPassRate($quiz),
+            ];
+        });
 
         return view('instructor.quiz.submissions', compact('course', 'quiz', 'submissions', 'stats'));
     }
@@ -523,17 +541,20 @@ class QuizController extends Controller
         $quiz = Quiz::findOrFail($quizId);
         $submission = QuizSubmission::findOrFail($submissionId);
 
-        // Check if student owns this submission
         if ($submission->user_id !== Auth::id() || $submission->quiz_id !== $quiz->id) {
             abort(403, 'Unauthorized access.');
         }
 
-        // Check if already submitted
         if ($submission->submitted_at) {
             return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId]);
         }
 
-        $questions = $quiz->questions()->orderBy('order')->get();
+        // [OPTIMASI] Cache pertanyaan quiz selamanya (sampai quiz diupdate).
+        // Pertanyaan itu data statis, sayang kalau di-query terus setiap refresh halaman.
+        $questions = \Illuminate\Support\Facades\Cache::remember("quiz_questions_{$quizId}", 3600, function () use ($quiz) {
+            return $quiz->questions()->orderBy('order')->get();
+        });
+
         $timeRemaining = $this->getTimeRemaining($submission, $quiz);
 
         return view('student.quiz.take', compact('course', 'quiz', 'submission', 'questions', 'timeRemaining'));
@@ -544,7 +565,9 @@ class QuizController extends Controller
      */
     public function submit(Request $request, $courseId, $quizId, $submissionId)
     {
-        $quiz = Quiz::where('course_id', $courseId)->findOrFail($quizId);
+        // [OPTIMASI] Eager Load 'questions' di sini!
+        // Tanpa ini, loop grading di bawah akan memicu N+1 Query (1 query per soal).
+        $quiz = Quiz::with('questions')->where('course_id', $courseId)->findOrFail($quizId);
         
         $submission = QuizSubmission::where('quiz_id', $quizId)
             ->where('user_id', Auth::id())
@@ -563,25 +586,24 @@ class QuizController extends Controller
 
         // Logic Grading
         $score = 0;
-        $totalPoints = $quiz->questions->sum('points');
+        
+        // [OPTIMASI] Hitung total points via Collection (sudah diload di memori), bukan query DB lagi
+        $totalPoints = $quiz->questions->sum('points'); 
         $earnedPoints = 0;
         $correctCount = 0;
 
         foreach ($quiz->questions as $question) {
             $userAns = $answers[$question->id] ?? null;
             
-            // [FIXED] Izinkan jawaban "0" (Opsi A) untuk diproses
             if ($userAns === null) continue;
 
             $isCorrect = false;
             
-            // Skip Essay dari penilaian otomatis (opsional, tergantung logic kamu)
             if ($question->question_type === 'essay') {
                 continue; 
             }
 
             if ($question->question_type == 'multiple_choice' || $question->question_type == 'true_false') {
-                // Bandingkan sebagai string biar aman ("0" vs 0)
                 if ((string)$userAns === (string)$question->correct_answer) {
                     $isCorrect = true;
                 }
@@ -589,7 +611,6 @@ class QuizController extends Controller
                 $keyArr = json_decode($question->correct_answer, true) ?? [];
                 $ansArr = is_array($userAns) ? $userAns : [];
                 
-                // Normalisasi ke string semua
                 $keyArr = array_map('strval', $keyArr);
                 $ansArr = array_map('strval', $ansArr);
                 
