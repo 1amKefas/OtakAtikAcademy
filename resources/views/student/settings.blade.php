@@ -3,6 +3,7 @@
 @section('title', __('settings.settings'))
 
 @section('content')
+{{-- Load External Script for Settings Logic --}}
 <script src="{{ asset('js/student-settings.js') }}"></script>
 
 <div class="bg-white">

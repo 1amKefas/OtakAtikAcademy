@@ -1,4 +1,5 @@
 <nav class="bg-white shadow-md fixed w-full top-0 z-50">
+    {{-- Load Navbar Logic --}}
     <script src="{{ asset('js/navbar.js') }}" defer></script>
 
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">

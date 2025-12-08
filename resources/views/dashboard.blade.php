@@ -3,6 +3,9 @@
 @section('title', 'OtakAtik Academy')
 
 @section('content')
+{{-- Load External JS for Slider Logic --}}
+<script src="{{ asset('js/user-dashboard.js') }}" defer></script>
+
 <div class="w-full bg-white">
     
     <section class="relative py-24 px-6 overflow-hidden">
@@ -95,12 +98,12 @@
             </div>
 
             <div class="relative group/slider">
-                <button onclick="document.getElementById('cat-scroll').scrollBy({left: -320, behavior: 'smooth'})" 
+                <button id="scroll-left" 
                         class="absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white shadow-xl rounded-full flex items-center justify-center text-gray-700 hover:text-blue-600 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100 duration-300 hidden md:flex border border-gray-100">
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 
-                <button onclick="document.getElementById('cat-scroll').scrollBy({left: 320, behavior: 'smooth'})" 
+                <button id="scroll-right" 
                         class="absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white shadow-xl rounded-full flex items-center justify-center text-gray-700 hover:text-blue-600 hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100 duration-300 hidden md:flex border border-gray-100">
                     <i class="fas fa-chevron-right"></i>
                 </button>
