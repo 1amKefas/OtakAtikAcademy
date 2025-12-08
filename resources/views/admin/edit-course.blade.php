@@ -150,6 +150,20 @@
                                 </div>
                             </div>
 
+                            <div class="mb-6">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">
+                                    Template Sertifikat (Background Image)
+                                </label>
+                                @if($course->certificate_template)
+                                    <div class="mb-2">
+                                        <img src="{{ Storage::url($course->certificate_template) }}" class="h-32 border rounded shadow-sm">
+                                        <p class="text-xs text-gray-500 mt-1">Template saat ini</p>
+                                    </div>
+                                @endif
+                                <input type="file" name="certificate_template" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" accept="image/*">
+                                <p class="text-xs text-gray-500 mt-1">Upload gambar sertifikat kosongan (JPG/PNG). Nama siswa akan dicetak otomatis di tengah.</p>
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Course</label>

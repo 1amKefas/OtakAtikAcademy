@@ -29,6 +29,7 @@ class Course extends Model
         'current_enrollment',
         'is_active',
         'image_url',
+        'certificate_template',
         'duration_days',
         'start_date',
         'end_date',

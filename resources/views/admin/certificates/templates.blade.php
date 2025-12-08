@@ -1,49 +1,83 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Sertifikat Kelulusan</title>
+    <style>
+        @page { margin: 0px; }
+        body { margin: 0px; font-family: 'Helvetica', sans-serif; color: #333; }
+        
+        /* Background Full Screen */
+        .certificate-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
 
-@section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">{{ __('Certificate Templates') }}</h1>
-        <a href="{{ route('admin.certificates.templates.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded">
-            {{ __('Create Template') }}
-        </a>
+        /* Kontainer Teks (Sesuaikan top/left dengan desain gambar kamu) */
+        .content {
+            position: absolute;
+            top: 38%; /* Geser ini biar pas di tengah gambar */
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .student-name {
+            font-size: 42px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            color: #1a202c;
+            letter-spacing: 1px;
+        }
+
+        .description {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .course-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 60px; /* Geser ini untuk posisi tanggal/kode */
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #718096;
+        }
+        
+        .code {
+            font-family: 'Courier', monospace;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    {{-- Gambar Background yang diupload Admin --}}
+    <img src="{{ $background_image }}" class="certificate-bg">
+
+    <div class="content">
+        <div class="description">Diberikan kepada:</div>
+        <div class="student-name">{{ $student_name }}</div>
+        
+        <div class="description">Atas kelulusannya dalam kursus:</div>
+        <div class="course-title">{{ $course_title }}</div>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <div class="bg-white rounded shadow overflow-hidden">
-        <table class="w-full">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-6 py-3 text-left">{{ __('Name') }}</th>
-                    <th class="px-6 py-3 text-left">{{ __('Issuer') }}</th>
-                    <th class="px-6 py-3 text-left">{{ __('Action') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($templates as $template)
-                    <tr class="border-t hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium">{{ $template->name }}</td>
-                        <td class="px-6 py-4">{{ $template->issuer_name }}</td>
-                        <td class="px-6 py-4 space-x-2">
-                            <a href="{{ route('admin.certificates.templates.edit', $template) }}" class="text-blue-600">{{ __('Edit') }}</a>
-                            <form action="{{ route('admin.certificates.templates.destroy', $template) }}" method="POST" class="inline" onsubmit="return confirm('{{ __('Confirm?') }}')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="text-red-600">{{ __('Delete') }}</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">{{ __('No templates') }}</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    <div class="footer">
+        <div>Diterbitkan pada: {{ $date }}</div>
+        <div class="code">No. Seri: {{ $code }}</div>
     </div>
-</div>
-@endsection
+</body>
+</html>

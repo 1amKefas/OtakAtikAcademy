@@ -546,6 +546,12 @@ class AdminController extends Controller
             }
         }
 
+        // 6. Logic Simpan Sertifikat
+        if ($request->hasFile('certificate_template')) {
+            $certPath = $request->file('certificate_template')->store('certificates/templates', 'public');
+            $courseData['certificate_template'] = $certPath;
+        }
+
         return redirect()->route('admin.courses.manage')->with('success', 'Course "'.$validated['title'].'" berhasil dibuat!');
     }
 
@@ -659,6 +665,19 @@ class AdminController extends Controller
                 );
             }
         }
+
+        // LOGIC UPLOAD SERTIFIKAT
+        if ($request->hasFile('certificate_template')) {
+            // Hapus file lama jika ada
+            if ($course->certificate_template) {
+                Storage::disk('public')->delete($course->certificate_template);
+            }
+            // Simpan file baru
+            $path = $request->file('certificate_template')->store('certificates/templates', 'public');
+            $course->certificate_template = $path;
+        }
+
+        $course->save(); // Save course changes
 
         return redirect()->route('admin.courses.manage')->with('success', 'Course berhasil diupdate!');
     }
