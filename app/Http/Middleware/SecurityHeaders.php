@@ -8,36 +8,40 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SecurityHeaders
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
-        // --- Content Security Policy (CSP) ---
-        // Aturan ini menentukan sumber mana yang diperbolehkan.
-        // 'self' = domain sendiri.
-        // 'unsafe-inline' = script/style di dalam HTML (kita masih butuh ini karena ada onclick="" dan Tailwind CDN).
-        // 'unsafe-eval' = fungsi evaluasi JS (Alpine.js & beberapa library butuh ini).
+        // --- DAFTAR DOMAIN DIPERBOLEHKAN (WHITELIST) ---
+        // Kita spesifikan domain satu per satu supaya tidak pakai Wildcard (*)
+        $allowedScripts = "https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud";
+        $allowedStyles  = "https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net";
+        $allowedFonts   = "https://fonts.gstatic.com https://cdnjs.cloudflare.com";
+        $allowedImages  = "https://ui-avatars.com https://www.svgrepo.com"; // Tambah domain gambar external lain jika ada
+
+        // --- CONTENT SECURITY POLICY (CSP) ---
+        // default-src 'self': Memblokir semuanya kecuali dari domain sendiri, kecuali di-override.
+        // unsafe-inline: Masih kita perlukan SEMENTARA sampai kita bersihkan onclick dan style tag.
+        // unsafe-eval: Diperlukan oleh Alpine.js (standar).
         
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud; " .
-               "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " .
-               "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " .
-               "img-src 'self' data: https:; " . // data: untuk gambar base64 (cropper.js)
-               "frame-src 'self' https://www.youtube.com https://player.vimeo.com; " . // Izin embed video
-               "connect-src 'self';";
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' $allowedScripts; " .
+               "style-src 'self' 'unsafe-inline' $allowedStyles; " .
+               "font-src 'self' $allowedFonts; " .
+               "img-src 'self' data: $allowedImages; " . // data: untuk gambar base64 (cropper)
+               "frame-src 'self' https://www.youtube.com https://player.vimeo.com; " .
+               "connect-src 'self'; " . 
+               "object-src 'none'; " . // Blokir plugin kayak Flash/Java
+               "base-uri 'self';";     // Mencegah injeksi base tag
 
         $response->headers->set('Content-Security-Policy', $csp);
         
-        // --- Header Keamanan Tambahan (Best Practice OWASP) ---
-        $response->headers->set('X-Content-Type-Options', 'nosniff'); // Mencegah browser menebak tipe file
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN'); // Mencegah Clickjacking (iframe dari domain lain)
-        $response->headers->set('X-XSS-Protection', '1; mode=block'); // Proteksi XSS browser lama
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin'); // Privasi referrer
+        // --- Header Keamanan Lainnya ---
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        $response->headers->set('X-XSS-Protection', '1; mode=block');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()'); // Batasi fitur browser
 
         return $response;
     }

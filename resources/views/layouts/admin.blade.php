@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}"> {{-- Tambahkan CSRF Token --}}
     <title>{{ config('app.name', 'OtakAtik') }} - Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    {{-- GANTI CDN TAILWIND DENGAN VITE (Lebih Aman & Cepat) --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {{-- Hapus <style> inline di sini jika memungkinkan nanti --}}
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -19,8 +25,8 @@
         /* Scrollbar custom biar rapi */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-gray-50">
