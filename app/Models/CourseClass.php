@@ -11,38 +11,28 @@ class CourseClass extends Model
 
     protected $fillable = [
         'course_id',
-        'class_name',
-        'room',
-        'start_date',
-        'end_date',
-        'start_time',
-        'end_time',
-        'days_of_week',
-        'max_students',
-        'current_students',
-        'is_active'
+        'instructor_id', // PJ Kelas
+        'name',          // Nama Kelas (misal: TI-4A)
+        'slug',
+        'quota',
+        'description' // Opsional (misal: Ruang 304)
     ];
 
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'days_of_week' => 'array',
-        'is_active' => 'boolean'
-    ];
-
+    // Relasi ke Course Utama
     public function course()
     {
         return $this->belongsTo(Course::class);
     }
 
-    public function students()
+    // Relasi ke Instructor/Asdos Kelas
+    public function instructor()
     {
-        return $this->belongsToMany(User::class, 'course_class_students')
-                    ->withTimestamps();
+        return $this->belongsTo(User::class, 'instructor_id');
     }
 
-    public function hasAvailableSlots()
+    // Relasi ke Mahasiswa di kelas ini
+    public function students()
     {
-        return $this->current_students < $this->max_students;
+        return $this->hasMany(CourseRegistration::class, 'course_class_id')->where('status', 'paid');
     }
 }

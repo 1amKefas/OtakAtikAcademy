@@ -317,6 +317,15 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     // Route::post('/courses/{course}/modules/{module}/quizzes/reorder', [ModuleController::class, 'reorderQuizzes'])->name('modules.quizzes.reorder');
     // [BARU] Route Reorder KONTEN (Gabungan Materi & Quiz)
     Route::post('/courses/{course}/modules/{module}/contents/reorder', [ModuleController::class, 'reorderContents'])->name('modules.contents.reorder');
+
+    // --- COURSE CLASS MANAGEMENT ---
+    Route::prefix('instructor/courses/{id}/classes')->name('instructor.classes.')->group(function () {
+    Route::get('/', [App\Http\Controllers\CourseClassController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\CourseClassController::class, 'store'])->name('store');
+    Route::post('/{classId}/assign', [App\Http\Controllers\CourseClassController::class, 'assignStudent'])->name('assign');
+    Route::delete('/student/{registrationId}', [App\Http\Controllers\CourseClassController::class, 'removeStudent'])->name('remove-student');
+    Route::delete('/{classId}', [App\Http\Controllers\CourseClassController::class, 'destroy'])->name('destroy');
+});
 });
 
 // Student routes with refund

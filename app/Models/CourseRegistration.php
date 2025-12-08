@@ -195,4 +195,10 @@ class CourseRegistration extends Model
     {
         return 'Rp' . number_format($this->discount_amount, 0, ',', '.');
     }
+
+    // Method For Course Class
+    public function courseClass()
+    {
+        return $this->belongsTo(CourseClass::class, 'course_class_id');
+    }
 }
