@@ -232,26 +232,5 @@
     </section>
 </div>
 
-{{-- CSS KHUSUS HALAMAN INI --}}
-<style>
-    /* Sembunyikan scrollbar tapi tetep bisa scroll */
-    .hide-scrollbar::-webkit-scrollbar {
-        height: 8px;
-    }
-    .hide-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .hide-scrollbar::-webkit-scrollbar-thumb {
-        background-color: #e5e7eb;
-        border-radius: 20px;
-    }
-    .hide-scrollbar:hover::-webkit-scrollbar-thumb {
-        background-color: #d1d5db;
-    }
-    
-    /* Efek Smooth Scroll */
-    html {
-        scroll-behavior: smooth;
-    }
-</style>
+@push('head') <link rel="stylesheet" href="{{ asset('css/landing.css') }}"> @endpush
 @endsection
