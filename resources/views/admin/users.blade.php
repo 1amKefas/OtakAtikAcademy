@@ -47,14 +47,11 @@
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="sidebar w-64 text-white flex flex-col">
-            <!-- Logo -->
             <div class="p-6 border-b border-gray-700">
                 <h1 class="text-2xl font-bold text-white">OtakAtik<span class="text-blue-400">Admin</span></h1>
             </div>
             
-            <!-- Navigation -->
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
                     <li>
@@ -110,7 +107,6 @@
                 </ul>
             </nav>
             
-            <!-- User Section -->
             <div class="p-4 border-t border-gray-700">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
@@ -131,9 +127,7 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -149,9 +143,7 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6">
-                <!-- User Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <div class="stats-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
@@ -205,9 +197,7 @@
                     </div>
                 </div>
 
-                <!-- User Analytics Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    <!-- Age Distribution -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">Age Distribution</h3>
                         <div class="h-64">
@@ -215,7 +205,6 @@
                         </div>
                     </div>
 
-                    <!-- Education Level -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">Education Level</h3>
                         <div class="h-64">
@@ -223,7 +212,6 @@
                         </div>
                     </div>
 
-                    <!-- Location Distribution -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">Location Distribution</h3>
                         <div class="h-64">
@@ -232,12 +220,11 @@
                     </div>
                 </div>
 
-                <!-- Users Table -->
                 <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
                     <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                         <h3 class="text-xl font-bold text-gray-800">All Users</h3>
                         <div class="flex gap-2">
-                            <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2">
+                            <button onclick="addUser()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2">
                                 <i class="fas fa-plus"></i> Add User
                             </button>
                             <button class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2">
@@ -384,14 +371,12 @@
                     </div>
                 </div>
 
-                <!-- Pagination -->
                 @if($users->hasPages())
                 <div class="bg-white px-6 py-3 rounded-lg shadow-sm">
                     {{ $users->links() }}
                 </div>
                 @endif
 
-                <!-- Quick User Actions -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">User Management</h3>
@@ -457,7 +442,6 @@
         </div>
     </div>
 
-    <!-- Success Message Handler -->
     @if(session('success'))
     <div class="fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3">
         <i class="fas fa-check-circle"></i>
@@ -472,94 +456,26 @@
     @endif
 
     <script>
-        // Age Distribution Chart
-        const ageCtx = document.getElementById('ageChart').getContext('2d');
-        new Chart(ageCtx, {
-            type: 'doughnut',
-            data: {
+        window.chartData = {
+            age: {
                 labels: {!! json_encode(array_column($ageDistribution, 'range')) !!},
-                datasets: [{
-                    data: {!! json_encode(array_column($ageDistribution, 'count')) !!},
-                    backgroundColor: {!! json_encode(array_column($ageDistribution, 'color')) !!},
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
+                data: {!! json_encode(array_column($ageDistribution, 'count')) !!},
+                colors: {!! json_encode(array_column($ageDistribution, 'color')) !!}
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        // Education Level Chart
-        const educationCtx = document.getElementById('educationChart').getContext('2d');
-        new Chart(educationCtx, {
-            type: 'bar',
-            data: {
+            education: {
                 labels: {!! json_encode(array_column($educationDistribution, 'level')) !!},
-                datasets: [{
-                    label: 'Users',
-                    data: {!! json_encode(array_column($educationDistribution, 'count')) !!},
-                    backgroundColor: {!! json_encode(array_column($educationDistribution, 'color')) !!},
-                    borderWidth: 0,
-                    borderRadius: 8
-                }]
+                data: {!! json_encode(array_column($educationDistribution, 'count')) !!},
+                colors: {!! json_encode(array_column($educationDistribution, 'color')) !!}
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Location Distribution Chart
-        const locationCtx = document.getElementById('locationChart').getContext('2d');
-        new Chart(locationCtx, {
-            type: 'pie',
-            data: {
+            location: {
                 labels: {!! json_encode(array_column($locationDistribution, 'location')) !!},
-                datasets: [{
-                    data: {!! json_encode(array_column($locationDistribution, 'count')) !!},
-                    backgroundColor: {!! json_encode(array_column($locationDistribution, 'color')) !!},
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right'
-                    }
-                }
+                data: {!! json_encode(array_column($locationDistribution, 'count')) !!},
+                colors: {!! json_encode(array_column($locationDistribution, 'color')) !!}
             }
-        });
-
-        function editUser(userId) {
-            alert('Edit user functionality for user ID: ' + userId);
-            // In real application, you would show a modal or redirect to edit page
-        }
-
-        function addUser() {
-            alert('Add new user functionality');
-            // In real application, you would show a modal or redirect to create page
-        }
+        };
     </script>
+    
+    <script src="{{ asset('js/admin-users.js') }}"></script>
 
 </body>
 </html>
