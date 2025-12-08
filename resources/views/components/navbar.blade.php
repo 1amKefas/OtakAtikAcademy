@@ -1,12 +1,11 @@
-<!-- Navbar with Profile Dropdown and Notifications -->
 <nav class="bg-white shadow-md fixed w-full top-0 z-50">
+    <script src="{{ asset('js/navbar.js') }}" defer></script>
+
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <!-- Logo (UPDATED: Image Only) -->
         <a href="/" class="flex items-center">
             <img src="/images/logo_OtakAtik.png" alt="OtakAtik Academy" class="h-12 w-auto object-contain">
         </a>
         
-        <!-- Menu -->
         <div class="hidden md:flex items-center gap-8">
             <a href="/dashboard" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.home') }}</a>
             <a href="/course" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.courses') }}</a>
@@ -14,9 +13,7 @@
             <a href="/purchase-history" class="text-gray-700 hover:text-orange-500 font-medium transition">{{ __('messages.purchase_history') }}</a>
         </div>
         
-        <!-- Right Section: Notifications and Profile -->
         <div class="flex items-center gap-6">
-            <!-- Notification Bell -->
             <div class="relative">
                 @php
                     $unreadNotifications = collect();
@@ -37,7 +34,6 @@
                     </span>
                     @endif
                 </button>
-                <!-- Notification Dropdown -->
                 @if(Auth::check())
                 <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
                     <div class="p-4 border-b border-gray-200">
@@ -100,11 +96,9 @@
                 @endif
             </div>
             
-            <!-- Profile Dropdown -->
             @auth
             <div class="relative">
                 <button id="profileBtn" class="flex items-center gap-3 hover:bg-gray-100 rounded-full p-1 transition">
-                    <!-- Circular Profile Avatar -->
                     @if(Auth::user()->profile_picture && Storage::disk('public')->exists(Auth::user()->profile_picture))
                         <img src="{{ Storage::url(Auth::user()->profile_picture) }}" alt="{{ Auth::user()->name }}" 
                              class="w-10 h-10 rounded-full object-cover border-2 border-orange-500">
@@ -115,7 +109,6 @@
                     @endif
                 </button>
                 
-                <!-- Profile Dropdown Menu -->
                 <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 overflow-hidden border border-gray-100">
                         <div class="p-4 border-b border-gray-200 bg-gray-50">
                             <p class="font-semibold text-gray-900 truncate">{{ Auth::user()->name ?? 'User' }}</p>
@@ -199,7 +192,6 @@
             </div>
             @endauth
             
-            <!-- Guest Login Button -->
             @guest
             <div class="flex gap-3">
                 <a href="{{ route('login') }}" class="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition font-medium">
@@ -213,63 +205,3 @@
         </div>
     </div>
 </nav>
-
-<!-- Dropdown Toggle Scripts -->
-<script>
-    // Mark notification as read
-    function markAsRead(notificationId) {
-        fetch(`/notifications/${notificationId}/mark-read`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                'Content-Type': 'application/json',
-            }
-        }).then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  // Remove notification from dropdown without reloading
-                  const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
-                  if (notificationElement) {
-                      notificationElement.style.opacity = '0.5';
-                      notificationElement.style.textDecoration = 'line-through';
-                  }
-                  // Update badge count
-                  const badge = document.querySelector('#notificationBtn span');
-                  if (badge) {
-                      let count = parseInt(badge.textContent);
-                      if (count > 1) {
-                          badge.textContent = count - 1;
-                      } else {
-                          badge.remove();
-                      }
-                  }
-              }
-          }).catch(error => console.error('Error:', error));
-    }
-    
-    // Profile Dropdown
-    const profileBtn = document.getElementById('profileBtn');
-    const profileDropdown = document.getElementById('profileDropdown');
-    
-    profileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        profileDropdown.classList.toggle('hidden');
-        notificationDropdown.classList.add('hidden');
-    });
-    
-    // Notification Dropdown
-    const notificationBtn = document.getElementById('notificationBtn');
-    const notificationDropdown = document.getElementById('notificationDropdown');
-    
-    notificationBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notificationDropdown.classList.toggle('hidden');
-        profileDropdown.classList.add('hidden');
-    });
-    
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', () => {
-        profileDropdown.classList.add('hidden');
-        notificationDropdown.classList.add('hidden');
-    });
-</script>

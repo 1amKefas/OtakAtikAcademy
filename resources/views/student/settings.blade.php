@@ -3,8 +3,9 @@
 @section('title', __('settings.settings'))
 
 @section('content')
+<script src="{{ asset('js/student-settings.js') }}"></script>
+
 <div class="bg-white">
-    <!-- Header -->
     <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-8">
         <div class="max-w-4xl mx-auto">
             <h1 class="text-3xl font-bold mb-2"><i class="fas fa-cog mr-2"></i>{{ __('settings.settings') }}</h1>
@@ -12,9 +13,7 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="max-w-4xl mx-auto px-6 py-8">
-        <!-- Alerts -->
         @if(session('success'))
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center gap-3">
                 <i class="fas fa-check-circle text-green-600 text-xl"></i>
@@ -33,7 +32,6 @@
             </div>
         @endif
 
-        <!-- Tabs Navigation -->
         <div class="flex border-b border-gray-200 mb-8 gap-4 overflow-x-auto">
             <button onclick="switchTab('notifications')" id="tab-notifications" 
                     class="tab-button active px-4 py-3 font-medium text-purple-600 border-b-2 border-purple-600 whitespace-nowrap flex items-center gap-2">
@@ -53,7 +51,6 @@
             </button>
         </div>
 
-        <!-- Notifications Tab -->
         <div id="notifications-tab" class="tab-content">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ __('settings.email_notifications') }}</h2>
@@ -61,7 +58,6 @@
                 <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
                     @csrf
 
-                    <!-- Assignment Posted -->
                     <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -79,7 +75,6 @@
                         </label>
                     </div>
 
-                    <!-- Deadline Reminder -->
                     <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
@@ -97,7 +92,6 @@
                         </label>
                     </div>
 
-                    <!-- Quiz Posted -->
                     <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-100">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -115,7 +109,6 @@
                         </label>
                     </div>
 
-                    <!-- Material Uploaded -->
                     <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-100">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -133,7 +126,6 @@
                         </label>
                     </div>
 
-                    <!-- Forum Reply -->
                     <div class="flex items-center justify-between p-4 bg-cyan-50 rounded-lg border border-cyan-100">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
@@ -151,7 +143,6 @@
                         </label>
                     </div>
 
-                    <!-- Submission Graded -->
                     <div class="flex items-center justify-between p-4 bg-teal-50 rounded-lg border border-teal-100">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
@@ -176,7 +167,6 @@
             </div>
         </div>
 
-        <!-- Language Tab -->
         <div id="language-tab" class="tab-content hidden">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ __('settings.language_preferences') }}</h2>
@@ -185,7 +175,6 @@
                 <form action="{{ route('settings.locale.update') }}" method="POST" class="space-y-6">
                     @csrf
 
-                    <!-- English Option -->
                     <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all" 
                            id="locale-en" style="border-color: {{ $user->locale === 'en' ? '#9333EA' : '#E5E7EB' }}; background-color: {{ $user->locale === 'en' ? '#F3E8FF' : 'white' }};">
                         <input type="radio" name="locale" value="en" class="w-5 h-5 text-purple-600 cursor-pointer" 
@@ -199,7 +188,6 @@
                         <i class="fas fa-check ml-auto text-purple-600" style="display: {{ $user->locale === 'en' ? 'block' : 'none' }};"></i>
                     </label>
 
-                    <!-- Indonesian Option -->
                     <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all" 
                            id="locale-id" style="border-color: {{ $user->locale === 'id' ? '#9333EA' : '#E5E7EB' }}; background-color: {{ $user->locale === 'id' ? '#F3E8FF' : 'white' }};">
                         <input type="radio" name="locale" value="id" class="w-5 h-5 text-purple-600 cursor-pointer" 
@@ -227,7 +215,6 @@
             </div>
         </div>
 
-        <!-- Privacy Tab -->
         <div id="privacy-tab" class="tab-content hidden">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ __('settings.privacy') }}</h2>
@@ -235,7 +222,6 @@
                 <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
                     @csrf
 
-                    <!-- Profile Visibility -->
                     <div class="border-b border-gray-200 pb-6">
                         <p class="font-semibold text-gray-800 mb-4">{{ __('settings.profile_visibility') }}</p>
                         <div class="space-y-3">
@@ -260,7 +246,6 @@
                         </div>
                     </div>
 
-                    <!-- Show Achievements -->
                     <div class="border-b border-gray-200 pb-6 flex items-center justify-between">
                         <div>
                             <p class="font-semibold text-gray-800"><i class="fas fa-trophy text-yellow-600 mr-2"></i>{{ __('settings.show_achievements') }}</p>
@@ -273,7 +258,6 @@
                         </label>
                     </div>
 
-                    <!-- Allow Direct Messages -->
                     <div class="pb-6 flex items-center justify-between">
                         <div>
                             <p class="font-semibold text-gray-800"><i class="fas fa-comments text-cyan-600 mr-2"></i>{{ __('settings.allow_direct_messages') }}</p>
@@ -293,19 +277,16 @@
             </div>
         </div>
 
-        <!-- Account Tab -->
         <div id="account-tab" class="tab-content hidden">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ __('settings.account_security') }}</h2>
                 
-                <!-- Change Password Section -->
                 <div class="border-b border-gray-200 pb-8 mb-8">
                     <h3 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-key text-purple-600 mr-2"></i>{{ __('settings.change_password') }}</h3>
                     
                     <form action="{{ route('settings.password.update') }}" method="POST" class="space-y-4">
                         @csrf
 
-                        <!-- Current Password -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('settings.current_password') }}</label>
                             <input type="password" name="current_password" required
@@ -316,7 +297,6 @@
                             @enderror
                         </div>
 
-                        <!-- New Password -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('settings.new_password') }}</label>
                             <input type="password" name="password" required
@@ -327,7 +307,6 @@
                             @enderror
                         </div>
 
-                        <!-- Confirm Password -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('settings.confirm_new_password') }}</label>
                             <input type="password" name="password_confirmation" required
@@ -341,7 +320,6 @@
                     </form>
                 </div>
 
-                <!-- Account Information -->
                 <div>
                     <h3 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-envelope text-blue-600 mr-2"></i>{{ __('settings.account_information') }}</h3>
                     
@@ -371,50 +349,4 @@
         </div>
     </div>
 </div>
-
-<script>
-    function switchTab(tabName) {
-        // Hide all tabs
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.add('hidden');
-        });
-        
-        // Remove active class from all buttons
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.classList.remove('text-purple-600', 'border-purple-600');
-            btn.classList.add('text-gray-600', 'border-transparent');
-        });
-        
-        // Show selected tab
-        document.getElementById(tabName + '-tab').classList.remove('hidden');
-        
-        // Add active class to clicked button
-        document.getElementById('tab-' + tabName).classList.remove('text-gray-600', 'border-transparent');
-        document.getElementById('tab-' + tabName).classList.add('text-purple-600', 'border-purple-600');
-    }
-
-    function updateLocalePreview() {
-        const enLabel = document.getElementById('locale-en');
-        const idLabel = document.getElementById('locale-id');
-        const selectedLocale = document.querySelector('input[name="locale"]:checked').value;
-
-        // Reset styles
-        document.querySelectorAll('input[name="locale"]').forEach(radio => {
-            const label = radio.closest('label');
-            const icon = label.querySelector('i.fa-check');
-            icon.style.display = 'none';
-        });
-
-        // Update selected style
-        if (selectedLocale === 'en') {
-            enLabel.style.borderColor = '#9333EA';
-            enLabel.style.backgroundColor = '#F3E8FF';
-            enLabel.querySelector('i.fa-check').style.display = 'block';
-        } else {
-            idLabel.style.borderColor = '#9333EA';
-            idLabel.style.backgroundColor = '#F3E8FF';
-            idLabel.querySelector('i.fa-check').style.display = 'block';
-        }
-    }
-</script>
 @endsection
