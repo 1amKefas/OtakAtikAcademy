@@ -17,7 +17,7 @@
     
     <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" crossorigin="anonymous"></script>
     
     <script src="{{ asset('js/instructor-manage.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
