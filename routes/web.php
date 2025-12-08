@@ -317,7 +317,8 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     // Route::post('/courses/{course}/modules/{module}/quizzes/reorder', [ModuleController::class, 'reorderQuizzes'])->name('modules.quizzes.reorder');
     // [BARU] Route Reorder KONTEN (Gabungan Materi & Quiz)
     Route::post('/courses/{course}/modules/{module}/contents/reorder', [ModuleController::class, 'reorderContents'])->name('modules.contents.reorder');
-
+    // Reorder Materi & Quiz dalam satu modul
+    Route::post('/courses/{course}/modules/{module}/reorder', [App\Http\Controllers\ModuleController::class, 'reorderContents'])->name('instructor.modules.contents.reorder');
     // --- COURSE CLASS MANAGEMENT ---
     Route::prefix('courses/{id}/classes')->name('courses.classes.')->group(function () {
         Route::get('/', [App\Http\Controllers\CourseClassController::class, 'index'])->name('index');

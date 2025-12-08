@@ -85,29 +85,36 @@ class ModuleController extends Controller
     /**
      * Reorder Mixed Contents (Material & Quiz)
      */
-    public function reorderContents(Request $request, Course $course, CourseModule $module)
+    /**
+     * Reorder Mixed Contents (Material & Quiz) - FIXED
+     */
+    public function reorderContents(Request $request, $courseId, $moduleId)
     {
         $request->validate([
             'items' => 'required|array',
             'items.*.id' => 'required',
-            'items.*.type' => 'required|in:material,quiz', // Wajib kirim type
+            'items.*.type' => 'required|in:material,quiz',
         ]);
 
-        // Loop urutan dari frontend (0, 1, 2, ...)
-        foreach ($request->items as $index => $item) {
-            $sortOrder = $index + 1;
+        // Gunakan Transaction biar aman
+        DB::transaction(function () use ($request, $moduleId) {
+            foreach ($request->items as $index => $item) {
+                $urutan = $index + 1; // Urutan dimulai dari 1
 
-            if ($item['type'] === 'material') {
-                \App\Models\CourseMaterial::where('id', $item['id'])
-                    ->where('course_module_id', $module->id)
-                    ->update(['sort_order' => $sortOrder]);
-            } 
-            elseif ($item['type'] === 'quiz') {
-                \App\Models\Quiz::where('id', $item['id'])
-                    ->where('course_module_id', $module->id)
-                    ->update(['sort_order' => $sortOrder]);
+                if ($item['type'] === 'material') {
+                    // [FIX] Materi pakai kolom 'order'
+                    \App\Models\CourseMaterial::where('id', $item['id'])
+                        ->where('course_module_id', $moduleId)
+                        ->update(['order' => $urutan]); 
+                } 
+                elseif ($item['type'] === 'quiz') {
+                    // [FIX] Quiz pakai kolom 'sort_order'
+                    \App\Models\Quiz::where('id', $item['id'])
+                        ->where('course_module_id', $moduleId)
+                        ->update(['sort_order' => $urutan]);
+                }
             }
-        }
+        });
 
         return response()->json(['success' => true]);
     }
