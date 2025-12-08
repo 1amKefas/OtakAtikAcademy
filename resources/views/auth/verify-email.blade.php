@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Email - OtakAtik Academy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    {{-- Hapus CDN, Ganti dengan Vite --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-50 h-screen flex items-center justify-center">
+<body class="bg-gray-50 h-screen flex items-center justify-center font-sans">
     <div class="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
         <h2 class="text-2xl font-bold mb-4 text-gray-800">Verifikasi Email Anda</h2>
         
