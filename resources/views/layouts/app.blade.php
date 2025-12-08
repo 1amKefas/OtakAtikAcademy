@@ -8,15 +8,12 @@
 
     <link rel="icon" href="{{ asset('images/brain.png') }}" type="image/png">
 
+    {{-- SEMUA LIBRARY (Alpine, FontAwesome, Tailwind) SUDAH DISINI --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
-    
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" crossorigin="anonymous"></script>
     
     @stack('head')
 
+    {{-- TinyMCE Tetap Pakai CDN (Aman karena sudah ada atribut security) --}}
     <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
 <body class="bg-gray-50 font-sans leading-normal tracking-normal">
