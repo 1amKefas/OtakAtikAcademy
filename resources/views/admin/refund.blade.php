@@ -6,7 +6,7 @@
     <title>Refund Management - OtakAtik Admin</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     
     {{-- Load External Custom Script --}}
     <script src="{{ asset('js/admin-refund.js') }}" defer></script>
