@@ -58,6 +58,7 @@ class StudentController extends Controller
    /**
      * Show course detail for enrolled student
      */
+    // GANTI METHOD courseDetail() DENGAN INI:
     public function courseDetail($registrationId)
     {
         $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
@@ -65,22 +66,25 @@ class StudentController extends Controller
             ->where('status', 'paid')
             ->firstOrFail();
 
+        // [OPTIMASI] Load Modul & Materi dengan Sorting yang Benar
         $course = $registration->course()->with([
             'instructor',
             'modules' => function($q) { 
-                $q->orderBy('order', 'asc'); // [UPDATE] Sorting Modul
+                $q->orderBy('order', 'asc');
             },
             'modules.materials' => function($q) {
-                $q->orderBy('order', 'asc'); // [UPDATE] Sorting Materi
+                $q->orderBy('order', 'asc')
+                  ->select('id', 'course_module_id', 'title', 'type'); // Cuma ambil judul & tipe (ringan)
             },
             'modules.quizzes' => function($q) {
-                $q->orderBy('sort_order', 'asc'); // [UPDATE] Sorting Quiz
+                $q->orderBy('sort_order', 'asc')
+                  ->select('id', 'course_module_id', 'title', 'duration_minutes'); // Cuma ambil info dasar
             },
+            // Batasi forum cuma ambil 3 terbaru biar gak berat
             'forums' => function($q) {
-                $q->orderBy('created_at', 'desc')->take(5);
+                $q->latest()->take(3);
             },
-            'forums.user',
-            'forums.replies'
+            'forums.user' // Gak perlu load replies detail di sini
         ])->first();
 
         return view('student.course-detail', compact('course', 'registration'));

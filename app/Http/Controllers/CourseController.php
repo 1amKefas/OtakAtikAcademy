@@ -16,25 +16,27 @@ class CourseController extends Controller
      */
     public function showCourse(Request $request)
     {
+        // Eager load instructor & assistants biar gak N+1 di view
         $query = Course::where('is_active', true)->with(['instructor', 'assistants']);
         
-        // [TAMBAHAN] Filter Search by Title
+        // Filter Search
         if ($request->has('search') && $request->search) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('title', 'ILIKE', "%{$search}%") // ILIKE = Case insensitive (PostgreSQL)
+                $q->where('title', 'ILIKE', "%{$search}%")
                   ->orWhere('description', 'ILIKE', "%{$search}%");
             });
         }
 
-        // Filter by category jika ada
+        // Filter Category
         if ($request->has('category') && $request->category) {
             $query->whereHas('categories', function ($q) use ($request) {
                 $q->where('slug', $request->category);
             });
         }
         
-        $courses = $query->get();
+        // [OPTIMASI] Gunakan PAGINATE (12 per halaman)
+        $courses = $query->paginate(12)->withQueryString();
         
         return view('course', compact('courses'));
     }

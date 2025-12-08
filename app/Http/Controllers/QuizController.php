@@ -450,15 +450,17 @@ class QuizController extends Controller
             ->where('status', 'paid')
             ->firstOrFail();
 
+        // [OPTIMASI] Eager Load Submission Milik User Ini Saja
         $quizzes = $course->quizzes()
             ->where('is_published', true)
-            ->with('submissions')
+            ->with(['submissions' => function($query) {
+                $query->where('user_id', Auth::id())
+                      ->orderBy('score', 'desc'); // Urutkan nilai tertinggi
+            }])
             ->get()
             ->map(function ($quiz) {
-                $quiz->user_submission = $quiz->submissions()
-                    ->where('user_id', Auth::id())
-                    ->orderBy('score', 'desc') // Sortir dari nilai terbesar
-                    ->first();
+                // Ambil dari memory (Eager Load), BUKAN query lagi
+                $quiz->user_submission = $quiz->submissions->first();
                 return $quiz;
             });
 

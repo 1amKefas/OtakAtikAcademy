@@ -30,8 +30,7 @@ class InstructorController extends Controller
 
         $instructor = Auth::user();
         
-        // [OPTIMISASI] Gunakan 'withCount' untuk menghitung jumlah di level database
-        // Jadi tidak perlu query berulang-ulang di dalam loop (N+1 Problem solved)
+        // [OPTIMASI] Gunakan withCount untuk menghitung jumlah sekaligus
         $taughtCourses = Course::where(function($q) use ($instructor) {
                 $q->where('instructor_id', $instructor->id)
                   ->orWhereHas('assistants', function($sq) use ($instructor) {
@@ -41,7 +40,7 @@ class InstructorController extends Controller
             ->withCount(['registrations' => function($query) {
                 $query->where('status', 'paid');
             }])
-            ->withCount('assignments') // <-- Tambahkan ini: Hitung assignment sekaligus!
+            ->withCount('assignments') // <-- HITUNG ASSIGNMENT DI QUERY
             ->latest()
             ->get();
 
@@ -50,7 +49,7 @@ class InstructorController extends Controller
 
         foreach ($taughtCourses as $course) {
             $totalStudents += $course->registrations_count;
-            // [FIX] Gunakan nilai yang sudah dihitung query, jangan panggil assignments() lagi
+            // [FIX] Pakai hasil hitungan query, JANGAN panggil assignments()->count() lagi
             $totalAssignments += $course->assignments_count; 
         }
 
@@ -61,8 +60,7 @@ class InstructorController extends Controller
             'active_courses' => $taughtCourses->where('is_active', true)->count(),
         ];
 
-        // Ambil data registrasi terbaru
-        // Tips: pluck('id') di sini aman karena datanya sudah ada di memori ($taughtCourses)
+        // Ambil 5 pendaftar terbaru (Query Efisien)
         $recentRegistrations = CourseRegistration::whereIn('course_id', $taughtCourses->pluck('id'))
             ->where('status', 'paid')
             ->with(['user', 'course'])
