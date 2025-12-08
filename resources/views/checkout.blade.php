@@ -188,7 +188,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> 
 
     <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/50 z-[9999] flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">

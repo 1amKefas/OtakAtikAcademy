@@ -29,16 +29,20 @@ class InstructorController extends Controller
         }
 
         $instructor = Auth::user();
+        
+        // [OPTIMISASI] Gunakan 'withCount' untuk menghitung jumlah di level database
+        // Jadi tidak perlu query berulang-ulang di dalam loop (N+1 Problem solved)
         $taughtCourses = Course::where(function($q) use ($instructor) {
-                $q->where('instructor_id', $instructor->id) // Cek sebagai Instruktur Utama
+                $q->where('instructor_id', $instructor->id)
                   ->orWhereHas('assistants', function($sq) use ($instructor) {
-                      $sq->where('users.id', $instructor->id); // Cek sebagai Asisten
+                      $sq->where('users.id', $instructor->id);
                   });
             })
             ->withCount(['registrations' => function($query) {
                 $query->where('status', 'paid');
             }])
-            // ->latest() // Tambahkan latest() kalau mau urutan terbaru
+            ->withCount('assignments') // <-- Tambahkan ini: Hitung assignment sekaligus!
+            ->latest()
             ->get();
 
         $totalStudents = 0;
@@ -46,7 +50,8 @@ class InstructorController extends Controller
 
         foreach ($taughtCourses as $course) {
             $totalStudents += $course->registrations_count;
-            $totalAssignments += $course->assignments()->count();
+            // [FIX] Gunakan nilai yang sudah dihitung query, jangan panggil assignments() lagi
+            $totalAssignments += $course->assignments_count; 
         }
 
         $stats = [
@@ -56,6 +61,8 @@ class InstructorController extends Controller
             'active_courses' => $taughtCourses->where('is_active', true)->count(),
         ];
 
+        // Ambil data registrasi terbaru
+        // Tips: pluck('id') di sini aman karena datanya sudah ada di memori ($taughtCourses)
         $recentRegistrations = CourseRegistration::whereIn('course_id', $taughtCourses->pluck('id'))
             ->where('status', 'paid')
             ->with(['user', 'course'])
