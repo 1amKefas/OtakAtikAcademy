@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    {{-- Load External Custom Logic --}}
+    <script src="{{ asset('js/admin-course-manage.js') }}" defer></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -418,7 +422,6 @@
         <i class="fas fa-check-circle"></i>
         <span class="font-medium">{{ session('success') }}</span>
     </div>
-    <script>setTimeout(() => document.getElementById('alert-success').remove(), 5000);</script>
     @endif
 
     @if(session('error'))
@@ -426,151 +429,7 @@
         <i class="fas fa-exclamation-circle"></i>
         <span class="font-medium">{{ session('error') }}</span>
     </div>
-    <script>setTimeout(() => document.getElementById('alert-error').remove(), 5000);</script>
     @endif
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script>
-        function toggleInstructorField(type) {
-            const instructorInput = document.getElementById('instructor_id');
-            const requiredStar = document.getElementById('instructor-required');
-            const noteText = document.getElementById('instructor-note');
-            
-            if (type === 'Full Online') {
-                instructorInput.removeAttribute('required');
-                requiredStar.style.display = 'none';
-                noteText.innerHTML = 'Opsional untuk Full Online (Bisa dipilih jika ada)';
-                noteText.classList.add('text-blue-500');
-                noteText.classList.remove('text-gray-500');
-            } else {
-                instructorInput.setAttribute('required', 'required');
-                requiredStar.style.display = 'inline';
-                noteText.innerHTML = 'Wajib untuk Hybrid & Tatap Muka';
-                noteText.classList.remove('text-blue-500');
-                noteText.classList.add('text-gray-500');
-            }
-        }
-
-        // --- Cropper Logic ---
-        const imageInput = document.getElementById('imageInput');
-        const cropModal = document.getElementById('cropModal');
-        const imageToCrop = document.getElementById('imageToCrop');
-        const imagePreview = document.getElementById('imagePreview');
-        const imagePlaceholder = document.getElementById('imagePlaceholder');
-        const imageOverlay = document.getElementById('imageOverlay');
-        let cropper = null;
-
-        imageInput.addEventListener('change', function(e) {
-            const files = e.target.files;
-            if (files && files.length > 0) {
-                const file = files[0];
-                
-                if(!file.type.startsWith('image/')){
-                    alert('File harus berupa gambar!');
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    imageToCrop.src = event.target.result;
-                    cropModal.classList.remove('hidden');
-                    
-                    if (cropper) cropper.destroy();
-                    
-                    cropper = new Cropper(imageToCrop, {
-                        aspectRatio: 16 / 9,
-                        viewMode: 1,
-                        autoCropArea: 1,
-                        background: false,
-                        responsive: true,
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        function cropImage() {
-            if (!cropper) return;
-            
-            cropper.getCroppedCanvas({
-                width: 800, 
-                height: 450,
-                fillColor: '#fff'
-            }).toBlob((blob) => {
-                const newFile = new File([blob], "thumbnail_cropped.jpg", { type: "image/jpeg" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(newFile);
-                imageInput.files = dataTransfer.files;
-
-                const url = URL.createObjectURL(blob);
-                imagePreview.src = url;
-                imagePreview.classList.remove('hidden');
-                imagePlaceholder.classList.add('hidden');
-                imageOverlay.classList.remove('hidden');
-                
-                closeCropper();
-            }, 'image/jpeg', 0.85);
-        }
-
-        function closeCropper() {
-            cropModal.classList.add('hidden');
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-            if (imagePreview.classList.contains('hidden')) {
-                imageInput.value = '';
-            }
-        }
-
-        // Init based on existing values
-        document.addEventListener('DOMContentLoaded', function() {
-            const typeSelect = document.querySelector('select[name="type"]');
-            if (typeSelect) toggleInstructorField(typeSelect.value);
-
-            // [ADD] SortableJS Init for Modules
-            var el = document.getElementById('modules-container');
-            if(el) {
-                Sortable.create(el, {
-                    handle: '.handle', // Class handle ada di input module
-                    animation: 150,
-                    ghostClass: 'sortable-ghost'
-                });
-            }
-        });
-    </script>
-    <script>
-    let moduleCount = 0;
-
-    function addModuleInput() {
-        const container = document.getElementById('modules-container');
-        const index = moduleCount; // Pakai counter biar unik
-
-        const html = `
-            <div class="flex items-center gap-2 group" id="module-row-${index}">
-                <div class="flex-1 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3">
-                    <span class="text-gray-400 font-bold px-2 cursor-grab handle"><i class="fas fa-grip-vertical"></i></span>
-                    <input type="text" name="modules[${index}][title]" placeholder="Nama Modul (Contoh: Pengenalan HTML)" 
-                           class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800 placeholder-gray-400" required>
-                </div>
-                <button type="button" onclick="removeModuleRow(${index})" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        `;
-
-        container.insertAdjacentHTML('beforeend', html);
-        moduleCount++;
-    }
-
-    function removeModuleRow(index) {
-        document.getElementById(`module-row-${index}`).remove();
-    }
-
-    // Tambahkan 1 modul kosong saat pertama kali load
-    document.addEventListener('DOMContentLoaded', () => {
-        addModuleInput(); 
-    });
-</script>
 </body>
 </html>
