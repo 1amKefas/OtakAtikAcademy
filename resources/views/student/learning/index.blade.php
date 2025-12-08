@@ -73,7 +73,7 @@
             
             <div class="flex-1 overflow-y-auto p-3 space-y-3">
                 @foreach($course->modules as $index => $module)
-                <div x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }" class="bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div x-data="{ open: {{ ($currentContent->course_module_id == $module->id) ? 'true' : ($loop->first ? 'true' : 'false') }} }" class="bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <button @click="open = !open" class="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-slate-700 transition text-left group">
                         <div class="flex items-center gap-3">
                             <span class="w-6 h-6 rounded-md bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-xs font-bold group-hover:bg-blue-500 group-hover:text-white transition">{{ $index + 1 }}</span>
@@ -84,14 +84,13 @@
 
                     <div x-show="open" x-collapse class="border-t border-gray-100 dark:border-gray-700">
                         <div class="py-1">
+                            {{-- MATERI --}}
                             @foreach($module->materials as $mat)
                             @php
                                 $isActive = ($type == 'material' && $currentContent->id == $mat->id);
-                                $isCompleted = \App\Models\CourseProgress::where('user_id', Auth::id())
-                                    ->where('content_id', $mat->id)
-                                    ->where('content_type', 'material')
-                                    ->where('is_completed', true)
-                                    ->exists();
+                                // Gunakan $completedMap yang dikirim dari controller (Lebih Ringan)
+                                $itemKey = 'material_' . $mat->id;
+                                $isCompleted = isset($completedMap[$itemKey]);
                             @endphp
                             <a href="{{ route('student.learning.content', [$course->id, 'material', $mat->id]) }}" 
                                class="flex items-center gap-3 px-4 py-2.5 text-sm transition relative {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-100 dark:hover:bg-slate-700' }}">
@@ -113,12 +112,22 @@
                             </a>
                             @endforeach
 
+                            {{-- QUIZ --}}
                             @foreach($module->quizzes as $quiz)
-                            @php $isActive = ($type == 'quiz' && $currentContent->id == $quiz->id); @endphp
+                            @php 
+                                $isActive = ($type == 'quiz' && $currentContent->id == $quiz->id);
+                                $quizKey = 'quiz_' . $quiz->id;
+                                $isQuizCompleted = isset($completedMap[$quizKey]);
+                            @endphp
                             <a href="{{ route('student.learning.content', [$course->id, 'quiz', $quiz->id]) }}" 
                                class="flex items-center gap-3 px-4 py-2.5 text-sm transition {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-100 dark:hover:bg-slate-700' }}">
                                 <div class="flex-shrink-0 w-5 text-center">
-                                    <i class="fas fa-question-circle {{ $isActive ? 'text-blue-600 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400' }}"></i>
+                                    @if($isQuizCompleted)
+                                        {{-- [FIXED] Tampilkan Checklist jika Quiz Selesai --}}
+                                        <i class="fas fa-check-circle text-green-500 text-sm"></i>
+                                    @else
+                                        <i class="fas fa-question-circle {{ $isActive ? 'text-blue-600 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400' }}"></i>
+                                    @endif
                                 </div>
                                 <span class="flex-1 truncate">{{ $quiz->title }}</span>
                                 <span class="text-[10px] font-bold bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded">QUIZ</span>
@@ -225,6 +234,7 @@
                     </div>
 
                     @php
+                        // Logic Navigasi Next/Prev
                         $flatList = [];
                         foreach($course->modules as $m) {
                             foreach($m->materials as $mat) { $flatList[] = ['type' => 'material', 'id' => $mat->id]; }
@@ -240,13 +250,12 @@
                         $prevUrl = ($currentIndex > 0) ? route('student.learning.content', [$course->id, $flatList[$currentIndex-1]['type'], $flatList[$currentIndex-1]['id']]) : '#';
                         $nextUrl = ($currentIndex < count($flatList) - 1) ? route('student.learning.content', [$course->id, $flatList[$currentIndex+1]['type'], $flatList[$currentIndex+1]['id']]) : route('student.courses');
                         
-                        $alreadyDone = \App\Models\CourseProgress::where('user_id', Auth::id())
-                            ->where('content_id', $currentContent->id ?? 0)
-                            ->where('content_type', 'material')
-                            ->where('is_completed', true)
-                            ->exists();
+                        // Cek apakah current content sudah selesai
+                        $currentKey = $type . '_' . $currentContent->id;
+                        $alreadyDone = isset($completedMap[$currentKey]);
                     @endphp
 
+                    {{-- Data Element untuk JavaScript --}}
                     <div id="content-data" 
                          data-next-url="{{ $nextUrl }}"
                          data-complete-url="{{ route('student.learning.complete-material', [$course->id, $currentContent->id ?? 0]) }}"

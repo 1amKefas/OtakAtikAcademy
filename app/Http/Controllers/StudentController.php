@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CourseRegistration;
 use App\Models\Course;
+use App\Models\CourseProgress;
 use App\Models\Refund;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -440,54 +441,94 @@ class StudentController extends Controller
     }
 
     /**
+     * Helper: Mendapatkan urutan semua konten dalam course (Flattened List)
+     */
+    private function getCourseContentFlattened($course)
+    {
+        $content = collect();
+        
+        // Pastikan urutan modul benar
+        $modules = $course->modules->sortBy('order');
+
+        foreach ($modules as $module) {
+            // Masukkan Materi (urutkan by order)
+            foreach ($module->materials->sortBy('order') as $material) {
+                $content->push([
+                    'type' => 'material',
+                    'id' => $material->id,
+                    'title' => $material->title,
+                    'module_id' => $module->id,
+                    'key' => 'material_' . $material->id
+                ]);
+            }
+            // Masukkan Quiz (urutkan by sort_order)
+            foreach ($module->quizzes->sortBy('sort_order') as $quiz) {
+                $content->push([
+                    'type' => 'quiz',
+                    'id' => $quiz->id,
+                    'title' => $quiz->title,
+                    'module_id' => $module->id,
+                    'key' => 'quiz_' . $quiz->id
+                ]);
+            }
+        }
+        return $content->values(); // Reset keys
+    }
+
+    /**
      * Halaman Utama Belajar (Redirect ke konten terakhir atau pertama)
      */
     public function learningPage($courseId)
     {
-        // 1. Validasi Akses (Harus Enroll & Paid)
+        // 1. Validasi Akses
         $registration = CourseRegistration::where('user_id', Auth::id())
             ->where('course_id', $courseId)
             ->where('status', 'paid')
             ->firstOrFail();
 
-        $course = Course::with(['modules.materials', 'modules.quizzes', 'modules.assignments'])
-            ->findOrFail($courseId);
+        $course = Course::with(['modules.materials', 'modules.quizzes'])->findOrFail($courseId);
 
-        // 2. Cari Konten Terakhir yang Diakses (Logic Sequential)
-        // Untuk simplifikasi awal, kita arahkan ke item pertama di modul pertama
-        // Nanti bisa dikembangkan pakai tabel 'user_progress'
+        // 2. Ambil Semua Konten Urut
+        $allContent = $this->getCourseContentFlattened($course);
         
-        $firstModule = $course->modules->sortBy('order')->first();
-        
-        if (!$firstModule) {
+        if ($allContent->isEmpty()) {
             return back()->with('error', 'Belum ada konten di kursus ini.');
         }
 
-        // Prioritas urutan: Materi -> Quiz -> Assignment
-        $firstContent = null;
-        $type = null;
+        // 3. Ambil Progress User
+        $completedKeys = CourseProgress::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('is_completed', true)
+            ->get()
+            ->map(fn($p) => $p->content_type . '_' . $p->content_id)
+            ->toArray();
 
-        if ($firstModule->materials->isNotEmpty()) {
-            $firstContent = $firstModule->materials->sortBy('order')->first();
-            $type = 'material';
-        } elseif ($firstModule->quizzes->isNotEmpty()) {
-            $firstContent = $firstModule->quizzes->first();
-            $type = 'quiz';
+        // 4. Cari konten PERTAMA yang BELUM selesai (Sequential Logic)
+        $nextItem = null;
+        foreach ($allContent as $item) {
+            if (!in_array($item['key'], $completedKeys)) {
+                $nextItem = $item;
+                break; // Ketemu yang belum selesai, langsung stop & ambil ini
+            }
         }
 
-        if ($firstContent) {
-            return redirect()->route('student.learning.content', [
-                'courseId' => $courseId, 
-                'type' => $type, 
-                'contentId' => $firstContent->id
-            ]);
+        // Jika semua sudah selesai, arahkan ke item terakhir (atau halaman "Selesai")
+        if (!$nextItem) {
+            $nextItem = $allContent->last();
         }
 
-        return back()->with('error', 'Konten belum tersedia.');
+        return redirect()->route('student.learning.content', [
+            'courseId' => $courseId, 
+            'type' => $nextItem['type'], 
+            'contentId' => $nextItem['id']
+        ]);
     }
 
     /**
      * Menampilkan Konten Spesifik (Materi/Quiz)
+     */
+    /**
+     * Menampilkan Konten Spesifik dengan VALIDASI URUTAN (Anti-Lompat)
      */
     public function learningContent($courseId, $type, $contentId)
     {
@@ -497,16 +538,45 @@ class StudentController extends Controller
             ->firstOrFail();
 
        $course = Course::with([
-            'modules' => function($q) {
-                $q->orderBy('order', 'asc'); // [UPDATE]
-            }, 
-            'modules.materials' => function($q) {
-                $q->orderBy('order', 'asc'); // [UPDATE]
-            }, 
-            'modules.quizzes' => function($q) {
-                $q->orderBy('sort_order', 'asc'); // [UPDATE]
-            }
+            'modules' => function($q) { $q->orderBy('order', 'asc'); }, 
+            'modules.materials' => function($q) { $q->orderBy('order', 'asc'); }, 
+            'modules.quizzes' => function($q) { $q->orderBy('sort_order', 'asc'); }
         ])->findOrFail($courseId);
+
+        // --- LOGIC ANTI LOMPAT ---
+        $allContent = $this->getCourseContentFlattened($course);
+        
+        // Cari index konten yang diminta user
+        $targetKey = $type . '_' . $contentId;
+        $targetIndex = $allContent->search(function ($item) use ($targetKey) {
+            return $item['key'] === $targetKey;
+        });
+
+        if ($targetIndex === false) abort(404);
+
+        // Ambil Progress User
+        $completedMap = CourseProgress::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('is_completed', true)
+            ->get()
+            ->mapWithKeys(fn($p) => [$p->content_type . '_' . $p->content_id => true])
+            ->toArray();
+
+        // Cek apakah item SEBELUMNYA sudah selesai?
+        // Loop dari awal sampai sebelum target index
+        for ($i = 0; $i < $targetIndex; $i++) {
+            $prevItem = $allContent[$i];
+            if (!isset($completedMap[$prevItem['key']])) {
+                // OOPS! Ada item sebelumnya yang belum selesai.
+                // Redirect paksa user ke item tersebut.
+                return redirect()->route('student.learning.content', [
+                    'courseId' => $courseId,
+                    'type' => $prevItem['type'],
+                    'contentId' => $prevItem['id']
+                ])->with('error', '⚠️ Materi terkunci! Selesaikan materi sebelumnya: "' . $prevItem['title'] . '"');
+            }
+        }
+        // --- END LOGIC ANTI LOMPAT ---
 
         // Ambil konten yang diminta
         $currentContent = null;
@@ -516,15 +586,9 @@ class StudentController extends Controller
             $currentContent = \App\Models\Quiz::findOrFail($contentId);
         }
 
-        // LOGIC SEQUENTIAL ACCESS (Basic)
-        // Di versi simple ini, kita izinkan akses semua. 
-        // Untuk strict sequential, kita perlu tabel pivot 'course_progress' untuk mencatat item yg sudah 'completed'.
-        // Implementasi strict butuh migrasi tambahan. 
-        // Sesuai request, kita buat UI-nya dulu, logic kuncinya nanti di tombol "Next".
-
-        return view('student.learning.index', compact('course', 'currentContent', 'type', 'registration'));
+        // Kirim data completedMap ke view untuk menampilkan Checklist Hijau
+        return view('student.learning.index', compact('course', 'currentContent', 'type', 'registration', 'completedMap'));
     }
-
     /**
      * Tandai Materi Selesai & Lanjut
      */
