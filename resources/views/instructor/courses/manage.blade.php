@@ -93,7 +93,8 @@
                     <h3 class="text-2xl font-bold text-gray-900">Kurikulum & Konten</h3>
                     <p class="text-gray-500 text-sm mt-1">Drag icon untuk mengubah urutan Modul atau Materi.</p>
                 </div>
-                <button @click="showModuleModal = true" class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2 font-medium">
+                <button @click="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" 
+                        class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2 font-medium">
                     <i class="fas fa-plus-circle"></i> Tambah Modul Baru
                 </button>
             </div>
@@ -228,8 +229,9 @@
                         <i class="fas fa-layer-group text-3xl"></i>
                     </div>
                     <h3 class="text-xl font-bold text-gray-800">Mulai Menyusun Kursus</h3>
-                    <button @click="showModuleModal = true" class="mt-6 text-blue-600 font-medium hover:text-blue-800 hover:underline">
-                        + Buat Modul Pertama
+                    <button @click="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" 
+                            class="mt-6 text-blue-600 font-medium hover:text-blue-800 hover:underline">
+                        + Buat Modul 
                     </button>
                 </div>
                 @endforelse
