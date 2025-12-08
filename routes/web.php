@@ -129,7 +129,7 @@ Route::middleware(['auth'])->group(function () {
     // Achievements & Certificates
     Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');
     Route::get('/user/{user}/achievements', [AchievementController::class, 'showUserProfile'])->name('achievements.user');
-    Route::get('/course/{id}/certificate', [CertificateController::class, 'download'])->name('student.certificate.download');
+    Route::get('/course/{courseId}/certificate-download', [App\Http\Controllers\CertificateController::class, 'downloadFromCourse'])->name('student.certificate.download');
 });
 
 // Payment Routes

@@ -13,46 +13,46 @@ use Illuminate\Support\Facades\Storage;
 class CertificateController extends Controller
 {
     /**
-     * Download sertifikat (Logic Baru: Based on Course Progress)
+     * Generate & Download Sertifikat berdasarkan Course ID
      */
-    public function download($courseId)
+    public function downloadFromCourse($courseId)
     {
         $user = Auth::user();
         
-        // 1. Cek apakah user terdaftar dan progress 100%
+        // 1. Validasi: User harus terdaftar & Progress 100%
         $registration = CourseRegistration::where('user_id', $user->id)
             ->where('course_id', $courseId)
             ->where('status', 'paid')
             ->firstOrFail();
 
         if ($registration->progress < 100) {
-            return back()->with('error', 'Selesaikan kursus 100% untuk mendapatkan sertifikat.');
+            return back()->with('error', 'Mohon selesaikan semua materi dan quiz (100%) untuk mendapatkan sertifikat.');
         }
 
         $course = $registration->course;
 
-        // 2. Cek apakah template tersedia di kursus ini
+        // 2. Validasi: Admin harus sudah upload template background
         if (!$course->certificate_template) {
-            return back()->with('error', 'Sertifikat untuk kursus ini belum di-upload oleh admin. Silakan hubungi admin.');
+            return back()->with('error', 'Template sertifikat belum di-upload oleh admin/instruktur. Silakan hubungi kami.');
         }
 
-        // 3. Generate atau Ambil Record Sertifikat
+        // 3. Generate Record Sertifikat di Database (jika belum ada)
         $certificate = Certificate::firstOrCreate(
             ['user_id' => $user->id, 'course_id' => $courseId],
             [
-                'certificate_code' => 'CERT-' . strtoupper(Str::random(10)),
+                'certificate_code' => 'CRT-' . strtoupper(Str::random(8)) . '-' . date('Y'),
                 'issued_at' => now()
             ]
         );
 
-        // 4. Siapkan Data untuk PDF
-        // Pastikan path image valid untuk DomPDF
+        // 4. Siapkan Data untuk View PDF
+        // Gunakan public_path() atau storage_path() agar DomPDF bisa baca gambar lokal
         $bgPath = storage_path('app/public/' . $course->certificate_template);
         
         $data = [
             'student_name' => $user->name,
             'course_title' => $course->title,
-            'date' => $certificate->issued_at->format('d F Y'),
+            'date' => $certificate->issued_at->translatedFormat('d F Y'), // Format tanggal Indonesia
             'code' => $certificate->certificate_code,
             'background_image' => $bgPath
         ];
@@ -63,9 +63,9 @@ class CertificateController extends Controller
 
         return $pdf->download('Sertifikat-' . Str::slug($course->title) . '.pdf');
     }
-    
+
     /**
-     * Tampilkan List Sertifikat User (Opsional)
+     * Menampilkan List Sertifikat Saya (Menu My Certificates)
      */
     public function myCertificates()
     {
@@ -75,14 +75,5 @@ class CertificateController extends Controller
             ->paginate(10);
             
         return view('student.certificates.index', compact('certificates'));
-    }
-
-    /**
-     * Admin Index (Opsional - Jika masih mau pakai admin view lama)
-     */
-    public function adminIndex()
-    {
-        $certificates = Certificate::with(['user', 'course'])->latest()->paginate(20);
-        return view('admin.certificates.index', compact('certificates'));
     }
 }
