@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    {{-- Load External JS Logic --}}
+    <script src="{{ asset('js/admin-course-edit.js') }}" defer></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -20,7 +24,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* [ADD] Handle Style */
         .handle { cursor: grab; }
         .handle:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
@@ -36,7 +39,6 @@
             <p class="text-sm">{{ session('success') }}</p>
         </div>
     </div>
-    <script>setTimeout(() => document.getElementById('alert-success').remove(), 4000);</script>
     @endif
 
     @if ($errors->any())
@@ -299,139 +301,5 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script>
-        function toggleInstructorField(type) {
-            // Logic handled backend/view state
-        }
-
-        const imageInput = document.getElementById('imageInput');
-        const cropModal = document.getElementById('cropModal');
-        const imageToCrop = document.getElementById('imageToCrop');
-        const imagePreview = document.getElementById('imagePreview');
-        const imagePlaceholder = document.getElementById('imagePlaceholder');
-        const imageOverlay = document.getElementById('imageOverlay');
-        
-        let cropper = null;
-
-        imageInput.addEventListener('change', function(e) {
-            const files = e.target.files;
-            if (files && files.length > 0) {
-                const file = files[0];
-                
-                if(!file.type.startsWith('image/')) {
-                    alert('Mohon upload file gambar (JPG/PNG).');
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    imageToCrop.src = event.target.result;
-                    cropModal.classList.remove('hidden');
-                    
-                    if (cropper) cropper.destroy();
-                    
-                    cropper = new Cropper(imageToCrop, {
-                        aspectRatio: 16 / 9,
-                        viewMode: 1,
-                        autoCropArea: 1,
-                        background: false,
-                        responsive: true,
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        function cropImage() {
-            if (!cropper) return;
-            
-            cropper.getCroppedCanvas({
-                width: 800, 
-                height: 450,
-                fillColor: '#fff'
-            }).toBlob((blob) => {
-                const newFile = new File([blob], "thumbnail_edited.jpg", { type: "image/jpeg" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(newFile);
-                imageInput.files = dataTransfer.files;
-
-                const url = URL.createObjectURL(blob);
-                imagePreview.src = url;
-                imagePreview.classList.remove('hidden');
-                imagePlaceholder.classList.add('hidden');
-                imageOverlay.classList.remove('hidden');
-                
-                closeCropper();
-            }, 'image/jpeg', 0.85);
-        }
-
-        function closeCropper() {
-            cropModal.classList.add('hidden');
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-        }
-    </script>
-    <script>
-    let editModuleCount = {{ $course->modules->count() + 100 }}; 
-
-    function addEditModuleInput() {
-        const emptyMsg = document.getElementById('no-modules-msg');
-        if(emptyMsg) emptyMsg.remove();
-
-        const container = document.getElementById('admin-modules-list');
-        const index = editModuleCount;
-
-        const html = `
-            <div class="flex items-center gap-2 group module-item" id="edit-module-row-new-${index}" data-id="new-${index}">
-                <div class="flex-1 bg-blue-50 p-3 rounded-lg border border-blue-200 flex items-center gap-3">
-                    <span class="text-blue-400 font-bold px-2 cursor-grab handle"><i class="fas fa-grip-vertical"></i></span>
-                    <input type="text" name="modules[new_${index}][title]" placeholder="Judul Modul Baru..." 
-                           class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800 placeholder-blue-300" required>
-                </div>
-                <button type="button" onclick="removeEditModuleRow('new-${index}')" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-
-        container.insertAdjacentHTML('beforeend', html);
-        editModuleCount++;
-    }
-
-    function removeEditModuleRow(idSuffix) {
-        document.getElementById(`edit-module-row-${idSuffix}`).remove();
-    }
-
-    // [ADD] Script SortableJS for Admin
-    document.addEventListener('DOMContentLoaded', function () {
-        var el = document.getElementById('admin-modules-list');
-        var courseId = el ? el.getAttribute('data-course-id') : null;
-
-        if(el) {
-            Sortable.create(el, {
-                handle: '.handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                onEnd: function (evt) {
-                    var orderedIds = this.toArray();
-                    
-                    // AJAX Reorder Call
-                    fetch("{{ route('admin.modules.reorder', $course->id) }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({ ordered_ids: orderedIds })
-                    }).then(res => res.json())
-                      .then(data => console.log('Reorder berhasil'));
-                }
-            });
-        }
-    });
-</script>
 </body>
 </html>

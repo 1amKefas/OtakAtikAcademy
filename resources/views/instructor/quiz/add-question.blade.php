@@ -3,6 +3,9 @@
 @section('title', isset($question) ? 'Edit Soal' : 'Tambah Soal')
 
 @section('content')
+{{-- Load External Script --}}
+<script src="{{ asset('js/instructor-quiz-question.js') }}" defer></script>
+
 <div class="bg-white">
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-8">
         <div class="max-w-4xl mx-auto">
@@ -174,79 +177,4 @@
     </div>
 </div>
 
-<script>
-    function changeQuestionType(type) {
-        // Hide all sections
-        ['mcCorrectAnswer', 'msCorrectAnswer', 'tfCorrectAnswer', 'essayCorrectAnswer', 'optionsSection'].forEach(id => {
-            document.getElementById(id).classList.add('hidden');
-        });
-
-        // Show active section
-        if (type === 'multiple_choice') {
-            document.getElementById('mcCorrectAnswer').classList.remove('hidden');
-            document.getElementById('optionsSection').classList.remove('hidden');
-        } else if (type === 'multiple_select') { // [BARU]
-            document.getElementById('msCorrectAnswer').classList.remove('hidden');
-            document.getElementById('optionsSection').classList.remove('hidden');
-        } else if (type === 'true_false') {
-            document.getElementById('tfCorrectAnswer').classList.remove('hidden');
-        } else if (type === 'essay') {
-            document.getElementById('essayCorrectAnswer').classList.remove('hidden');
-        }
-    }
-
-    function addOption() {
-        const container = document.getElementById('optionsContainer');
-        const count = container.children.length;
-        const letter = String.fromCharCode(65 + count);
-        const html = `
-            <div class="flex items-center gap-3 optionItem">
-                <span class="text-sm font-bold text-gray-600 w-6">${letter}</span>
-                <input type="text" name="options[]" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg" placeholder="Masukkan pilihan...">
-                <button type="button" onclick="removeOption(this)" class="bg-red-500 text-white px-3 py-2 rounded">🗑️</button>
-            </div>`;
-        container.insertAdjacentHTML('beforeend', html);
-        updateCorrectAnswerOptions();
-    }
-
-    function removeOption(btn) {
-        btn.closest('.optionItem').remove();
-        // Re-index
-        document.querySelectorAll('.optionItem').forEach((el, idx) => {
-            el.querySelector('span').innerText = String.fromCharCode(65 + idx);
-        });
-        updateCorrectAnswerOptions();
-    }
-
-    function updateCorrectAnswerOptions() {
-        const options = Array.from(document.querySelectorAll('input[name="options[]"]')).map(el => el.value);
-        const containerRadio = document.getElementById('correctAnswerOptions');
-        const containerCheck = document.getElementById('correctAnswerCheckboxes');
-        
-        let htmlRadio = '';
-        let htmlCheck = '';
-
-        options.forEach((opt, idx) => {
-            if(opt) {
-                // Radio
-                htmlRadio += `<label class="flex items-center"><input type="radio" name="correct_answer" value="${idx}" class="w-4 h-4 text-indigo-600"><span class="ml-2 text-gray-800">${String.fromCharCode(65 + idx)}: ${opt}</span></label>`;
-                // Checkbox
-                htmlCheck += `<label class="flex items-center"><input type="checkbox" name="correct_answers[]" value="${idx}" class="w-4 h-4 text-indigo-600 rounded"><span class="ml-2 text-gray-800">${String.fromCharCode(65 + idx)}: ${opt}</span></label>`;
-            }
-        });
-
-        containerRadio.innerHTML = htmlRadio;
-        containerCheck.innerHTML = htmlCheck;
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const type = document.querySelector('input[name="question_type"]:checked')?.value || 'multiple_choice';
-        changeQuestionType(type);
-        updateCorrectAnswerOptions();
-        
-        document.getElementById('optionsContainer').addEventListener('input', (e) => {
-            if(e.target.name === 'options[]') updateCorrectAnswerOptions();
-        });
-    });
-</script>
 @endsection
