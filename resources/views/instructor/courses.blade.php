@@ -6,6 +6,10 @@
     <title>My Courses - OtakAtik Instructor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {{-- Load External Script --}}
+    <script src="{{ asset('js/instructor-courses.js') }}"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -186,12 +190,6 @@
         <i class="fas fa-check-circle"></i>
         <span class="font-medium">{{ session('success') }}</span>
     </div>
-    <script>
-        setTimeout(() => {
-            const alert = document.querySelector('.fixed.bottom-6');
-            if(alert) alert.remove();
-        }, 4000);
-    </script>
     @endif
 
 </body>
