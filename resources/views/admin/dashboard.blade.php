@@ -49,14 +49,11 @@
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="sidebar w-64 text-white flex flex-col">
-            <!-- Logo -->
             <div class="p-6 border-b border-gray-700">
                 <h1 class="text-2xl font-bold text-white">OtakAtik<span class="text-blue-400">Admin</span></h1>
             </div>
             
-            <!-- Navigation -->
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
                     <li>
@@ -112,7 +109,6 @@
                 </ul>
             </nav>
             
-            <!-- User Section -->
             <div class="p-4 border-t border-gray-700">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
@@ -133,9 +129,7 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -151,11 +145,8 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6">
-                <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Participants / Users -->
                     <div class="users-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -167,7 +158,6 @@
                         </div>
                     </div>
 
-                    <!-- Financial Analytics -->
                     <div class="finance-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -179,7 +169,6 @@
                         </div>
                     </div>
 
-                    <!-- Total Courses -->
                     <div class="card-gradient rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -191,7 +180,6 @@
                         </div>
                     </div>
 
-                    <!-- Course Registrations -->
                     <div class="refund-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -204,9 +192,7 @@
                     </div>
                 </div>
 
-                <!-- Second Row Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Active Courses -->
                     <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
                         <div class="flex items-center justify-between">
                             <div>
@@ -218,7 +204,6 @@
                         </div>
                     </div>
 
-                    <!-- Pending Registrations -->
                     <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
                         <div class="flex items-center justify-between">
                             <div>
@@ -230,7 +215,6 @@
                         </div>
                     </div>
 
-                    <!-- Monthly Revenue -->
                     <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
                         <div class="flex items-center justify-between">
                             <div>
@@ -242,7 +226,6 @@
                         </div>
                     </div>
 
-                    <!-- Instructors -->
                     <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
                         <div class="flex items-center justify-between">
                             <div>
@@ -256,7 +239,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Recent Registrations -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-xl font-bold text-gray-800">Recent Registrations</h3>
@@ -302,9 +284,7 @@
                         </div>
                     </div>
 
-                    <!-- Popular Courses & Quick Actions -->
                     <div class="space-y-8">
-                        <!-- Popular Courses -->
                         <div class="bg-white rounded-2xl shadow-lg p-6">
                             <h3 class="text-xl font-bold text-gray-800 mb-6">Popular Courses</h3>
                             
@@ -342,7 +322,6 @@
                             </div>
                         </div>
 
-                        <!-- Quick Actions -->
                         <div class="bg-white rounded-2xl shadow-lg p-6">
                             <h3 class="text-xl font-bold text-gray-800 mb-6">Quick Actions</h3>
                             
@@ -371,7 +350,6 @@
                     </div>
                 </div>
 
-                <!-- Financial Summary -->
                 <div class="mt-8 bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl shadow-lg p-6 text-white">
                     <h3 class="text-xl font-bold mb-6">Financial Summary</h3>
                     
@@ -395,7 +373,6 @@
                     </div>
                 </div>
 
-                <!-- System Status -->
                 <div class="mt-8 bg-white rounded-2xl shadow-lg p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-6">System Status</h3>
                     
@@ -421,18 +398,11 @@
         </div>
     </div>
 
-    <!-- Success Message Handler -->
     @if(session('success'))
     <div class="fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 animate-fade-in flex items-center gap-3">
         <i class="fas fa-check-circle"></i>
         <span class="font-medium">{{ session('success') }}</span>
     </div>
-    <script>
-        setTimeout(() => {
-            const alert = document.querySelector('.fixed.top-6');
-            if(alert) alert.remove();
-        }, 5000);
-    </script>
     @endif
 
     @if(session('error'))
@@ -440,13 +410,9 @@
         <i class="fas fa-exclamation-circle"></i>
         <span class="font-medium">{{ session('error') }}</span>
     </div>
-    <script>
-        setTimeout(() => {
-            const alert = document.querySelector('.fixed.top-6');
-            if(alert) alert.remove();
-        }, 5000);
-    </script>
     @endif
+
+    <script src="{{ asset('js/admin-dashboard.js') }}"></script>
 
 </body>
 </html>
