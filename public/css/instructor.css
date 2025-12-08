@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body { font-family: 'Inter', sans-serif; }
+
+/* Sidebar */
+.sidebar { background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%); }
+/* Versi dark untuk halaman tertentu jika perlu samakan dengan admin */
+.sidebar-dark { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+
+/* Cards */
+.stats-card       { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.students-card    { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.courses-card     { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.assignments-card { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+
+/* Course Types & Status */
+.type-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.type-online { background: #dbeafe; color: #1e40af; }
+.type-hybrid { background: #fef3c7; color: #d97706; }
+.type-offline { background: #d1fae5; color: #065f46; }
+
+.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-active { background: #d1fae5; color: #065f46; }
+.status-inactive { background: #fee2e2; color: #dc2626; }
+
+/* Manage Course Specific */
+.custom-scrollbar::-webkit-scrollbar { width: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.tox-tinymce { border-radius: 0.5rem !important; border-color: #e2e8f0 !important; }
+.tox-dialog-wrap { z-index: 10000 !important; }
+.tox .tox-dialog { z-index: 10001 !important; }
+
+.handle, .handle-content { cursor: grab; }
+.handle:active, .handle-content:active { cursor: grabbing; }
+.sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }

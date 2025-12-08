@@ -1,0 +1,41 @@
+/* Scrollbar Halus */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+.dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+
+/* Nav Item Active Styling */
+.nav-item-active {
+    background: linear-gradient(to right, #eff6ff, #ffffff);
+    border-left: 4px solid #3b82f6;
+    color: #1d4ed8;
+}
+.dark .nav-item-active {
+    background: linear-gradient(to right, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0));
+    border-left: 4px solid #60a5fa;
+    color: #60a5fa;
+}
+
+.nav-item-inactive {
+    border-left: 4px solid transparent;
+    color: #64748b;
+}
+.dark .nav-item-inactive {
+    color: #94a3b8;
+}
+
+.progress-ring__circle {
+    transition: stroke-dashoffset 0.35s ease-out;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.dark .prose { color: #cbd5e1; }
+.dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4, .dark .prose strong { color: #f1f5f9; }
+.dark .prose a { color: #60a5fa; }
+.dark .prose code { color: #e2e8f0; background-color: #1e293b; }
+
+/* Video responsive */
+.aspect-w-16 { position: relative; padding-bottom: 56.25%; }
+.aspect-w-16 iframe { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }

@@ -7,43 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .sidebar {
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        }
-        
-        .role-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .role-admin { background: #fef3c7; color: #d97706; }
-        .role-user { background: #d1fae5; color: #065f46; }
-        .role-instructor { background: #dbeafe; color: #1e40af; }
-        
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .admin-card {
-            background: linear-gradient(135deg, #cc83d4ff 0%, #f5576c 100%);
-        }
-        .instructor-card {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        .user-card {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        .active-card {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">

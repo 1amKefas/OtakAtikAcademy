@@ -1,0 +1,74 @@
+/* Font & Body */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Sidebar Gradient */
+.sidebar {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar,
+::-webkit-scrollbar { 
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track,
+::-webkit-scrollbar-track { 
+    background: #f1f1f1; /* atau transparent */
+}
+.custom-scrollbar::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 3px; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover { 
+    background: #94a3b8; 
+}
+
+/* Dashboard Cards (Gradient) */
+.card-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.stats-card    { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); } /* Default Blue/Purple */
+.stats-card-pink { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.finance-card  { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.users-card    { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.refund-card   { background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.rejected-card { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); } /* Greenish/Blueish */
+.processed-card{ background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.pending-refund-card { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+
+/* Users Page Cards */
+.admin-card      { background: linear-gradient(135deg, #cc83d4ff 0%, #f5576c 100%); }
+.instructor-card { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.user-card       { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.active-card     { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+/* Role Badges */
+.role-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.role-admin { background: #fef3c7; color: #d97706; }
+.role-user  { background: #d1fae5; color: #065f46; }
+.role-instructor { background: #dbeafe; color: #1e40af; }
+
+/* Status Badges */
+.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-pending    { background: #fef3c7; color: #d97706; }
+.status-approved   { background: #d1fae5; color: #065f46; }
+.status-rejected   { background: #fee2e2; color: #dc2626; }
+.status-processing { background: #dbeafe; color: #1e40af; }
+
+/* Animations */
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.5s ease-out; }
+.animate-fade-in-down { animation: fade-in 0.5s ease-out; }
+
+/* Drag Handle */
+.handle { cursor: grab; }
+.handle:active { cursor: grabbing; }
+.sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
