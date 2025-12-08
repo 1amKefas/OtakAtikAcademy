@@ -7,7 +7,11 @@
     
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <script src="{{ asset('js/preview-course.js') }}"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
@@ -33,11 +37,11 @@
     </style>
 </head>
 
-<body class="bg-gray-100 text-gray-800 h-screen flex flex-col font-sans overflow-hidden" x-data="{ sidebarOpen: false }">
+<body class="bg-gray-100 text-gray-800 h-screen flex flex-col font-sans overflow-hidden" x-data="previewCourse">
 
     <header class="bg-indigo-900 text-white shadow-md h-16 flex items-center justify-between px-4 md:px-6 z-30 flex-shrink-0 relative">
         <div class="flex items-center gap-4">
-            <button @click="sidebarOpen = !sidebarOpen" class="md:hidden text-white hover:text-gray-200">
+            <button @click="toggleSidebar()" class="md:hidden text-white hover:text-gray-200">
                 <i class="fas fa-bars text-xl"></i>
             </button>
 
@@ -61,7 +65,7 @@
 
     <div class="flex-1 flex overflow-hidden relative">
         
-        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 z-30 md:hidden"></div>
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 z-30 md:hidden" style="display: none;"></div>
 
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed md:static inset-y-0 left-0 w-72 md:w-80 bg-white border-r border-gray-200 flex flex-col z-40 md:translate-x-0 transition-transform duration-300 shadow-2xl md:shadow-none">
             <div class="p-5 border-b border-gray-200 bg-gray-50">
