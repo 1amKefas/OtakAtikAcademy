@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Refund Management - OtakAtik Admin</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {{-- Load External Custom Script --}}
+    <script src="{{ asset('js/admin-refund.js') }}" defer></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -47,14 +52,11 @@
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="sidebar w-64 text-white flex flex-col">
-            <!-- Logo -->
             <div class="p-6 border-b border-gray-700">
                 <h1 class="text-2xl font-bold text-white">OtakAtik<span class="text-blue-400">Admin</span></h1>
             </div>
             
-            <!-- Navigation -->
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
                     <li>
@@ -75,13 +77,13 @@
                             <span>Course Management</span>
                         </a>
                     </li>
-                     <li>
+                      <li>
                         <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors {{ request()->routeIs('categories.*') ? 'bg-blue-600 text-white' : '' }}">
                             <i class="fas fa-tags w-5"></i>
                             <span>Kategori</span>
                         </a>
                     </li>
-                     <li>
+                      <li>
                         <a href="/admin/courses/manage" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
                             <i class="fas fa-plus-circle w-5"></i>
                             <span>Tambah Course</span>
@@ -109,7 +111,6 @@
                 </ul>
             </nav>
             
-            <!-- User Section -->
             <div class="p-4 border-t border-gray-700">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
@@ -130,9 +131,7 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -148,11 +147,8 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6">
-                <!-- Refund Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Total Refunds -->
                     <div class="refund-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -164,7 +160,6 @@
                         </div>
                     </div>
 
-                    <!-- Pending Refunds -->
                     <div class="pending-refund-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -176,7 +171,6 @@
                         </div>
                     </div>
 
-                    <!-- Processed Refunds -->
                     <div class="processed-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -188,7 +182,6 @@
                         </div>
                     </div>
 
-                    <!-- Rejected Refunds -->
                     <div class="rejected-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -201,7 +194,6 @@
                     </div>
                 </div>
 
-                <!-- Refund Requests Table -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold text-gray-800">Refund Requests</h3>
@@ -272,7 +264,6 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex gap-2">
                                             @if($refund->status == 'pending')
-                                            <!-- Form Approve -->
                                             <form action="{{ route('admin.refunds.approve', $refund->id) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit" 
@@ -283,7 +274,6 @@
                                                 </button>
                                             </form>
                                             
-                                            <!-- Button Reject (Trigger Modal) -->
                                             <button onclick="showRejectModal({{ $refund->id }})" 
                                                     class="text-red-600 hover:text-red-900"
                                                     title="Reject">
@@ -300,7 +290,6 @@
                                             </span>
                                             @endif
                                             
-                                            <!-- View Detail -->
                                             <a href="{{ route('admin.refunds.show', $refund->id) }}" 
                                                class="text-blue-600 hover:text-blue-900"
                                                title="View Details">
@@ -323,7 +312,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Refund Statistics -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">Refund Statistics</h3>
                         <div class="space-y-4">
@@ -351,7 +339,6 @@
                         </div>
                     </div>
 
-                    <!-- Quick Actions -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">Quick Actions</h3>
                         <div class="space-y-3">
@@ -369,7 +356,6 @@
                             </a>
                         </div>
 
-                        <!-- Refund Tips -->
                         <div class="mt-6 p-4 bg-gray-50 rounded-lg">
                             <h4 class="font-bold text-gray-800 mb-2">Refund Tips</h4>
                             <ul class="text-sm text-gray-600 space-y-1">
@@ -385,7 +371,6 @@
         </div>
     </div>
 
-    <!-- Reject Modal -->
     <div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="flex items-center justify-between mb-4">
@@ -423,22 +408,11 @@
         </div>
     </div>
 
-    <!-- Success/Error Message Handler -->
     @if(session('success'))
     <div id="successAlert" class="fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3">
         <i class="fas fa-check-circle"></i>
         <span class="font-medium">{{ session('success') }}</span>
     </div>
-    <script>
-        setTimeout(() => {
-            const alert = document.getElementById('successAlert');
-            if(alert) {
-                alert.style.opacity = '0';
-                alert.style.transition = 'opacity 0.5s';
-                setTimeout(() => alert.remove(), 500);
-            }
-        }, 5000);
-    </script>
     @endif
 
     @if(session('error'))
@@ -446,56 +420,7 @@
         <i class="fas fa-exclamation-circle"></i>
         <span class="font-medium">{{ session('error') }}</span>
     </div>
-    <script>
-        setTimeout(() => {
-            const alert = document.getElementById('errorAlert');
-            if(alert) {
-                alert.style.opacity = '0';
-                alert.style.transition = 'opacity 0.5s';
-                setTimeout(() => alert.remove(), 500);
-            }
-        }, 5000);
-    </script>
     @endif
-
-    <script>
-        function showRejectModal(refundId) {
-            const modal = document.getElementById('rejectModal');
-            const form = document.getElementById('rejectForm');
-            form.action = `/admin/refunds/${refundId}/reject`;
-            modal.classList.remove('hidden');
-        }
-
-        function closeRejectModal() {
-            const modal = document.getElementById('rejectModal');
-            modal.classList.add('hidden');
-            document.getElementById('rejectForm').reset();
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('rejectModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeRejectModal();
-            }
-        });
-
-        // Close modal with ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeRejectModal();
-            }
-        });
-
-        // Form validation
-        document.getElementById('rejectForm')?.addEventListener('submit', function(e) {
-            const textarea = this.querySelector('textarea[name="rejection_reason"]');
-            if (textarea.value.trim().length < 10) {
-                e.preventDefault();
-                alert('Alasan penolakan minimal 10 karakter!');
-                textarea.focus();
-            }
-        });
-    </script>
 
 </body>
 </html>
