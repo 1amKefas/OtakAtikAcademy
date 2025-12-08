@@ -12,36 +12,41 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        // --- DAFTAR DOMAIN DIPERBOLEHKAN (WHITELIST) ---
-        // Kita spesifikan domain satu per satu supaya tidak pakai Wildcard (*)
-        $allowedScripts = "https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud";
-        $allowedStyles  = "https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net";
-        $allowedFonts   = "https://fonts.gstatic.com https://cdnjs.cloudflare.com";
-        $allowedImages  = "https://ui-avatars.com https://www.svgrepo.com"; // Tambah domain gambar external lain jika ada
+        // --- WHITELIST DOMAIN ---
+        // Hapus CDN yang tidak perlu jika sudah di-lokalkan via NPM
+        // TinyMCE masih butuh CDN
+        $scripts = "https://cdn.tiny.cloud"; 
+        $styles  = "https://fonts.googleapis.com";
+        $fonts   = "https://fonts.gstatic.com";
+        $images  = "https://ui-avatars.com https://www.svgrepo.com"; 
 
-        // --- CONTENT SECURITY POLICY (CSP) ---
-        // default-src 'self': Memblokir semuanya kecuali dari domain sendiri, kecuali di-override.
-        // unsafe-inline: Masih kita perlukan SEMENTARA sampai kita bersihkan onclick dan style tag.
-        // unsafe-eval: Diperlukan oleh Alpine.js (standar).
-        
+        // --- CONTENT SECURITY POLICY (STRICT MODE) ---
+        // 1. default-src 'self': Blokir semua kecuali dari domain sendiri.
+        // 2. script-src: Hapus 'unsafe-inline'. 'unsafe-eval' mungkin dibutuhkan AlpineJS (lihat catatan di bawah).
+        // 3. style-src: Hapus 'unsafe-inline'.
+        // 4. frame-ancestors 'self': Mencegah Clickjacking modern (Wajib buat ZAP).
+        // 5. form-action 'self': Mencegah pembajakan formulir.
+
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' $allowedScripts; " .
-               "style-src 'self' 'unsafe-inline' $allowedStyles; " .
-               "font-src 'self' $allowedFonts; " .
-               "img-src 'self' data: $allowedImages; " . // data: untuk gambar base64 (cropper)
+               "script-src 'self' 'unsafe-eval' $scripts; " . // unsafe-eval dibiarkan utk AlpineJS
+               "style-src 'self' $styles; " .                 // unsafe-inline DIHAPUS
+               "font-src 'self' $fonts; " .
+               "img-src 'self' data: $images; " .
                "frame-src 'self' https://www.youtube.com https://player.vimeo.com; " .
-               "connect-src 'self'; " . 
-               "object-src 'none'; " . // Blokir plugin kayak Flash/Java
-               "base-uri 'self';";     // Mencegah injeksi base tag
+               "connect-src 'self' https://cdn.tiny.cloud; " . // TinyMCE butuh connect ke servernya
+               "object-src 'none'; " .
+               "base-uri 'self'; " .
+               "form-action 'self'; " .
+               "frame-ancestors 'self';";
 
         $response->headers->set('Content-Security-Policy', $csp);
-        
-        // --- Header Keamanan Lainnya ---
+
+        // --- SECURITY HEADERS LAINNYA ---
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()'); // Batasi fitur browser
+        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=()');
 
         return $response;
     }
