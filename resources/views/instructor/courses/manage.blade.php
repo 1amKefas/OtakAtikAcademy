@@ -242,7 +242,7 @@
     <div x-show="showModuleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="moduleEditMode ? 'Edit Modul' : 'Buat Modul Baru'"></h3>
-            <form :action="moduleFormAction" method="POST">
+            <form :action="moduleEditMode ? moduleFormAction : '{{ route('instructor.course.module.store', $course->id) }}'" method="POST">
                 @csrf
                 <input type="hidden" name="_method" :value="moduleEditMode ? 'PUT' : 'POST'">
                 <div class="mb-5">
