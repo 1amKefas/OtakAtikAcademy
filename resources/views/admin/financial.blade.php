@@ -7,33 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .sidebar {
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        }
-        
-        .revenue-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .growth-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .average-card {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        
-        .pending-card {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
@@ -144,7 +118,7 @@
                 <!-- Financial Overview Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- Total Revenue -->
-                    <div class="revenue-card rounded-2xl p-6 text-white shadow-lg">
+                    <div class="card-gradient rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm opacity-90 mb-1">Total Revenue</p>
@@ -156,7 +130,7 @@
                     </div>
 
                     <!-- Monthly Growth -->
-                    <div class="growth-card rounded-2xl p-6 text-white shadow-lg">
+                    <div class="stats-card-pink rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm opacity-90 mb-1">Monthly Growth</p>
@@ -168,7 +142,7 @@
                     </div>
 
                     <!-- Average Order Value -->
-                    <div class="average-card rounded-2xl p-6 text-white shadow-lg">
+                    <div class="finance-card  rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm opacity-90 mb-1">Avg Order Value</p>
@@ -180,7 +154,7 @@
                     </div>
 
                     <!-- Pending Revenue -->
-                    <div class="pending-card rounded-2xl p-6 text-white shadow-lg">
+                    <div class="users-card  rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm opacity-90 mb-1">Pending Revenue</p>

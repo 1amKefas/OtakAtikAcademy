@@ -141,7 +141,7 @@
                         </div>
                     </div>
 
-                    <div class="refund-card rounded-2xl p-6 text-white shadow-lg">
+                    <div class="active-card  rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm opacity-90 mb-1">Course Registrations</p>

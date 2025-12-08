@@ -6,27 +6,7 @@
     <title>Course Management - OtakAtik Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .sidebar {
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .status-pending { background: #fef3c7; color: #d97706; }
-        .status-paid { background: #d1fae5; color: #065f46; }
-        .status-cancelled { background: #fee2e2; color: #dc2626; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
