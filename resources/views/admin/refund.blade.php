@@ -274,8 +274,9 @@
                                                 </button>
                                             </form>
                                             
-                                            <button onclick="showRejectModal({{ $refund->id }})" 
-                                                    class="text-red-600 hover:text-red-900"
+                                            <button type="button" 
+                                                    class="text-red-600 hover:text-red-900 btn-reject"
+                                                    data-id="{{ $refund->id }}"
                                                     title="Reject">
                                                 <i class="fas fa-times"></i>
                                             </button>
@@ -375,7 +376,7 @@
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold">Reject Refund</h3>
-                <button onclick="closeRejectModal()" class="text-gray-400 hover:text-gray-600">
+                <button type="button" id="btnCloseModal" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -395,7 +396,7 @@
                 </div>
                 <div class="flex justify-end gap-2">
                     <button type="button" 
-                            onclick="closeRejectModal()"
+                            id="btnCancelReject"
                             class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors">
                         Cancel
                     </button>
