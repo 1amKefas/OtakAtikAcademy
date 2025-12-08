@@ -223,6 +223,23 @@
                             <p class="text-xs text-green-600 text-right">{{ $userRegistration->progress }}% Selesai</p>
                         </div>
 
+                        @if($userRegistration->course_class_id && in_array(strtolower($course->type), ['hybrid', 'offline', 'tatap muka']))
+                            <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-4 flex items-start gap-3 animate-fade-in">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+                                    <i class="fas fa-users text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Kelas Terdaftar</p>
+                                    <h4 class="font-bold text-gray-900 text-base truncate">{{ $userRegistration->courseClass->name ?? 'Nama Kelas' }}</h4>
+                                    @if($userRegistration->courseClass->instructor)
+                                        <p class="text-xs text-gray-500 mt-1 truncate">
+                                            <span class="font-medium text-gray-400">PJ:</span> {{ $userRegistration->courseClass->instructor->name }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                         <a href="{{ route('student.learning.index', $course->id) }}" 
                            class="block w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-0.5 text-center flex items-center justify-center gap-2">
                             <span>Lanjut Belajar</span>
