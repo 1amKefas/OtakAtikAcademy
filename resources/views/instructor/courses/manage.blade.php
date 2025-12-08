@@ -134,9 +134,23 @@
                     <div x-show="open" x-collapse class="bg-white p-2">
                         @php
                             $mergedContents = collect();
-                            foreach($module->materials as $m) { $m->type = 'material'; $mergedContents->push($m); }
-                            foreach($module->quizzes as $q) { $q->type = 'quiz'; $mergedContents->push($q); }
-                            $sortedContents = $mergedContents->sortBy('sort_order');
+                            
+                            // Masukkan Materi (Mapping 'order' ke 'urutan_tampil')
+                            foreach($module->materials as $m) { 
+                                $m->type = 'material'; 
+                                $m->urutan_tampil = $m->order; // <--- KUNCINYA DISINI
+                                $mergedContents->push($m); 
+                            }
+                            
+                            // Masukkan Quiz (Mapping 'sort_order' ke 'urutan_tampil')
+                            foreach($module->quizzes as $q) { 
+                                $q->type = 'quiz'; 
+                                $q->urutan_tampil = $q->sort_order; // <--- KUNCINYA DISINI
+                                $mergedContents->push($q); 
+                            }
+                            
+                            // Sort berdasarkan key yang sudah disamakan
+                            $sortedContents = $mergedContents->sortBy('urutan_tampil');
                         @endphp
 
                         <div class="space-y-1 contents-list mb-2" data-reorder-url="{{ route('instructor.modules.contents.reorder', ['course' => $course->id, 'module' => $module->id]) }}">
