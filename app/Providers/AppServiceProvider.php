@@ -26,9 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        
         if (config('app.env') === 'local') {
-            URL::forceScheme('https');
+            \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
         // Custom route macro for instructor routes
@@ -40,24 +39,28 @@ class AppServiceProvider extends ServiceProvider
                 });
         });
 
-        // Share common data with all views
-        View::composer('*', function ($view) {
+        // [OPTIMASI] Gunakan View Composer spesifik, bukan '*' (all views)
+        // Agar query tidak jalan berulang-ulang saat include sub-view
+        View::composer(['layouts.app', 'layouts.admin', 'components.navbar'], function ($view) {
             if (Auth::check()) {
                 $user = Auth::user();
                 
-                // Share user notifications count
-                $pendingRegistrationsCount = 0;
+                // [OPTIMASI] Cache hitungan notifikasi selama 30 detik
+                $cacheKey = 'pending_registrations_' . $user->id;
                 
-                if ($user->is_admin) {
-                    $pendingRegistrationsCount = CourseRegistration::where('status', 'pending')->count();
-                }
-                
-                if ($user->is_instructor) {
-                    $instructorCourses = $user->taughtCourses()->pluck('id');
-                    $pendingRegistrationsCount = CourseRegistration::whereIn('course_id', $instructorCourses)
-                        ->where('status', 'pending')
-                        ->count();
-                }
+                $pendingRegistrationsCount = \Illuminate\Support\Facades\Cache::remember($cacheKey, 30, function () use ($user) {
+                    if ($user->is_admin) {
+                        return CourseRegistration::where('status', 'pending')->count();
+                    }
+                    
+                    if ($user->is_instructor) {
+                        return CourseRegistration::whereHas('course', function($q) use ($user) {
+                            $q->where('instructor_id', $user->id);
+                        })->where('status', 'pending')->count();
+                    }
+                    
+                    return 0;
+                });
                 
                 $view->with([
                     'currentUser' => $user,
@@ -68,14 +71,17 @@ class AppServiceProvider extends ServiceProvider
 
         // Share global stats for admin pages
         View::composer('admin.*', function ($view) {
-            $stats = [
-                'total_users' => User::count(),
-                'total_instructors' => User::where('is_instructor', true)->count(),
-                'total_courses' => Course::count(),
-                'active_courses' => Course::where('is_active', true)->count(),
-                'total_registrations' => CourseRegistration::count(),
-                'pending_registrations' => CourseRegistration::where('status', 'pending')->count(),
-            ];
+            // [OPTIMASI] Cache statistik admin selama 5 menit
+            $stats = \Illuminate\Support\Facades\Cache::remember('admin_global_stats', 300, function () {
+                return [
+                    'total_users' => User::count(),
+                    'total_instructors' => User::where('is_instructor', true)->count(),
+                    'total_courses' => Course::count(),
+                    'active_courses' => Course::where('is_active', true)->count(),
+                    'total_registrations' => CourseRegistration::count(),
+                    'pending_registrations' => CourseRegistration::where('status', 'pending')->count(),
+                ];
+            });
             
             $view->with('globalStats', $stats);
         });
@@ -84,23 +90,18 @@ class AppServiceProvider extends ServiceProvider
         View::composer('instructor.*', function ($view) {
             if (Auth::check() && Auth::user()->is_instructor) {
                 $instructor = Auth::user();
-                $taughtCourses = $instructor->taughtCourses()->withCount(['registrations' => function($query) {
-                    $query->where('status', 'paid');
-                }])->get();
-
-                $totalStudents = $taughtCourses->sum('registrations_count');
-                $totalAssignments = 0;
-
-                foreach ($taughtCourses as $course) {
-                    $totalAssignments += $course->assignments()->count();
-                }
-
-                $instructorStats = [
-                    'total_courses' => $taughtCourses->count(),
-                    'total_students' => $totalStudents,
-                    'total_assignments' => $totalAssignments,
-                    'active_courses' => $taughtCourses->where('is_active', true)->count(),
-                ];
+                
+                // [OPTIMASI] Gunakan query aggregate daripada load models
+                $instructorStats = \Illuminate\Support\Facades\Cache::remember('instructor_stats_'.$instructor->id, 60, function () use ($instructor) {
+                    $courses = Course::where('instructor_id', $instructor->id)->get();
+                    
+                    return [
+                        'total_courses' => $courses->count(),
+                        'total_students' => CourseRegistration::whereIn('course_id', $courses->pluck('id'))->where('status', 'paid')->count(),
+                        'total_assignments' => \App\Models\CourseAssignment::whereIn('course_id', $courses->pluck('id'))->count(),
+                        'active_courses' => $courses->where('is_active', true)->count(),
+                    ];
+                });
                 
                 $view->with('instructorStats', $instructorStats);
             }

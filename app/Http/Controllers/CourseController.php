@@ -72,11 +72,12 @@ class CourseController extends Controller
     {
         $user = Auth::user();
         
-        // Hanya ambil course dengan status 'paid' (yang sudah disetujui)
+        // [OPTIMASI] Gunakan paginate(9) agar halaman tidak berat jika user punya banyak course
         $enrolledCourses = $user->courseRegistrations()
             ->where('status', 'paid')
             ->with('course.instructor')
-            ->get();
+            ->latest() // Sorting agar yang terbaru muncul di atas
+            ->paginate(9); 
         
         return view('my-courses', compact('enrolledCourses'));
     }

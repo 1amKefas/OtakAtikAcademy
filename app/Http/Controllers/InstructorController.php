@@ -30,7 +30,7 @@ class InstructorController extends Controller
 
         $instructor = Auth::user();
         
-        // [OPTIMASI] Gunakan withCount untuk menghitung jumlah sekaligus
+        // [OPTIMASI] Gunakan withCount untuk menghitung jumlah relasi sekaligus
         $taughtCourses = Course::where(function($q) use ($instructor) {
                 $q->where('instructor_id', $instructor->id)
                   ->orWhereHas('assistants', function($sq) use ($instructor) {
@@ -40,23 +40,15 @@ class InstructorController extends Controller
             ->withCount(['registrations' => function($query) {
                 $query->where('status', 'paid');
             }])
-            ->withCount('assignments') // <-- HITUNG ASSIGNMENT DI QUERY
+            ->withCount('assignments') // Hitung assignment langsung dari database
             ->latest()
             ->get();
 
-        $totalStudents = 0;
-        $totalAssignments = 0;
-
-        foreach ($taughtCourses as $course) {
-            $totalStudents += $course->registrations_count;
-            // [FIX] Pakai hasil hitungan query, JANGAN panggil assignments()->count() lagi
-            $totalAssignments += $course->assignments_count; 
-        }
-
+        // [OPTIMASI] Hitung total menggunakan Collection method (lebih efisien daripada loop foreach manual)
         $stats = [
             'total_courses' => $taughtCourses->count(),
-            'total_students' => $totalStudents,
-            'total_assignments' => $totalAssignments,
+            'total_students' => $taughtCourses->sum('registrations_count'),
+            'total_assignments' => $taughtCourses->sum('assignments_count'),
             'active_courses' => $taughtCourses->where('is_active', true)->count(),
         ];
 

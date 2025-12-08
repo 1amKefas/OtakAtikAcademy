@@ -28,23 +28,26 @@ class StudentController extends Controller
             ->limit(5)
             ->get();
 
-        // Calculate stats
+        // [OPTIMASI] Gunakan selectRaw untuk hitung statistik dalam 1 kali query ke DB
+        $registrationStats = CourseRegistration::where('user_id', $user->id)
+            ->selectRaw('count(*) as total')
+            ->selectRaw("count(case when status = 'paid' then 1 end) as active")
+            ->first();
+
+        $refundStats = Refund::where('user_id', $user->id)
+            ->selectRaw("count(case when status = 'pending' then 1 end) as pending")
+            ->selectRaw("sum(case when status = 'approved' then amount else 0 end) as approved_amount")
+            ->first();
+
         $stats = [
-            'total_courses' => CourseRegistration::where('user_id', $user->id)->count(),
-            'active_courses' => CourseRegistration::where('user_id', $user->id)
-                ->where('status', 'paid')
-                ->count(),
-            'pending_refunds' => Refund::where('user_id', $user->id)
-                ->where('status', 'pending')
-                ->count(),
-            'approved_refunds' => Refund::where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->sum('amount'),
+            'total_courses' => $registrationStats->total ?? 0,
+            'active_courses' => $registrationStats->active ?? 0,
+            'pending_refunds' => $refundStats->pending ?? 0,
+            'approved_refunds' => $refundStats->approved_amount ?? 0,
         ];
 
         return view('student.dashboard', compact('enrolledCourses', 'refundRequests', 'stats'));
     }
-
     public function myCourses()
     {
         $courses = CourseRegistration::where('user_id', Auth::id())
