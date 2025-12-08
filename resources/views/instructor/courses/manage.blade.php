@@ -67,8 +67,22 @@
                 <button onclick="window.location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                     <i class="fas fa-check-circle"></i> Selesai & Simpan
                 </button>
-                <a href="{{ route('instructor.courses.show', $course->id) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 ml-2">
-                    <i class="fas fa-external-link-alt"></i> Preview
+                @if($course->type !== 'online')
+                <a href="{{ route('instructor.courses.classes.index', $course->id) }}" 
+                   class="flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition shadow-sm">
+                   {{-- Icon Gedung Kelas --}}
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                   </svg>
+                   Atur Kelas
+                </a>
+                @endif
+                <a href="{{ route('instructor.courses.show', $course->id) }}" target="_blank" class="flex items-center bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-lg transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Preview
                 </a>
             </div>
         </header>

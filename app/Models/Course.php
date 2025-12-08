@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\CourseClass;
 
 class Course extends Model
 {
@@ -469,5 +470,13 @@ public function getCheckoutUrlAttribute()
                 throw new \Exception('Kuota maksimal harus lebih besar dari kuota minimal');
             }
         });
+    }
+
+    /**
+     * Relasi ke CourseClass
+     */
+    public function classes()
+    {
+        return $this->hasMany(CourseClass::class);
     }
 }
