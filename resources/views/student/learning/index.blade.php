@@ -22,12 +22,7 @@
             theme: { 
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { 
-                        slate: { 
-                            850: '#1e293b', 
-                            900: '#0f172a' 
-                        } 
-                    }
+                    colors: { slate: { 850: '#1e293b', 900: '#0f172a' } }
                 } 
             }
         }
@@ -37,6 +32,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <script src="{{ asset('js/learning-app.js') }}"></script>
+
     <style>
         /* Scrollbar Halus */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -65,45 +62,25 @@
             color: #94a3b8;
         }
         
-        .locked { cursor: not-allowed; opacity: 0.5; filter: grayscale(100%); }
-
         .progress-ring__circle {
             transition: stroke-dashoffset 0.35s ease-out;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
         
-        /* Dark Mode Typography & Width Fix */
-        .prose { 
-            max-width: 100% !important; /* [FIXED] Stretch Text Full Width */
-            color: #374151; 
-        }
         .dark .prose { color: #cbd5e1; }
         .dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4, .dark .prose strong { color: #f1f5f9; }
         .dark .prose a { color: #60a5fa; }
         .dark .prose code { color: #e2e8f0; background-color: #1e293b; }
         
-        /* Video aspect ratio container */
+        /* Video responsive */
         .aspect-w-16 { position: relative; padding-bottom: 56.25%; }
         .aspect-w-16 iframe { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
     </style>
 </head>
 
 <body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col transition-colors duration-300 font-sans"
-      x-data="{ 
-          theme: localStorage.getItem('theme') || 'system',
-          sidebarOpen: false,
-          setTheme(val) {
-              this.theme = val;
-              localStorage.setItem('theme', val);
-              if (val === 'dark' || (val === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-              } else {
-                  document.documentElement.classList.remove('dark');
-              }
-          }
-      }"
-      x-init="$watch('theme', val => setTheme(val))">
+      x-data="layout">
 
     <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 md:px-8 shadow-sm z-30 flex-shrink-0 transition-colors fixed w-full top-0">
         <div class="flex items-center gap-4">
@@ -240,7 +217,9 @@
                     </div>
 
                     <div id="contentBody" class="p-6 md:p-10 flex-1">
-                        <div class="w-full"> @if($type == 'material')
+                        <div class="w-full">
+                            
+                            @if($type == 'material')
                                 @if($currentContent->type == 'video' && $currentContent->external_url)
                                     <div class="aspect-w-16 aspect-h-9 mb-8 bg-black rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-900/5 w-full">
                                         <iframe src="{{ str_replace('watch?v=', 'embed/', $currentContent->external_url) }}" frameborder="0" allowfullscreen class="w-full h-full"></iframe>
@@ -305,24 +284,36 @@
                         </div>
                     </div>
 
-                    <div class="px-6 py-5 md:px-10 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 backdrop-blur flex justify-between items-center sticky bottom-0 z-20">
-                        @php
-                            $flatList = [];
-                            foreach($course->modules as $m) {
-                                foreach($m->materials as $mat) { $flatList[] = ['type' => 'material', 'id' => $mat->id]; }
-                                foreach($m->quizzes as $q) { $flatList[] = ['type' => 'quiz', 'id' => $q->id]; }
+                    @php
+                        $flatList = [];
+                        foreach($course->modules as $m) {
+                            foreach($m->materials as $mat) { $flatList[] = ['type' => 'material', 'id' => $mat->id]; }
+                            foreach($m->quizzes as $q) { $flatList[] = ['type' => 'quiz', 'id' => $q->id]; }
+                        }
+                        $currentIndex = -1;
+                        foreach($flatList as $idx => $item) {
+                            if($item['type'] == $type && $item['id'] == $currentContent->id) {
+                                $currentIndex = $idx;
+                                break;
                             }
-                            $currentIndex = -1;
-                            foreach($flatList as $idx => $item) {
-                                if($item['type'] == $type && $item['id'] == $currentContent->id) {
-                                    $currentIndex = $idx;
-                                    break;
-                                }
-                            }
-                            $prevUrl = ($currentIndex > 0) ? route('student.learning.content', [$course->id, $flatList[$currentIndex-1]['type'], $flatList[$currentIndex-1]['id']]) : '#';
-                            $nextUrl = ($currentIndex < count($flatList) - 1) ? route('student.learning.content', [$course->id, $flatList[$currentIndex+1]['type'], $flatList[$currentIndex+1]['id']]) : route('student.courses');
-                        @endphp
+                        }
+                        $prevUrl = ($currentIndex > 0) ? route('student.learning.content', [$course->id, $flatList[$currentIndex-1]['type'], $flatList[$currentIndex-1]['id']]) : '#';
+                        $nextUrl = ($currentIndex < count($flatList) - 1) ? route('student.learning.content', [$course->id, $flatList[$currentIndex+1]['type'], $flatList[$currentIndex+1]['id']]) : route('student.courses');
+                        
+                        $alreadyDone = \App\Models\CourseProgress::where('user_id', Auth::id())
+                            ->where('content_id', $currentContent->id ?? 0)
+                            ->where('content_type', 'material')
+                            ->where('is_completed', true)
+                            ->exists();
+                    @endphp
 
+                    <div id="content-data" 
+                         data-next-url="{{ $nextUrl }}"
+                         data-complete-url="{{ route('student.learning.complete-material', [$course->id, $currentContent->id ?? 0]) }}"
+                         data-already-done="{{ $alreadyDone ? '1' : '0' }}">
+                    </div>
+
+                    <div class="px-6 py-5 md:px-10 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 backdrop-blur flex justify-between items-center sticky bottom-0 z-20">
                         <a href="{{ $prevUrl }}" class="px-6 py-3 text-gray-600 dark:text-gray-400 font-bold hover:bg-white dark:hover:bg-slate-700 rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition flex items-center gap-2 {{ $currentIndex <= 0 ? 'opacity-50 pointer-events-none' : '' }}">
                             <i class="fas fa-arrow-left"></i> <span>Sebelumnya</span>
                         </a>
@@ -340,71 +331,5 @@
             </div>
         </main>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const scrollContainer = document.getElementById('mainScrollContainer');
-            const btnNext = document.getElementById('btnNext');
-            const progressCircle = document.getElementById('progressCircle');
-            const progressIcon = document.getElementById('progressIcon');
-            
-            const radius = progressCircle ? progressCircle.r.baseVal.value : 0;
-            const circumference = radius * 2 * Math.PI;
-            
-            if(progressCircle) {
-                progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-                progressCircle.style.strokeDashoffset = circumference;
-            }
-
-            let isCompleted = false;
-            const nextUrl = "{{ $nextUrl }}";
-            const completeUrl = "{{ route('student.learning.complete-material', [$course->id, $currentContent->id ?? 0]) }}";
-
-            @php
-                $alreadyDone = \App\Models\CourseProgress::where('user_id', Auth::id())
-                    ->where('content_id', $currentContent->id ?? 0)
-                    ->where('content_type', 'material')
-                    ->where('is_completed', true)
-                    ->exists();
-            @endphp
-
-            if (@json($alreadyDone)) unlockNextButton();
-
-            function unlockNextButton() {
-                isCompleted = true;
-                if(btnNext) {
-                    btnNext.disabled = false;
-                    btnNext.classList.remove('bg-gray-300', 'dark:bg-slate-700', 'text-gray-500', 'dark:text-gray-400', 'cursor-not-allowed', 'shadow-none');
-                    btnNext.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'text-white', 'hover:shadow-lg', 'hover:shadow-blue-500/30', 'transform', 'hover:-translate-y-0.5');
-                    btnNext.innerHTML = `<span>Selesai & Lanjut</span> <i class="fas fa-check-circle animate-pulse"></i>`;
-                }
-                if(progressCircle) {
-                    progressCircle.style.strokeDashoffset = 0;
-                    progressIcon.innerHTML = '<i class="fas fa-check text-green-500 text-xl"></i>';
-                }
-            }
-
-            if(scrollContainer && progressCircle) {
-                scrollContainer.addEventListener('scroll', () => {
-                    if (isCompleted) return;
-                    const scrollTop = scrollContainer.scrollTop;
-                    const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-                    let percent = scrollHeight > 0 ? (scrollTop / scrollHeight) : 1;
-                    if (percent > 1) percent = 1;
-                    const offset = circumference - (percent * circumference);
-                    progressCircle.style.strokeDashoffset = offset;
-                    progressIcon.innerText = Math.round(percent * 100) + '%';
-                    if (scrollHeight - scrollTop <= 50) {
-                        unlockNextButton();
-                        fetch(completeUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
-                    }
-                });
-            }
-
-            if(btnNext) {
-                btnNext.addEventListener('click', () => { if(isCompleted) window.location.href = nextUrl; });
-            }
-        });
-    </script>
 </body>
 </html>
