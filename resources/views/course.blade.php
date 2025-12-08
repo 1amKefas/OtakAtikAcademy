@@ -3,6 +3,8 @@
 @section('title', 'Katalog Course - OtakAtik Academy')
 
 @section('content')
+<script src="{{ asset('js/course-search.js') }}"></script>
+
 <section class="pt-32 pb-20 px-6 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-10">
@@ -11,34 +13,7 @@
         </div>
 
         <div class="max-w-xl mx-auto mb-12 relative" 
-             x-data="{ 
-                query: '{{ request('search') }}',
-                suggestions: [],
-                showSuggestions: false,
-                active: -1,
-                
-                search() {
-                    if (this.query.length < 2) {
-                        this.suggestions = [];
-                        this.showSuggestions = false;
-                        return;
-                    }
-                    
-                    // Fetch ke API searchSuggestions yang kita buat di Controller
-                    fetch(`{{ route('courses.search') }}?query=${this.query}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            this.suggestions = data;
-                            this.showSuggestions = true;
-                            this.active = -1;
-                        });
-                },
-                
-                select(courseId) {
-                    // Redirect ke halaman detail course
-                    window.location.href = `/course/${courseId}`;
-                }
-             }"
+             x-data="courseSearch('{{ request('search') }}')"
              @click.outside="showSuggestions = false">
             
             <form action="{{ route('course.index') }}" method="GET" class="relative z-20">
@@ -63,10 +38,13 @@
                 </div>
 
                 <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center">
-                    <button type="button" x-show="query.length > 0" @click="query = ''; suggestions = []; showSuggestions = false; $el.form.submit()" class="text-gray-400 hover:text-red-500 mr-3" style="display: none;">
+                    <button type="button" x-show="query.length > 0" 
+                            @click="clear(); $el.form.submit()" 
+                            class="text-gray-400 hover:text-red-500 mr-3 transition" 
+                            style="display: none;">
                         <i class="fas fa-times"></i>
                     </button>
-                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 transition shadow-md">
+                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 transition shadow-md transform hover:scale-105">
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>

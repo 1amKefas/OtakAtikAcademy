@@ -1,13 +1,21 @@
+@extends('layouts.app')
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - OtakAtik Academy</title>
+    
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Midtrans Snap JS -->
+    
     <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    
+    <script src="{{ asset('js/checkout.js') }}"></script>
+
     <style>
         .payment-method {
             transition: all 0.3s ease;
@@ -20,47 +28,16 @@
 </head>
 <body class="bg-gray-50">
     
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md fixed w-full top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <!-- Logo -->
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                    <span class="text-white font-bold text-lg">O</span>
-                </div>
-                <span class="text-xl font-bold text-gray-800">OtakAtik</span>
-            </div>
-            
-            <!-- Progress Steps -->
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
-                    <span class="text-sm font-medium text-blue-600">Checkout</span>
-                </div>
-                <div class="w-8 h-0.5 bg-gray-300"></div>
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
-                    <span class="text-sm font-medium text-gray-500">Payment</span>
-                </div>
-                <div class="w-8 h-0.5 bg-gray-300"></div>
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
-                    <span class="text-sm font-medium text-gray-500">Complete</span>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div id="finalPriceData" data-price="{{ $finalPrice }}"></div>
+    <div id="courseData" data-id="{{ $course->id }}"></div>
 
-    <!-- Checkout Section -->
     <section class="pt-32 pb-20 px-6">
         <div class="max-w-4xl mx-auto">
             <div class="grid md:grid-cols-3 gap-8">
-                <!-- Order Summary -->
                 <div class="md:col-span-2">
                     <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                         <h2 class="text-2xl font-bold text-gray-800 mb-6">Order Summary</h2>
                         
-                        <!-- Course Info -->
                         <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg mb-6">
                             <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                                 [C]
@@ -76,7 +53,6 @@
                         </div>
 
                         @if(!Auth::user()->is_instructor)
-                        <!-- Voucher Code -->
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Voucher Code (Optional)</label>
                             <div class="flex gap-3">
@@ -90,7 +66,6 @@
                             <div id="voucherMessage" class="mt-2 text-sm"></div>
                         </div>
 
-                        <!-- Payment Method -->
                         <div class="mb-6">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Payment Method</h3>
                             <div class="grid grid-cols-2 gap-4">
@@ -134,7 +109,6 @@
                             <input type="hidden" id="selectedPaymentMethod" name="payment_method" required>
                         </div>
 
-                        <!-- Terms Agreement -->
                         <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
                             <input type="checkbox" id="termsAgreement" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 mt-1">
                             <label for="termsAgreement" class="text-sm text-gray-700">
@@ -144,7 +118,6 @@
                             </label>
                         </div>
                         @else
-                        <!-- Instructor Info -->
                         <div class="flex items-start gap-3 p-4 bg-green-50 rounded-lg border-2 border-green-200">
                             🌟
                             <div>
@@ -156,13 +129,11 @@
                     </div>
                 </div>
 
-                <!-- Order Total -->
                 <div class="md:col-span-1">
                     <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-32">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">Order Total</h3>
                         
                         @if(Auth::user()->is_instructor)
-                            <!-- Instructor Free Access -->
                             <div class="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-6">
                                 <div class="flex items-center gap-2 mb-3">
                                     <span class="text-2xl">🌟</span>
@@ -178,7 +149,6 @@
                                 </button>
                             </div>
                         @else
-                            <!-- Regular User Payment -->
                             <div class="space-y-3 mb-6">
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">Course Price</span>
@@ -202,7 +172,6 @@
                                   Pay
                             </button>
 
-                            <!-- Development Only - Simulate Payment -->
                             <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <p class="text-sm text-yellow-800 font-medium mb-2">Development Mode</p>
                                 <button type="button" onclick="simulatePayment()" 
@@ -221,265 +190,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12 px-6">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="flex items-center justify-center gap-2 mb-4">
-                <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                    <span class="text-white font-bold text-xl">O</span>
-                </div>
-                <span class="text-2xl font-bold">OtakAtik Academy</span>
-            </div>
-            <p class="text-gray-400 mb-4">Secure Learning Platform</p>
-            <p class="text-gray-500 text-sm">&copy; 2025 OtakAtik Academy. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script>
-    // --- VARIABLES ---
-    let selectedPaymentMethod = '';
-    let snapToken = '';
-    let orderId = '';
-    let finalPrice = {{ $finalPrice }};
-    let courseId = {{ $course->id }};
-
-    // --- LOADING HELPERS ---
-    const showLoading = () => document.getElementById('loadingOverlay').classList.remove('hidden');
-    const hideLoading = () => document.getElementById('loadingOverlay').classList.add('hidden');
-
-    // --- PAYMENT METHOD SELECTION ---
-    // (Ini yang bikin kamu bisa klik kotak payment method)
-    document.querySelectorAll('.payment-method').forEach(method => {
-        method.addEventListener('click', function() {
-            // Reset semua style
-            document.querySelectorAll('.payment-method').forEach(m => {
-                m.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-                m.classList.add('border-gray-200');
-            });
-            
-            // Highlight yang dipilih
-            this.classList.add('selected', 'border-blue-500', 'bg-blue-50');
-            this.classList.remove('border-gray-200');
-            
-            // Simpan value
-            selectedPaymentMethod = this.dataset.method;
-            document.getElementById('selectedPaymentMethod').value = selectedPaymentMethod;
-            
-            // Cek apakah tombol Pay boleh aktif
-            checkPaymentReady();
-        });
-    });
-
-    // --- TERMS CHECKBOX ---
-    const termsElement = document.getElementById('termsAgreement');
-    if (termsElement) {
-        termsElement.addEventListener('change', checkPaymentReady);
-    }
-
-    // --- CHECK READY STATE ---
-    function checkPaymentReady() {
-        const termsChecked = document.getElementById('termsAgreement') ? document.getElementById('termsAgreement').checked : true;
-        const payButton = document.getElementById('payButton');
-        
-        // Tombol Pay hanya nyala jika Method dipilih & Terms dicentang
-        if (selectedPaymentMethod && termsChecked) {
-            payButton.disabled = false;
-            payButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-            payButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-        } else {
-            payButton.disabled = true;
-            payButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-            payButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-        }
-    }
-
-    // --- VOUCHER LOGIC ---
-    async function applyVoucher() {
-        const voucherCode = document.getElementById('voucherCode').value;
-        const messageDiv = document.getElementById('voucherMessage');
-
-        if (!voucherCode) {
-            messageDiv.innerHTML = '<p class="text-red-600">Please enter a voucher code</p>';
-            return;
-        }
-
-        // Tampilkan loading kecil di tombol apply (opsional) atau biarkan async
-        try {
-            const response = await fetch('/checkout/voucher-check', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    voucher_code: voucherCode,
-                    course_id: courseId
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.valid) {
-                messageDiv.innerHTML = `<p class="text-green-600 font-medium"><i class="fas fa-check-circle"></i> ${data.message}</p>`;
-                document.getElementById('discountAmount').textContent = `-Rp${data.discount_amount.toLocaleString()}`;
-                document.getElementById('finalPrice').textContent = `Rp${data.final_price.toLocaleString()}`;
-                finalPrice = data.final_price;
-            } else {
-                messageDiv.innerHTML = `<p class="text-red-600"><i class="fas fa-times-circle"></i> ${data.message}</p>`;
-                resetPrices();
-            }
-        } catch (error) {
-            messageDiv.innerHTML = '<p class="text-red-600">Error checking voucher</p>';
-            console.error('Voucher error:', error);
-        }
-    }
-
-    function resetPrices() {
-        document.getElementById('discountAmount').textContent = '-Rp0';
-        document.getElementById('finalPrice').textContent = `Rp${finalPrice.toLocaleString()}`;
-    }
-
-    // --- ENROLL INSTRUCTOR (FREE) ---
-    async function enrollFreeAsInstructor() {
-        showLoading(); // Layar Gelap
-
-        try {
-            const response = await fetch(`/checkout/process/{{ $course->id }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    payment_method: 'instructor_free',
-                    voucher_code: ''
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success && data.is_instructor) {
-                window.location.href = '/my-courses?enrolled=success';
-            } else {
-                throw new Error(data.message || 'Enrollment failed');
-            }
-        } catch (error) {
-            hideLoading();
-            alert('Enrollment failed: ' + error.message);
-        }
-    }
-
-    // --- REAL PAYMENT (MIDTRANS) ---
-    async function processPayment() {
-        // Validasi lagi biar aman
-        if (!selectedPaymentMethod) {
-            alert('Silakan pilih metode pembayaran terlebih dahulu!');
-            return;
-        }
-
-        const voucherCode = document.getElementById('voucherCode').value;
-        
-        showLoading(); // BLOCK LAYAR
-
-        try {
-            const response = await fetch(`/checkout/process/{{ $course->id }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    payment_method: selectedPaymentMethod,
-                    voucher_code: voucherCode
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                hideLoading(); // Buka layar sebentar buat munculin popup
-                
-                snapToken = data.snap_token;
-                orderId = data.order_id;
-                
-                window.snap.pay(snapToken, {
-                    onSuccess: function(result) {
-                        showLoading(); // Block lagi saat redirect
-                        window.location.href = '/purchase-history?payment=success';
-                    },
-                    onPending: function(result) {
-                        showLoading(); // Block lagi saat redirect
-                        window.location.href = '/purchase-history?payment=pending';
-                    },
-                    onError: function(result) {
-                        console.log('Payment error:', result);
-                        alert('Payment failed. Please try again.');
-                    },
-                    onClose: function() {
-                        console.log('Payment popup closed');
-                    }
-                });
-            } else {
-                throw new Error(data.message);
-            }
-        } catch (error) {
-            hideLoading();
-            alert('Payment processing failed: ' + error.message);
-        }
-    }
-
-    // --- SIMULATE PAYMENT (DEV MODE) ---
-    async function simulatePayment() {
-        const voucherCode = document.getElementById('voucherCode').value;
-        
-        // [UPDATE] Gunakan method yang dipilih user, kalau belum pilih, default ke bank_transfer
-        // atau alert suruh pilih dulu (sesuai requestmu "harus pilih payment method")
-        if (!selectedPaymentMethod) {
-            alert('Harap pilih Payment Method terlebih dahulu untuk simulasi!');
-            return;
-        }
-
-        // Efek visual tombol berubah warna saat diklik
-        const btn = event.target;
-        const originalText = btn.innerText;
-        btn.classList.remove('bg-green-600', 'hover:bg-green-700');
-        btn.classList.add('bg-green-800', 'cursor-wait');
-        btn.innerText = 'Simulating...';
-        
-        showLoading(); // BLOCK LAYAR
-
-        try {
-            const response = await fetch(`/checkout/process/{{ $course->id }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    payment_method: selectedPaymentMethod, // Pakai yang dipilih user
-                    voucher_code: voucherCode
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Redirect ke simulasi sukses
-                window.location.href = `/checkout/simulate-success/${data.order_id}`;
-            } else {
-                throw new Error(data.message);
-            }
-        } catch (error) {
-            hideLoading();
-            // Balikin tombol ke semula jika error
-            btn.classList.add('bg-green-600', 'hover:bg-green-700');
-            btn.classList.remove('bg-green-800', 'cursor-wait');
-            btn.innerText = originalText;
-            
-            alert('Simulation failed: ' + error.message);
-        }
-    }
-</script>
     <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/50 z-[9999] flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-t-blue-600 mb-4"></div>
