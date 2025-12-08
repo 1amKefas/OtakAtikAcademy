@@ -29,7 +29,7 @@ class SecurityHeaders
 
         $csp = "default-src 'self'; " .
                "script-src 'self' 'unsafe-eval' $scripts; " . // unsafe-eval dibiarkan utk AlpineJS
-               "style-src 'self' $styles; " .                 // unsafe-inline DIHAPUS
+               "style-src 'self' 'unsafe-inline' $styles; " .                 // unsafe-inline DIHAPUS
                "font-src 'self' $fonts; " .
                "img-src 'self' data: $images; " .
                "frame-src 'self' https://www.youtube.com https://player.vimeo.com; " .
