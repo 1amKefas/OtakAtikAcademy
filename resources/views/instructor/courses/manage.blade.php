@@ -326,7 +326,6 @@
         <i class="fas fa-check-circle"></i>
         <span class="font-medium">{{ session('success') }}</span>
     </div>
-    <script>setTimeout(() => document.querySelector('.fixed.bottom-6').remove(), 4000);</script>
     @endif
 
 </body>

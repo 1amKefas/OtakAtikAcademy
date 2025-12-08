@@ -1,3 +1,29 @@
+// --- 1. Theme & Config Initialization (Runs immediately) ---
+
+// Theme Initialization (Dark Mode Support)
+(function() {
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark')
+    } else {
+        document.documentElement.classList.remove('dark')
+    }
+})();
+
+// Tailwind Configuration
+if (typeof tailwind !== 'undefined') {
+    tailwind.config = {
+        darkMode: 'class',
+        theme: { 
+            extend: {
+                fontFamily: { sans: ['Inter', 'sans-serif'] },
+                colors: { slate: { 850: '#1e293b', 900: '#0f172a' } }
+            } 
+        }
+    };
+}
+
+// --- 2. Alpine.js Components ---
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('layout', () => ({
         sidebarOpen: false,
@@ -19,6 +45,8 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+
+// --- 3. DOM Logic (Scroll Progress & Completion) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     const scrollContainer = document.getElementById('mainScrollContainer');

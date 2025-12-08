@@ -94,12 +94,24 @@ document.addEventListener('alpine:init', () => {
     }))
 });
 
-// SortableJS & TinyMCE Initialization
+// Initialization: SortableJS, TinyMCE, & Flash Messages
 document.addEventListener('DOMContentLoaded', function () {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const courseId = document.querySelector('meta[name="course-id"]').content;
     
-    // TinyMCE Init
+    // 1. Flash Message Handler (Merged Logic)
+    const flashMessage = document.querySelector('.fixed.bottom-6');
+    if (flashMessage) {
+        setTimeout(() => {
+            flashMessage.style.transition = 'opacity 0.5s ease-out';
+            flashMessage.style.opacity = '0';
+            setTimeout(() => {
+                flashMessage.remove();
+            }, 500);
+        }, 4000);
+    }
+
+    // 2. TinyMCE Init
     if(document.getElementById('richEditor')) {
         tinymce.init({
             selector: '#richEditor',
@@ -111,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Sortable Modules
+    // 3. Sortable Modules
     var moduleList = document.getElementById('modules-list');
     if(moduleList) {
         Sortable.create(moduleList, {
@@ -129,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Sortable Contents
+    // 4. Sortable Contents
     document.querySelectorAll('.contents-list').forEach(function(el) {
         Sortable.create(el, {
             handle: '.handle-content',
