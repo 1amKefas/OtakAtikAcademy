@@ -19,21 +19,7 @@
     
     <script src="{{ asset('js/instructor-manage.js') }}"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .sidebar { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .tox-tinymce { border-radius: 0.5rem !important; border-color: #e2e8f0 !important; }
-        .handle, .handle-content { cursor: grab; }
-        .handle:active, .handle-content:active { cursor: grabbing; }
-        .sortable-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
-        .tox-dialog-wrap { z-index: 10000 !important; }
-        .tox .tox-dialog { z-index: 10001 !important; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden" x-data="contentManager">
 

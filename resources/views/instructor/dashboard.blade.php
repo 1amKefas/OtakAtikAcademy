@@ -6,33 +6,7 @@
     <title>Instructor Dashboard - OtakAtik Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .sidebar {
-            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
-        }
-        
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .students-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .courses-card {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        
-        .assignments-card {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">

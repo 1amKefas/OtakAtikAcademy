@@ -10,37 +10,7 @@
     {{-- Load External Script --}}
     <script src="{{ asset('js/instructor-courses.js') }}"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        /* [UPDATE] Samakan Sidebar dengan Admin (Dark Theme) */
-        .sidebar {
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        }
-        
-        .type-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .type-online { background: #dbeafe; color: #1e40af; }
-        .type-hybrid { background: #fef3c7; color: #d97706; }
-        .type-offline { background: #d1fae5; color: #065f46; }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .status-active { background: #d1fae5; color: #065f46; }
-        .status-inactive { background: #fee2e2; color: #dc2626; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
