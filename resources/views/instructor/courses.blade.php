@@ -11,6 +11,7 @@
     <script src="{{ asset('js/instructor-courses.js') }}"></script>
 
     <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">

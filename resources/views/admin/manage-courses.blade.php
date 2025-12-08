@@ -20,6 +20,7 @@
 
     {{-- Custom CSS --}}
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 h-screen overflow-hidden">
     

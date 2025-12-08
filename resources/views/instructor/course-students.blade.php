@@ -11,6 +11,7 @@
         body { font-family: 'Inter', sans-serif; }
         .sidebar { background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%); }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 flex h-screen">
 

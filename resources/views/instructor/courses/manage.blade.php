@@ -21,6 +21,7 @@
     
     <script src="{{ asset('js/instructor-manage.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden" x-data="contentManager">
 
