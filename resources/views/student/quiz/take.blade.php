@@ -3,34 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz: {{ $quiz->title }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $quiz->title }} - Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    {{-- TAMBAHKAN crossorigin="anonymous" --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{-- TAMBAHKAN crossorigin="anonymous" --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" crossorigin="anonymous"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
-        
-        .custom-radio:checked + div {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
-        }
-        
-        .slide-enter-active, .slide-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
-        .slide-enter-from { opacity: 0; transform: translateX(20px); }
-        .slide-leave-to { opacity: 0; transform: translateX(-20px); }
-    </style>
-
     <script src="{{ asset('js/quiz-app.js') }}"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 h-screen flex flex-col font-sans overflow-hidden"
