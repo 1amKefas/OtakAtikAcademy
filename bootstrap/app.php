@@ -13,8 +13,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
-
         $middleware->trustProxies(at: '*');
 
         $middleware->alias([
@@ -30,9 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle' => Illuminate\Routing\Middleware\ThrottleRequests::class,
             'verified' => Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
             'admin' => App\Http\Middleware\AdminMiddleware::class,
-            'instructor' => App\Http\Middleware\InstructorMiddleware::class, // TAMBAH INI!
+            'instructor' => App\Http\Middleware\InstructorMiddleware::class,
             'setlocale' => App\Http\Middleware\SetLocale::class,
         ]);
+
+        // --- GLOBAL MIDDLEWARE (Berjalan di setiap request) ---
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class); // <--- TAMBAHKAN BARIS INI (PENTING!)
 
         $middleware->web(append: [
             Illuminate\Cookie\Middleware\EncryptCookies::class,
