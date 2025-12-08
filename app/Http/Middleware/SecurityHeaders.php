@@ -12,28 +12,17 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        // --- WHITELIST DOMAIN ---
-        // Hapus CDN yang tidak perlu jika sudah di-lokalkan via NPM
-        // TinyMCE masih butuh CDN
-        $scripts = "https://cdn.tiny.cloud"; 
-        $styles  = "https://fonts.googleapis.com";
-        $fonts   = "https://fonts.gstatic.com";
-        $images  = "https://ui-avatars.com https://www.svgrepo.com"; 
-
-        // --- CONTENT SECURITY POLICY (STRICT MODE) ---
-        // 1. default-src 'self': Blokir semua kecuali dari domain sendiri.
-        // 2. script-src: Hapus 'unsafe-inline'. 'unsafe-eval' mungkin dibutuhkan AlpineJS (lihat catatan di bawah).
-        // 3. style-src: Hapus 'unsafe-inline'.
-        // 4. frame-ancestors 'self': Mencegah Clickjacking modern (Wajib buat ZAP).
-        // 5. form-action 'self': Mencegah pembajakan formulir.
-
-        $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-eval' $scripts; " . // unsafe-eval dibiarkan utk AlpineJS
-               "style-src 'self' 'unsafe-inline' $styles; " .                 // unsafe-inline DIHAPUS
-               "font-src 'self' $fonts; " .
-               "img-src 'self' data: $images; " .
-               "frame-src 'self' https://www.youtube.com https://player.vimeo.com; " .
-               "connect-src 'self' https://cdn.tiny.cloud; " . // TinyMCE butuh connect ke servernya
+        // --- CONTENT SECURITY POLICY (PERMISSIVE MODE) ---
+        // Kita izinkan 'https:' secara umum dulu untuk mengatasi masalah hosting/CDN/subdomain.
+        // 'data:' kita izinkan di font dan img karena sering dipakai library modern.
+        
+        $csp = "default-src 'self' https: data: blob:; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " . 
+               "style-src 'self' 'unsafe-inline' https:; " . 
+               "font-src 'self' data: https:; " .
+               "img-src 'self' data: https: blob:; " .
+               "connect-src 'self' https:; " . 
+               "frame-src 'self' https:; " .
                "object-src 'none'; " .
                "base-uri 'self'; " .
                "form-action 'self'; " .
