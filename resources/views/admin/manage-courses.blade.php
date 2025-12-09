@@ -142,6 +142,8 @@
                                     <p class="text-xs text-gray-500 mt-1">Upload gambar sertifikat kosongan (JPG/PNG). Nama siswa akan dicetak otomatis di tengah.</p>
                                 </div>
 
+                                
+
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <label class="text-sm font-medium text-gray-700 mb-1 block">Tipe Course</label>
@@ -305,6 +307,11 @@
                                             <div class="flex items-center justify-end gap-2">
                                                 <a href="{{ route('admin.courses.edit', $course->id) }}" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors">
                                                     <i class="fas fa-pen text-xs"></i>
+                                                </a>
+                                                <a href="{{ route('admin.courses.certificate.designer', $course->id) }}" 
+                                                    class="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded transition-colors mr-1" 
+                                                    title="Desain Sertifikat">
+                                                        <i class="fas fa-certificate text-xs"></i>
                                                 </a>
                                                 <form action="{{ route('admin.courses.toggle', $course->id) }}" method="POST" class="inline">
                                                     @csrf @method('PUT')

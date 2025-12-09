@@ -30,6 +30,8 @@ class Course extends Model
         'is_active',
         'image_url',
         'certificate_template',
+        'certificate_settings', 
+        'signature_image',
         'duration_days',
         'start_date',
         'end_date',
@@ -51,7 +53,8 @@ class Course extends Model
         'end_date' => 'date',
         'is_rescheduled' => 'boolean',
         'rescheduled_start_date' => 'date',
-        'quota_not_met' => 'boolean'
+        'quota_not_met' => 'boolean',
+        'certificate_settings' => 'array'
     ];
 
     protected $appends = [

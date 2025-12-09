@@ -65,6 +65,35 @@ class CertificateController extends Controller
         return $pdf->download('Sertifikat-' . Str::slug($course->title) . '.pdf');
     }
 
+    private function generatePdfResponse($certificate, $course)
+    {
+        // 1. Ambil Setting dari DB (atau pakai default kalau null)
+        $s = $course->certificate_settings ?? [
+            'student_name' => ['x' => 50, 'y' => 40],
+            'course_name'  => ['x' => 50, 'y' => 55],
+            'date'         => ['x' => 20, 'y' => 75],
+            'code'         => ['x' => 80, 'y' => 75],
+            'message'      => ['text' => 'Diberikan kepada:', 'x' => 50, 'y' => 35],
+        ];
+
+        // 2. Data buat View
+        $data = [
+            'certificate' => $certificate,
+            'course' => $course,
+            'student_name' => $certificate->user->name,
+            'course_title' => $course->title,
+            'date' => $certificate->issued_at ? $certificate->issued_at->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
+            'code' => $certificate->certificate_code, // Sesuaikan nama kolom database lu (certificate_number atau certificate_code)
+            'background_image' => storage_path('app/public/' . $course->certificate_template),
+            'signature_image'  => $course->signature_image ? storage_path('app/public/' . $course->signature_image) : null,
+            'settings' => $s, // Pass settingan koordinat ke view
+        ];
+
+        $pdf = Pdf::loadView('certificates.template', $data)
+                  ->setPaper('a4', 'landscape');
+
+        return $pdf->download('Sertifikat-' . Str::slug($course->title) . '.pdf');
+    }
     /**
      * Menampilkan List Sertifikat Saya (Menu My Certificates)
      */

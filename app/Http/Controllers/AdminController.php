@@ -556,6 +556,63 @@ class AdminController extends Controller
     }
 
     /**
+     * [FITUR BARU] Tampilkan Designer Sertifikat (Admin Side)
+     */
+    public function certificateDesigner($id)
+    {
+        $course = Course::findOrFail($id);
+        
+        // Default Settings jika belum ada
+        $settings = $course->certificate_settings ?? [
+            'student_name' => ['x' => 50, 'y' => 40, 'color' => '#1a202c', 'font_size' => 40, 'show' => true],
+            'course_name'  => ['x' => 50, 'y' => 55, 'color' => '#2563eb', 'font_size' => 30, 'show' => true],
+            'date'         => ['x' => 20, 'y' => 75, 'color' => '#718096', 'font_size' => 14, 'show' => true],
+            'code'         => ['x' => 80, 'y' => 75, 'color' => '#718096', 'font_size' => 14, 'show' => true],
+            'message'      => ['text' => 'Diberikan kepada:', 'x' => 50, 'y' => 35, 'color' => '#718096', 'font_size' => 18, 'show' => true],
+            'signature'    => ['x' => 50, 'y' => 80, 'w' => 150, 'show' => false],
+        ];
+
+        return view('admin.certificate.designer', compact('course', 'settings'));
+    }
+
+    /**
+     * [FITUR BARU] Simpan Setting Sertifikat
+     */
+    public function certificateUpdate(Request $request, $id)
+    {
+        $course = Course::findOrFail($id);
+        
+        // 1. Upload Template Background
+        if ($request->hasFile('certificate_template')) {
+            // Hapus yang lama jika ada
+            if($course->certificate_template) {
+                Storage::disk('public')->delete($course->certificate_template);
+            }
+            $path = $request->file('certificate_template')->store('certificates/templates', 'public');
+            $course->certificate_template = $path;
+        }
+
+        // 2. Upload Tanda Tangan
+        if ($request->hasFile('signature_image')) {
+            if($course->signature_image) {
+                Storage::disk('public')->delete($course->signature_image);
+            }
+            $sigPath = $request->file('signature_image')->store('certificates/signatures', 'public');
+            $course->signature_image = $sigPath;
+        }
+
+        // 3. Simpan Koordinat JSON
+        if ($request->has('settings_json')) {
+            $settings = json_decode($request->input('settings_json'), true);
+            $course->certificate_settings = $settings;
+        }
+        
+        $course->save();
+
+        return back()->with('success', 'Layout sertifikat berhasil disimpan!');
+    }
+
+    /**
      * Show edit course form
      */
     public function editCourse($id)

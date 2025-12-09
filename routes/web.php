@@ -209,6 +209,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/certificates/{certificate}', [CertificateController::class, 'adminView'])->name('certificates.view');
     Route::post('/certificates/generate', [CertificateController::class, 'generate'])->name('certificates.generate');
     Route::post('/certificates/{certificate}/revoke', [CertificateController::class, 'revoke'])->name('certificates.revoke');
+
+    // Certificate Designer untuk Admin
+    Route::get('/courses/{id}/certificate-designer', [AdminController::class, 'certificateDesigner'])->name('courses.certificate.designer');
+    Route::post('/courses/{id}/certificate-save', [AdminController::class, 'certificateUpdate'])->name('courses.certificate.update');
     
     // FINANCIAL ROUTES - Admin Financial Dashboard
     Route::get('/financial/dashboard', [FinancialController::class, 'dashboard'])->name('financial.dashboard');
