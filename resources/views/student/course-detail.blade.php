@@ -246,6 +246,20 @@
                             <i class="fas fa-arrow-right"></i>
                         </a>
 
+                        @if($userRegistration->progress == 100)
+                        <div class="mt-6 mb-6 animate-fade-in-up">
+                            <a href="{{ route('student.certificate.download', $course->id) }}" 
+                               class="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-yellow-500/30 transition transform hover:-translate-y-1 group">
+                                <i class="fas fa-certificate text-2xl group-hover:rotate-12 transition-transform"></i>
+                                <span>Download Sertifikat</span>
+                            </a>
+                            <p class="text-xs text-gray-500 text-center mt-3 flex items-center justify-center gap-1">
+                                <i class="fas fa-medal text-yellow-500"></i> 
+                                Selamat! Anda telah menyelesaikan kursus ini.
+                            </p>
+                        </div>
+                        @endif
+
                     @else
                         <form action="{{ route('checkout.show', $course->id) }}" method="GET">
                             <button type="submit" class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-orange-200 transition transform hover:-translate-y-0.5 mb-4 flex items-center justify-center gap-2">
