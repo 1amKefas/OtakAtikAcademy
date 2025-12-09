@@ -40,20 +40,21 @@ class CertificateController extends Controller
         $certificate = Certificate::firstOrCreate(
             ['user_id' => $user->id, 'course_id' => $courseId],
             [
-                'certificate_code' => 'CRT-' . strtoupper(Str::random(8)) . '-' . date('Y'),
-                'issued_at' => now()
+                // [FIX] Sesuaikan dengan nama kolom di database & migration
+                'certificate_number' => 'CRT-' . strtoupper(Str::random(8)) . '-' . date('Y'), // Ganti 'certificate_code' jadi 'certificate_number'
+                'issued_date' => now() // Ganti 'issued_at' jadi 'issued_date'
             ]
         );
 
         // 4. Siapkan Data untuk View PDF
-        // Gunakan public_path() atau storage_path() agar DomPDF bisa baca gambar lokal
         $bgPath = storage_path('app/public/' . $course->certificate_template);
         
         $data = [
             'student_name' => $user->name,
             'course_title' => $course->title,
-            'date' => $certificate->issued_at->translatedFormat('d F Y'), // Format tanggal Indonesia
-            'code' => $certificate->certificate_code,
+            // [FIX] Update pemanggilan attributenya juga
+            'date' => $certificate->issued_date->translatedFormat('d F Y'), 
+            'code' => $certificate->certificate_number,
             'background_image' => $bgPath
         ];
 
