@@ -25,16 +25,6 @@ use App\Models\Category;
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
-// TEMPORARY SETUP ROUTE - RUN MIGRATIONS AND SEED
-Route::get('/setup/achievements', function () {
-    if (env('APP_ENV') === 'production') {
-        \Artisan::call('migrate', ['--force' => true]);
-        \Artisan::call('db:seed', ['--class' => 'AchievementSeeder']);
-        return response()->json(['message' => 'Achievements setup complete!']);
-    }
-    abort(403);
-});
-
 // TEMPORARY DEBUG ROUTE - DELETE AFTER TESTING
 Route::get('/debug/delete-user/{email}', function ($email) {
     if (env('APP_ENV') !== 'production' && env('APP_DEBUG')) {

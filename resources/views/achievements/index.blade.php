@@ -135,7 +135,7 @@
                                 <p class="text-xs text-gray-400 mt-2">{{ $cert->certificate_number }}</p>
                                 
                                 <div class="flex gap-3 justify-center mt-6">
-                                    <a href="{{ route('certificate.download', $cert) }}" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-semibold transition">
+                                    <a href="{{ route('student.certificates.download', $cert) }}" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-semibold transition">
                                         {{ __('achievements.download_certificate') }}
                                     </a>
                                     <button class="px-4 py-2 border border-orange-600 text-orange-600 hover:bg-orange-50 rounded-lg text-sm font-semibold transition">

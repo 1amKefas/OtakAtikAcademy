@@ -126,15 +126,24 @@ class InstructorController extends Controller
      * Hapus Modul
      */
     public function deleteModule($id)
-    {
-        $module = CourseModule::whereHas('course', function($q) {
-            $q->where('instructor_id', Auth::id());
-        })->findOrFail($id);
+{
+    // 1. Cari modulnya, kalau gak ada lgsg error 404
+    $module = \App\Models\CourseModule::findOrFail($id); 
 
-        $module->delete();
+    // 2. [PENTING] Cek Kepemilikan (SECURITY CHECK)
+    // Kita cek: Apakah User ID di course modul ini SAMA dengan User ID yang lagi login?
+    $courseOwnerId = $module->course->instructor_id; // Pastikan relasi di model Module ke Course bener
 
-        return back()->with('success', 'Modul dihapus!');
+    if ($courseOwnerId !== auth()->id()) {
+        // Kalau beda, tendang dia!
+        abort(403, 'Eits! Anda tidak berhak menghapus modul orang lain.');
     }
+
+    // 3. Kalau lolos pengecekan, baru hapus
+    $module->delete();
+
+    return back()->with('success', 'Modul berhasil dihapus.');
+}
 
     /**
      * Simpan Quiz Baru ke dalam Modul
