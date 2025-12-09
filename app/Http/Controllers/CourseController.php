@@ -91,7 +91,7 @@ class CourseController extends Controller
         $allRegistrations = CourseRegistration::where('user_id', $user->id)
             ->with('course')
             ->latest()
-            ->get();
+            ->paginate(10); // [OPTIMASI] Batasi 10 per halaman biar ringan
 
         return view('purchase-history', compact('allRegistrations'));
     }

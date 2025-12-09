@@ -20,8 +20,15 @@ class DashboardController extends Controller
 
         // Data tambahan (opsional)
         // Gunakan cache pendek (misal 30 detik) untuk hitungan personal jika traffic tinggi
-        $myCoursesCount = CourseRegistration::where('user_id', $user->id)->where('status', 'paid')->count();
-        $completedCoursesCount = CourseRegistration::where('user_id', $user->id)->where('status', 'paid')->where('progress', 100)->count();
+        // [OPTIMASI] Gabungin 2 query count menjadi 1 query agregat
+        $stats = CourseRegistration::where('user_id', $user->id)
+            ->where('status', 'paid')
+            ->selectRaw('count(*) as total')
+            ->selectRaw('count(case when progress = 100 then 1 end) as completed')
+            ->first();
+
+        $myCoursesCount = $stats->total ?? 0;
+        $completedCoursesCount = $stats->completed ?? 0;
         $certificatesCount = $user->certificates ? $user->certificates->count() : 0;
 
         return view('dashboard', compact(

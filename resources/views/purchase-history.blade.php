@@ -118,6 +118,20 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            
+                            <div class="mt-6">
+                                {{-- Cek apakah ada halaman (biar gak muncul kotak kosong kalau cuma 1 halaman) --}}
+                                @if($allRegistrations->hasPages())
+                                    <div class="flex flex-col items-center justify-between gap-4 px-4 py-3 bg-white border rounded-lg shadow-sm sm:flex-row dark:bg-gray-800 dark:border-gray-700 sm:px-6">
+
+                                        {{-- Tombol Pagination Default Laravel --}}
+                                        <div class="w-full sm:w-auto">
+                                            {{ $allRegistrations->links() }} 
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
                         </div>
                     </div>
 
