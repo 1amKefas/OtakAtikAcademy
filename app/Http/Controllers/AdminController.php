@@ -562,54 +562,61 @@ class AdminController extends Controller
     {
         $course = Course::findOrFail($id);
         
-        // Default Settings jika belum ada
-        $settings = $course->certificate_settings ?? [
-            'student_name' => ['x' => 50, 'y' => 40, 'color' => '#1a202c', 'font_size' => 40, 'show' => true],
-            'course_name'  => ['x' => 50, 'y' => 55, 'color' => '#2563eb', 'font_size' => 30, 'show' => true],
-            'date'         => ['x' => 20, 'y' => 75, 'color' => '#718096', 'font_size' => 14, 'show' => true],
-            'code'         => ['x' => 80, 'y' => 75, 'color' => '#718096', 'font_size' => 14, 'show' => true],
-            'message'      => ['text' => 'Diberikan kepada:', 'x' => 50, 'y' => 35, 'color' => '#718096', 'font_size' => 18, 'show' => true],
-            'signature'    => ['x' => 50, 'y' => 80, 'w' => 150, 'show' => false],
+        // Data Default jika JSON kosong
+        $defaultElements = [
+            ['id' => 'el_1', 'type' => 'dynamic', 'content' => 'student_name', 'text' => '[Nama Siswa]', 'x' => 50, 'y' => 40, 'font' => 'Helvetica', 'color' => '#000000', 'size' => 40, 'align' => 'center'],
+            ['id' => 'el_2', 'type' => 'dynamic', 'content' => 'course_title', 'text' => '[Judul Kursus]', 'x' => 50, 'y' => 55, 'font' => 'Helvetica', 'color' => '#2563eb', 'size' => 30, 'align' => 'center'],
+            ['id' => 'el_3', 'type' => 'text', 'text' => 'Diberikan kepada:', 'x' => 50, 'y' => 35, 'font' => 'Helvetica', 'color' => '#555555', 'size' => 18, 'align' => 'center'],
+            ['id' => 'el_4', 'type' => 'dynamic', 'content' => 'date', 'text' => '[Tanggal]', 'x' => 20, 'y' => 75, 'font' => 'Courier', 'color' => '#777777', 'size' => 14, 'align' => 'center'],
+            ['id' => 'el_5', 'type' => 'dynamic', 'content' => 'code', 'text' => '[No. Sertifikat]', 'x' => 80, 'y' => 75, 'font' => 'Courier', 'color' => '#777777', 'size' => 14, 'align' => 'center'],
         ];
 
-        return view('admin.certificate.designer', compact('course', 'settings'));
+        // Ambil dari DB atau pakai default
+        $elements = $course->certificate_settings['elements'] ?? $defaultElements;
+
+        return view('admin.certificate.designer', compact('course', 'elements'));
     }
 
-    /**
-     * [FITUR BARU] Simpan Setting Sertifikat
-     */
     public function certificateUpdate(Request $request, $id)
     {
         $course = Course::findOrFail($id);
         
-        // 1. Upload Template Background
+        // 1. Upload Background Template (Induk)
         if ($request->hasFile('certificate_template')) {
-            // Hapus yang lama jika ada
-            if($course->certificate_template) {
-                Storage::disk('public')->delete($course->certificate_template);
-            }
+            if($course->certificate_template) Storage::disk('public')->delete($course->certificate_template);
             $path = $request->file('certificate_template')->store('certificates/templates', 'public');
             $course->certificate_template = $path;
         }
 
-        // 2. Upload Tanda Tangan
-        if ($request->hasFile('signature_image')) {
-            if($course->signature_image) {
-                Storage::disk('public')->delete($course->signature_image);
-            }
-            $sigPath = $request->file('signature_image')->store('certificates/signatures', 'public');
-            $course->signature_image = $sigPath;
-        }
-
-        // 3. Simpan Koordinat JSON
-        if ($request->has('settings_json')) {
-            $settings = json_decode($request->input('settings_json'), true);
-            $course->certificate_settings = $settings;
+        // 2. Simpan Struktur Elemen (JSON)
+        // Kita simpan array 'elements'
+        if ($request->has('elements_json')) {
+            $elements = json_decode($request->input('elements_json'), true);
+            $course->certificate_settings = ['elements' => $elements];
         }
         
         $course->save();
 
-        return back()->with('success', 'Layout sertifikat berhasil disimpan!');
+        return back()->with('success', 'Desain sertifikat berhasil disimpan!');
+    }
+
+    // [BARU] Helper untuk upload gambar elemen (Logo/TTD)
+    public function uploadCertificateAsset(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:2048'
+        ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('certificates/assets', 'public');
+            return response()->json([
+                'success' => true,
+                'url' => Storage::url($path),
+                'path' => $path // Simpan path ini untuk PDF generation nanti
+            ]);
+        }
+
+        return response()->json(['success' => false], 400);
     }
 
     /**

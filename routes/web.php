@@ -213,6 +213,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Certificate Designer untuk Admin
     Route::get('/courses/{id}/certificate-designer', [AdminController::class, 'certificateDesigner'])->name('courses.certificate.designer');
     Route::post('/courses/{id}/certificate-save', [AdminController::class, 'certificateUpdate'])->name('courses.certificate.update');
+    // [BARU] Route khusus upload elemen gambar (Logo, QR, TTD) via AJAX
+    Route::post('/courses/certificate/upload-asset', [AdminController::class, 'uploadCertificateAsset'])->name('courses.certificate.upload-asset');
     
     // FINANCIAL ROUTES - Admin Financial Dashboard
     Route::get('/financial/dashboard', [FinancialController::class, 'dashboard'])->name('financial.dashboard');

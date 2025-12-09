@@ -67,26 +67,24 @@ class CertificateController extends Controller
 
     private function generatePdfResponse($certificate, $course)
     {
-        // 1. Ambil Setting dari DB (atau pakai default kalau null)
-        $s = $course->certificate_settings ?? [
-            'student_name' => ['x' => 50, 'y' => 40],
-            'course_name'  => ['x' => 50, 'y' => 55],
-            'date'         => ['x' => 20, 'y' => 75],
-            'code'         => ['x' => 80, 'y' => 75],
-            'message'      => ['text' => 'Diberikan kepada:', 'x' => 50, 'y' => 35],
-        ];
+        // 1. Ambil Elements JSON
+        // Strukturnya sekarang: ['elements' => [ ... ]]
+        $settings = $course->certificate_settings; 
+        $elements = $settings['elements'] ?? [];
 
-        // 2. Data buat View
-        $data = [
-            'certificate' => $certificate,
-            'course' => $course,
+        // 2. Data Mapping untuk Variabel Dinamis
+        $variables = [
             'student_name' => $certificate->user->name,
             'course_title' => $course->title,
             'date' => $certificate->issued_at ? $certificate->issued_at->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
-            'code' => $certificate->certificate_code, // Sesuaikan nama kolom database lu (certificate_number atau certificate_code)
+            'code' => $certificate->certificate_number ?? $certificate->certificate_code,
+        ];
+
+        // 3. Prepare Data
+        $data = [
+            'elements' => $elements,
+            'variables' => $variables,
             'background_image' => storage_path('app/public/' . $course->certificate_template),
-            'signature_image'  => $course->signature_image ? storage_path('app/public/' . $course->signature_image) : null,
-            'settings' => $s, // Pass settingan koordinat ke view
         ];
 
         $pdf = Pdf::loadView('certificates.template', $data)
