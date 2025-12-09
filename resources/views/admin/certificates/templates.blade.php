@@ -5,79 +5,60 @@
     <title>Sertifikat Kelulusan</title>
     <style>
         @page { margin: 0px; }
-        body { margin: 0px; font-family: 'Helvetica', sans-serif; color: #1f2937; }
+        body { margin: 0px; font-family: 'Helvetica', sans-serif; text-align: center; }
         
         /* Gambar Background Full Screen */
-        .bg-image {
+        .bg {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            width: 100%; height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
         }
 
-        /* Container Utama */
-        .container {
-            width: 100%;
-            height: 100%;
-            text-align: center;
+        /* Container Teks */
+        .content {
             position: absolute;
-            top: 0;
+            top: 35%; /* Geser naik turun sesuai desain gambar backgroundmu */
+            left: 0; 
+            width: 100%;
         }
 
-        /* Pengaturan Posisi Teks (Sesuaikan 'top' dengan desain gambarmu) */
-        .content-wrapper {
-            margin-top: 280px; /* Jarak dari atas kertas */
-        }
-
-        .subtitle {
-            font-size: 20px;
-            color: #4b5563;
-            margin-bottom: 10px;
-        }
-
-        .student-name {
-            font-size: 48px;
+        .name {
+            font-size: 50px;
             font-weight: bold;
             text-transform: uppercase;
-            color: #111827;
             margin-bottom: 20px;
-            letter-spacing: 2px;
+            color: #1a202c;
         }
 
-        .course-title {
-            font-size: 32px;
+        .course {
+            font-size: 30px;
+            color: #4a5568;
             font-weight: bold;
-            color: #2563eb; /* Warna Biru */
-            margin-top: 10px;
-            margin-bottom: 40px;
         }
 
         .footer {
             position: absolute;
-            bottom: 60px; /* Jarak dari bawah */
+            bottom: 50px;
             width: 100%;
-            text-align: center;
             font-size: 14px;
-            color: #6b7280;
+            color: #718096;
         }
     </style>
 </head>
 <body>
     {{-- Background Image --}}
-    <img src="{{ $background_image }}" class="bg-image">
+    <img src="{{ $background_image }}" class="bg">
 
-    <div class="container">
-        <div class="content-wrapper">
-            <div class="subtitle">Diberikan kepada:</div>
-            <div class="student-name">{{ $student_name }}</div>
-            
-            <div class="subtitle">Atas kelulusannya dalam kursus:</div>
-            <div class="course-title">{{ $course_title }}</div>
-        </div>
+    <div class="content">
+        <p style="font-size: 24px; color: #718096; margin-bottom: 10px;">Diberikan Kepada:</p>
+        <div class="name">{{ $student_name }}</div>
+        
+        <p style="font-size: 20px; color: #718096; margin-top: 30px; margin-bottom: 10px;">Telah Menyelesaikan Kursus:</p>
+        <div class="course">{{ $course_title }}</div>
     </div>
 
     <div class="footer">
-        <p>Nomor Sertifikat: <strong>{{ $code }}</strong> &bull; Tanggal Terbit: {{ $date }}</p>
+        ID Sertifikat: {{ $code }} &bull; Tanggal: {{ $date }}
     </div>
 </body>
 </html>

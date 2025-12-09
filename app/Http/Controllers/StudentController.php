@@ -65,33 +65,38 @@ class StudentController extends Controller
     // GANTI METHOD courseDetail() DENGAN INI:
     public function courseDetail($registrationId)
     {
-        $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
+        $user = Auth::user();
+        
+        $registration = CourseRegistration::where('user_id', $user->id)
             ->where('id', $registrationId)
-            ->where('status', 'paid')
+            ->with(['course.modules.materials', 'course.modules.quizzes', 'course.instructor', 'courseClass.instructor'])
             ->firstOrFail();
 
-        // [OPTIMASI] Load Modul & Materi dengan Sorting yang Benar
-        $course = $registration->course()->with([
-            'instructor',
-            'modules' => function($q) { 
-                $q->orderBy('order', 'asc');
-            },
-            'modules.materials' => function($q) {
-                $q->orderBy('order', 'asc')
-                  ->select('id', 'course_module_id', 'title', 'type'); // Cuma ambil judul & tipe (ringan)
-            },
-            'modules.quizzes' => function($q) {
-                $q->orderBy('sort_order', 'asc')
-                  ->select('id', 'course_module_id', 'title', 'duration_minutes'); // Cuma ambil info dasar
-            },
-            // Batasi forum cuma ambil 3 terbaru biar gak berat
-            'forums' => function($q) {
-                $q->latest()->take(3);
-            },
-            'forums.user' // Gak perlu load replies detail di sini
-        ])->first();
+        $course = $registration->course;
 
-        return view('student.course-detail', compact('course', 'registration'));
+        // [FIX LOGIC] Hitung Ulang Progress Real-time (Self-Healing)
+        // Hitung Total Item (Materi + Quiz)
+        $totalItems = 0;
+        foreach($course->modules as $module) {
+            $totalItems += $module->materials->count();
+            $totalItems += $module->quizzes->count();
+        }
+
+        // Hitung Item yang Selesai
+        $completedCount = \App\Models\CourseProgress::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->where('is_completed', true)
+            ->count();
+
+        // Kalkulasi Persentase Baru
+        $realProgress = ($totalItems > 0) ? round(($completedCount / $totalItems) * 100) : 0;
+
+        // Jika data di DB beda sama hitungan asli, update DB!
+        if ($registration->progress !== $realProgress) {
+            $registration->update(['progress' => $realProgress]);
+        }
+
+        return view('student.course-detail', compact('course', 'registration')); // Note: variable di view $userRegistration diganti jadi $registration biar konsisten
     }
 
     public function profile()
