@@ -5,6 +5,11 @@
 @section('content')
 {{-- Load CSS & JS Eksternal --}}
 <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
+
+{{-- [TAMBAHAN] Load TinyMCE (cdnjs) --}}
+<script src="https://cdn.tiny.cloud/1/40wmpfbvzkycl0abvcvdpedgmg1a5pa6mu5yyv37jgk0thqo/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+
+{{-- Script Custom Kita --}}
 <script src="{{ asset('js/instructor-quiz-editor.js') }}"></script>
 
 <div class="bg-gray-50 min-h-screen pb-20" 
@@ -63,6 +68,76 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         
+        {{-- [BARU] FORM PENGATURAN QUIZ --}}
+        <div class="bg-white p-6 rounded-xl border border-gray-200 mb-6 shadow-sm" x-data="{ openSettings: false }">
+            <div class="flex justify-between items-center cursor-pointer" @click="openSettings = !openSettings">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Pengaturan Quiz</h3>
+                        <p class="text-xs text-gray-500">Edit Judul, Deskripsi, Durasi & Passing Score</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-indigo-600 font-bold" x-show="!openSettings">Tampilkan</span>
+                    <span class="text-xs text-gray-500 font-bold" x-show="openSettings">Sembunyikan</span>
+                    <i class="fas" :class="openSettings ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </div>
+            </div>
+
+            <div x-show="openSettings" x-transition class="mt-6 pt-6 border-t border-gray-100">
+                <form action="{{ route('instructor.quiz.update', [$course->id, $quiz->id]) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Judul --}}
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Judul Quiz</label>
+                            <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
+                        </div>
+
+                        {{-- Deskripsi --}}
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Deskripsi / Instruksi</label>
+                            <textarea name="description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">{{ old('description', $quiz->description) }}</textarea>
+                        </div>
+
+                        {{-- Durasi --}}
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Durasi Pengerjaan</label>
+                            <div class="relative">
+                                <input type="number" name="duration_minutes" value="{{ old('duration_minutes', $quiz->duration_minutes) }}" min="5" max="300" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">Menit</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Passing Score --}}
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Passing Score (KKM)</label>
+                            <div class="relative">
+                                <input type="number" name="passing_score" value="{{ old('passing_score', $quiz->passing_score) }}" min="0" max="100" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">Point</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-end gap-3">
+                         <button type="button" @click="openSettings = false" class="text-gray-500 hover:text-gray-700 font-medium text-sm px-4">Batal</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+                            Simpan Pengaturan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         {{-- INPUT SETTING MAX SCORE (Manual Input) --}}
         {{-- Ini dummy form action kalau mau update setting quiz, atau pake JS ajax --}}
         <div class="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-sm flex items-center justify-between">
@@ -170,8 +245,8 @@
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Soal</label>
                                     <select name="question_type" x-model="questionType" @change="changeType($event.target.value)" 
                                             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
-                                        <option value="multiple_choice">Pilihan Ganda (1 Jawaban)</option>
-                                        <option value="multiple_select">Pilihan Ganda (Banyak Jawaban)</option>
+                                        <option value="pilihan ganda">Pilihan Ganda</option>
+                                        <option value="multiple_select">Multiple Choice</option>
                                         <option value="true_false">Benar / Salah</option>
                                         <option value="essay">Essay</option>
                                     </select>

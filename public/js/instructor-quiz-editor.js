@@ -189,6 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
             selector: '#questionEditor',
             height: 250,
             menubar: false,
+            // [TAMBAHAN] Matikan tombol promosi "Upgrade"
+            promotion: false, 
+            branding: false, // Opsional: hilangkan logo TinyMCE di footer
+            
             plugins: 'image media link lists table code preview',
             toolbar: 'undo redo | fontfamily fontsize | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | link image media | code preview',
             content_style: "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; font-size: 14px; }",
