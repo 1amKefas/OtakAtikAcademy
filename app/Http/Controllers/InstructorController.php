@@ -29,30 +29,48 @@ class InstructorController extends Controller
         }
 
         $instructor = Auth::user();
+
+        // 1. Definisikan Base Query (Biar gak ngetik ulang)
+        $baseQuery = Course::where(function($q) use ($instructor) {
+            $q->where('instructor_id', $instructor->id)
+            ->orWhereHas('assistants', function($sq) use ($instructor) {
+                $sq->where('users.id', $instructor->id);
+            });
+        });
+
+        // 2. [OPTIMASI] Hitung Statistik LANGSUNG di Database (Tanpa Load Model)
+        // Clone query biar gak tabrakan
+        $totalCourses = (clone $baseQuery)->count();
+        $activeCourses = (clone $baseQuery)->where('is_active', true)->count();
         
-        // [OPTIMASI] Gunakan withCount untuk menghitung jumlah relasi sekaligus
-        $taughtCourses = Course::where(function($q) use ($instructor) {
-                $q->where('instructor_id', $instructor->id)
-                  ->orWhereHas('assistants', function($sq) use ($instructor) {
-                      $sq->where('users.id', $instructor->id);
-                  });
-            })
+        // Hitung total assignment via relationship existence
+        $totalAssignments = \App\Models\CourseAssignment::whereHas('course', function($q) use ($instructor) {
+            $q->where('instructor_id', $instructor->id); // Simplify: Asumsi assignment milik instruktur utama
+        })->count();
+
+        // Hitung total student via CourseRegistration (Jauh lebih ringan)
+        $totalStudents = CourseRegistration::whereHas('course', function($q) use ($instructor) {
+            $q->where('instructor_id', $instructor->id);
+        })->where('status', 'paid')->count();
+
+        $stats = [
+            'total_courses' => $totalCourses,
+            'total_students' => $totalStudents,
+            'total_assignments' => $totalAssignments,
+            'active_courses' => $activeCourses,
+        ];
+
+        // 3. [OPTIMASI] Ambil List Course Secukupnya (Pagination/Limit)
+        // Dashboard biasanya cuma butuh lihat yang terbaru/populer, gak semua.
+        // Kita pake paginate(5) biar halaman dashboard enteng.
+        $taughtCourses = $baseQuery
             ->withCount(['registrations' => function($query) {
                 $query->where('status', 'paid');
             }])
-            ->withCount('assignments') // Hitung assignment langsung dari database
             ->latest()
-            ->get();
+            ->paginate(5); // Ganti get() jadi paginate(5)
 
-        // [OPTIMASI] Hitung total menggunakan Collection method (lebih efisien daripada loop foreach manual)
-        $stats = [
-            'total_courses' => $taughtCourses->count(),
-            'total_students' => $taughtCourses->sum('registrations_count'),
-            'total_assignments' => $taughtCourses->sum('assignments_count'),
-            'active_courses' => $taughtCourses->where('is_active', true)->count(),
-        ];
-
-        // Ambil 5 pendaftar terbaru (Query Efisien)
+        // Recent Registrations (Tetap sama, sudah oke)
         $recentRegistrations = CourseRegistration::whereIn('course_id', $taughtCourses->pluck('id'))
             ->where('status', 'paid')
             ->with(['user', 'course'])
@@ -209,7 +227,7 @@ class InstructorController extends Controller
                 $query->where('status', 'paid');
             }])
             ->latest()
-            ->get();
+            ->paginate(10); // [OPTIMASI] Load 10 per halaman
 
         return view('instructor.courses', compact('courses'));
     }

@@ -254,13 +254,14 @@ class StudentController extends Controller
         $sort = $request->get('sort', 'latest');
         
         $forums = \App\Models\CourseForum::where('course_id', $courseId)
-            ->with(['user', 'replies']) // Eager load biar cepat
+            ->with('user') // Load user pembuat topik (perlu)
+            ->withCount('replies') // [OPTIMASI] Cuma hitung jumlah balasan, JANGAN load isinya
             ->when($sort == 'oldest', function($q) {
                 return $q->orderBy('created_at', 'asc');
             }, function($q) {
                 return $q->orderBy('created_at', 'desc');
             })
-            ->paginate(10); // Pagination 10 item per halaman
+            ->paginate(10);
 
         return view('student.forum-index', compact('course', 'forums', 'sort'));
     }
