@@ -2,58 +2,50 @@
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('quizEditor', (initialData) => ({
-        // --- State Halaman ---
+        // State Halaman
         mode: 'add',
         currentQuestionId: null,
         formAction: initialData.addUrl,
-        updateQuizUrl: initialData.updateQuizUrl,
         
-        // --- State Modal ---
-        showSettingsModal: false,
-
-        // --- State Quiz Global ---
-        // Menggunakan passing_score_max jika ada, default 100
+        // State Quiz Global
         maxScore: parseInt(initialData.maxScore) || 100,
-        currentTotalScore: 0, 
+        currentTotalScore: 0, // Total dari database (sebelum edit)
         questionsList: initialData.questions || [],
-        
-        // Data Meta Quiz (untuk Modal Settings)
-        quiz: initialData.quizData || { 
-            title: '', 
-            description: '', 
-            duration_minutes: 30, 
-            passing_score: 70 
-        },
 
-        // --- State Form Input Soal ---
+        // State Form Input
         questionType: 'multiple_choice',
         points: 10,
-        oldPoints: 0, // Nilai lama sebelum diedit (untuk kalkulasi selisih)
+        oldPoints: 0, // Untuk tracking perubahan saat edit
         order: 1,
         options: ['', '', '', ''],
         correctAnswer: 0,
         correctAnswersArray: [],
         essayExplanation: '',
 
-        // --- Lifecycle ---
+        // -- Lifecycle --
         init() {
             this.recalculateTotal();
             this.resetForm();
+            
+            // Listener External (TinyMCE Sync)
+            // Kita bind manual karena TinyMCE diluar scope Alpine
         },
 
-        // --- Logic Kalkulasi Nilai & Alert Real-time ---
+        // -- Logic Kalkulasi Nilai Real-time --
         
-        // Menghitung estimasi total nilai (Data DB + Perubahan Input Form)
+        // Menghitung Total Score Estimasi (Current DB + Form Input Change)
         get projectedTotalScore() {
             let baseScore = this.currentTotalScore;
+            
             if (this.mode === 'edit') {
+                // Kalau lagi edit, kurangi nilai lama, tambah nilai input baru
                 return (baseScore - this.oldPoints) + parseInt(this.points || 0);
             } else {
+                // Kalau tambah baru, langsung tambahkan nilai input
                 return baseScore + parseInt(this.points || 0);
             }
         },
 
-        // Menentukan warna bar & pesan alert
         get scoreStatus() {
             const total = this.projectedTotalScore;
             const max = this.maxScore;
@@ -61,38 +53,30 @@ document.addEventListener('alpine:init', () => {
             if (total < max) return { 
                 color: 'bg-yellow-500', 
                 text: 'text-yellow-600', 
-                msg: `⚠️ Total ${total}. Kurang ${max - total} poin lagi.` 
+                msg: `⚠️ Total nilai ${total}. Kurang ${max - total} poin lagi untuk mencapai target.` 
             };
             if (total === max) return { 
                 color: 'bg-green-500', 
                 text: 'text-green-600', 
-                msg: '✅ Sempurna! Total nilai pas.' 
+                msg: '✅ Sempurna! Total nilai pas sesuai target.' 
             };
             return { 
                 color: 'bg-red-500', 
                 text: 'text-red-600', 
-                msg: `⛔ Berlebih! Total ${total}. Kelebihan ${total - max} poin.` 
+                msg: `⛔ Berlebih! Total nilai ${total}. Kelebihan ${total - max} poin.` 
             };
         },
 
-        // Hitung ulang total murni dari data yang ada di list
         recalculateTotal() {
+            // Hitung total dari list questions yang di-pass dari server
             this.currentTotalScore = this.questionsList.reduce((sum, q) => sum + parseInt(q.points), 0);
-            // Auto-increment order untuk mode add
+            // Update order default untuk soal baru
             if (this.mode === 'add') {
                 this.order = this.questionsList.length + 1;
             }
         },
 
-        // --- Fungsi Modal Settings ---
-        openSettingsModal() {
-            this.showSettingsModal = true;
-        },
-        closeSettingsModal() {
-            this.showSettingsModal = false;
-        },
-
-        // --- Fungsi Form Soal (CRUD UI) ---
+        // -- Form Handling Functions --
 
         openAddMode() {
             this.resetForm();
@@ -104,21 +88,21 @@ document.addEventListener('alpine:init', () => {
             this.currentQuestionId = q.id;
             this.formAction = initialData.updateUrlBase + '/' + q.id;
             
-            // Isi Form
+            // Set Form Data
             this.questionType = q.question_type;
             this.points = parseInt(q.points);
-            this.oldPoints = parseInt(q.points);
+            this.oldPoints = parseInt(q.points); // Simpan nilai lama buat kalkulasi
             this.order = q.order;
             
-            // Isi TinyMCE
+            // TinyMCE Set Content
             if(tinymce.get('questionEditor')) {
                 tinymce.get('questionEditor').setContent(q.question);
             }
 
-            // Parse Options & Jawaban
+            // Parse Options
             this.handleOptionsParsing(q);
 
-            // Update UI
+            // UI Fixes
             this.changeType(this.questionType);
             this.scrollToForm();
         },
@@ -142,10 +126,9 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        // --- Helpers ---
+        // -- Helpers --
 
         handleOptionsParsing(q) {
-            // Logic parsing JSON options dari DB
             if (['multiple_choice', 'multiple_select'].includes(q.question_type)) {
                 let opts = q.options;
                 if (typeof opts === 'string') {
@@ -170,7 +153,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         changeType(newType) {
-            // Reset jawaban kalau ganti tipe soal biar gak error
             if(newType === 'multiple_choice') this.correctAnswer = 0;
             if(newType === 'multiple_select') this.correctAnswersArray = [];
             if(newType === 'true_false') this.correctAnswer = 'true';
@@ -189,11 +171,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         scrollToForm() {
-            // Auto scroll di mobile biar enak
+            // Mobile UX
             if(window.innerWidth < 1024) {
-                if(this.$refs.quizFormContainer) {
-                    this.$refs.quizFormContainer.scrollIntoView({ behavior: 'smooth' });
-                }
+                this.$refs.quizFormContainer.scrollIntoView({ behavior: 'smooth' });
             } else {
                  window.scrollTo({ top: 0, behavior: 'smooth' });
             }
@@ -201,10 +181,10 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
-// TinyMCE Initialization (Global)
+// TinyMCE Init (Global)
 document.addEventListener('DOMContentLoaded', () => {
     if(typeof tinymce !== 'undefined') {
-        tinymce.remove(); // Bersihkan instance lama jika ada
+        tinymce.remove();
         tinymce.init({
             selector: '#questionEditor',
             height: 250,
@@ -214,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             content_style: "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; font-size: 14px; }",
             setup: function (editor) {
                 editor.on('change', function () {
-                    editor.save(); // Sync otomatis ke textarea hidden
+                    editor.save();
                 });
             }
         });
