@@ -1,29 +1,53 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial state setup
+    // 1. Initial Setup
     const typeRadio = document.querySelector('input[name="question_type"]:checked');
     const type = typeRadio ? typeRadio.value : 'multiple_choice';
     
+    // [FIX] Inisialisasi State Jawaban dari Data Server
+    if (typeof window.savedCorrectAnswer !== 'undefined') {
+        window.currentSelection = window.savedCorrectAnswer;
+    } else {
+        window.currentSelection = null;
+    }
+
+    // Jalankan fungsi awal
     window.changeQuestionType(type);
     window.updateCorrectAnswerOptions();
     
+    // 2. Listener untuk Update Opsi saat ngetik
     const optionsContainer = document.getElementById('optionsContainer');
     if (optionsContainer) {
         optionsContainer.addEventListener('input', (e) => {
             if(e.target.name === 'options[]') window.updateCorrectAnswerOptions();
         });
     }
+
+    // 3. [FIX] Listener Global untuk "Mengingat" Jawaban yang dipilih User
+    // Kita pasang di document body (delegation) karena elemen radio/checkbox sering dibuat ulang
+    document.addEventListener('change', (e) => {
+        // Jika yang berubah adalah Radio Button Jawaban Benar
+        if (e.target.name === 'correct_answer') {
+            window.currentSelection = e.target.value;
+        }
+        // Jika yang berubah adalah Checkbox Jawaban Benar
+        else if (e.target.name === 'correct_answers[]') {
+            // Ambil semua checkbox yang dicentang, simpan sebagai Array string ID
+            const checkedBoxes = Array.from(document.querySelectorAll('input[name="correct_answers[]"]:checked'))
+                                      .map(cb => cb.value);
+            // Simpan dalam format JSON string biar konsisten sama format DB/SavedAnswer
+            window.currentSelection = JSON.stringify(checkedBoxes);
+        }
+    });
 });
 
 // --- Global Functions ---
 
 window.changeQuestionType = function(type) {
-    // Hide all sections
     ['mcCorrectAnswer', 'msCorrectAnswer', 'tfCorrectAnswer', 'essayCorrectAnswer', 'optionsSection'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
 
-    // Show active section
     const optionsSection = document.getElementById('optionsSection');
     
     if (type === 'multiple_choice') {
@@ -55,14 +79,11 @@ window.addOption = function() {
 
 window.removeOption = function(btn) {
     btn.closest('.optionItem').remove();
-    // Re-index letters
     document.querySelectorAll('.optionItem').forEach((el, idx) => {
         el.querySelector('span').innerText = String.fromCharCode(65 + idx);
     });
     window.updateCorrectAnswerOptions();
 };
-
-// public/js/instructor-quiz-question.js
 
 window.updateCorrectAnswerOptions = function() {
     const options = Array.from(document.querySelectorAll('input[name="options[]"]')).map(el => el.value);
@@ -72,49 +93,46 @@ window.updateCorrectAnswerOptions = function() {
     let htmlRadio = '';
     let htmlCheck = '';
 
-    // Ambil data yang kita lempar dari Blade tadi
-    let savedAnswer = window.savedCorrectAnswer; 
+    // [FIX] Gunakan currentSelection (Data Real-time) bukan savedCorrectAnswer (Data Basi)
+    let selectedAnswer = window.currentSelection;
 
     options.forEach((opt, idx) => {
         if(opt) {
             const letter = String.fromCharCode(65 + idx);
-            const strIdx = String(idx); // Convert index ke string biar aman bandinginnya
+            const strIdx = String(idx);
 
-            // LOGIC CHECKED UNTUK RADIO (Single Choice)
-            // Cek apakah index ini SAMA dengan yang tersimpan di DB
+            // LOGIC CHECKED RADIO
             let isRadioChecked = '';
-            if (savedAnswer !== null && String(savedAnswer) === strIdx) {
+            if (selectedAnswer !== null && String(selectedAnswer) === strIdx) {
                 isRadioChecked = 'checked';
             }
 
-            // LOGIC CHECKED UNTUK CHECKBOX (Multiple Select)
-            // Kalau multiple, DB nyimpennya string JSON '["0","2"]', jadi kita parse dulu kalau string
+            // LOGIC CHECKED CHECKBOX
             let isBoxChecked = '';
-            if (savedAnswer !== null) {
+            if (selectedAnswer !== null) {
                 let ansArray = [];
                 try {
-                    // Kalau tipe datanya array (dari json blade), pake langsung. Kalau string, parse.
-                    ansArray = Array.isArray(savedAnswer) ? savedAnswer : JSON.parse(savedAnswer);
+                    // Coba parse JSON, kalau gagal berarti mungkin single value atau array JS
+                    ansArray = Array.isArray(selectedAnswer) ? selectedAnswer : JSON.parse(selectedAnswer);
                     
-                    // Pastikan semua elemen jadi string buat perbandingan
-                    ansArray = ansArray.map(String);
-                    
-                    if (ansArray.includes(strIdx)) {
-                        isBoxChecked = 'checked';
+                    // Normalisasi ke array of strings
+                    if(Array.isArray(ansArray)) {
+                        ansArray = ansArray.map(String);
+                        if (ansArray.includes(strIdx)) {
+                            isBoxChecked = 'checked';
+                        }
                     }
                 } catch (e) {
-                    // Fallback kalau bukan JSON valid (misal data lama)
-                    console.log("Error parsing answers", e);
+                    // Fallback sederhana jika format aneh
+                    if (String(selectedAnswer) === strIdx) isBoxChecked = 'checked';
                 }
             }
 
-            // Radio HTML
             htmlRadio += `<label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
                 <input type="radio" name="correct_answer" value="${idx}" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500" ${isRadioChecked}>
                 <span class="ml-2 text-gray-800 font-medium">${letter}. ${opt}</span>
             </label>`;
-            
-            // Checkbox HTML
+
             htmlCheck += `<label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
                 <input type="checkbox" name="correct_answers[]" value="${idx}" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500" ${isBoxChecked}>
                 <span class="ml-2 text-gray-800 font-medium">${letter}. ${opt}</span>

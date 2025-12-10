@@ -174,7 +174,10 @@
 
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">🔢 Urutan Soal</h3>
-                    <input type="number" name="order" min="1" value="{{ old('order', $question->order ?? ($quiz->questions()->count() + 1)) }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                    <input type="number" name="order" min="1" 
+                        {{-- [FIX] Kalau order di DB bernilai 0 atau null, kita paksa hitung max + 1 --}}
+                        value="{{ old('order', (isset($question) && $question->order > 0) ? $question->order : ($quiz->questions()->count() + 1)) }}" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg">
                 </div>
 
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
