@@ -1,6 +1,6 @@
 // public/js/learning-app.js
 
-// --- 1. Theme & Config Initialization (Runs immediately) ---
+// --- 1. Theme & Config Initialization ---
 (function() {
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark')
@@ -55,20 +55,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const nextUrl = contentData.dataset.nextUrl;
     const completeUrl = contentData.dataset.completeUrl;
-    const isAlreadyDone = contentData.dataset.alreadyDone === '1';
-    const isVideo = contentData.dataset.isVideo === '1'; // Native Video Upload
-    const isVideoContent = contentData.dataset.isVideoContent === '1'; // Any Video (Upload/Embed)
+    // [FIX] Pastikan boolean check benar
+    const isAlreadyDone = contentData.dataset.alreadyDone === '1'; 
+    const isVideo = contentData.dataset.isVideo === '1'; 
+    const isVideoContent = contentData.dataset.isVideoContent === '1';
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    let isCompleted = isAlreadyDone;
+    let isCompleted = isAlreadyDone; // Init status dari server
 
-    // Init Progress Circle (Jika ada)
+    // Init Progress Circle
     let circumference = 0;
     if(progressCircle) {
         const radius = progressCircle.r.baseVal.value;
         circumference = radius * 2 * Math.PI;
         progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-        progressCircle.style.strokeDashoffset = circumference;
+        
+        // [FIX] Jika sudah selesai, langsung set circle penuh (0 offset), jika belum set kosong
+        if(isAlreadyDone) {
+            progressCircle.style.strokeDashoffset = 0;
+        } else {
+            progressCircle.style.strokeDashoffset = circumference;
+        }
     }
 
     // Fungsi Mark Complete via AJAX
@@ -83,34 +90,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({}) 
             }).then(() => {
                 console.log("Material Marked as Completed");
+                // Update local state biar gak kirim request berkali-kali
                 contentData.dataset.alreadyDone = '1';
             });
         }
     }
 
-    // Fungsi Buka Kunci Tombol Next
+    // Fungsi Buka Kunci Tombol Next & Update UI Header
     function unlockNextButton() {
-        isCompleted = true;
+        isCompleted = true; // Flag JS update
+        
+        // 1. Update Tombol
         if(btnNext) {
             btnNext.disabled = false;
             btnNext.classList.remove('bg-gray-300', 'dark:bg-slate-700', 'text-gray-500', 'dark:text-gray-400', 'cursor-not-allowed', 'shadow-none');
             btnNext.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'text-white', 'hover:shadow-lg', 'hover:shadow-blue-500/30', 'transform', 'hover:-translate-y-0.5');
             btnNext.innerHTML = `<span>Selesai & Lanjut</span> <i class="fas fa-check-circle animate-pulse"></i>`;
         }
-        if(progressCircle) {
-            progressCircle.style.strokeDashoffset = 0;
+        
+        // 2. Update Circle Header
+        if(progressCircle && progressIcon) {
+            progressCircle.style.strokeDashoffset = 0; // Penuh
             progressIcon.innerHTML = '<i class="fas fa-check text-green-500 text-xl"></i>';
         }
         
-        // Auto mark complete saat unlock
+        // 3. Trigger Backend
         markAsComplete();
+    }
+
+    // [FIX] Priority Check: Kalau dari server dibilang sudah selesai, jalankan unlock SEKARANG.
+    if (isAlreadyDone) {
+        unlockNextButton();
     }
 
     // A. LOGIC VIDEO TRACKING (Untuk Native Video Upload)
     if (isVideo && videoPlayer && !isAlreadyDone) {
         console.log("Tracking Video Progress...");
         
-        // Prevent Seeking (Opsional - Matikan kalau mau strict banget)
         let supposedCurrentTime = 0;
         videoPlayer.addEventListener('timeupdate', function() {
             if (!videoPlayer.seeking) {
@@ -118,14 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Kalau user coba skip manual, balikin ke posisi terakhir (Opsional)
-        // videoPlayer.addEventListener('seeking', function() {
-        //     var delta = videoPlayer.currentTime - supposedCurrentTime;
-        //     if (Math.abs(delta) > 0.01) {
-        //         videoPlayer.currentTime = supposedCurrentTime; 
-        //     }
-        // });
-
         // Unlock saat video selesai
         videoPlayer.addEventListener('ended', function() {
             console.log("Video Finished");
@@ -134,9 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // B. LOGIC SCROLL TRACKING (Untuk Teks/Artikel)
-    if(scrollContainer && progressCircle && !isVideoContent && !isAlreadyDone) {
+    if(scrollContainer && progressCircle && !isVideoContent) {
         scrollContainer.addEventListener('scroll', () => {
-            if (isCompleted) return;
+            // [FIX] KUNCI UTAMA: Kalau sudah selesai (dari server atau barusan), JANGAN hitung scroll lagi.
+            // Biarkan UI tetap 100% (Centang Hijau)
+            if (isCompleted || isAlreadyDone) return; 
 
             const scrollTop = scrollContainer.scrollTop;
             const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
@@ -148,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             progressCircle.style.strokeDashoffset = offset;
             progressIcon.innerText = Math.round(percent * 100) + '%';
 
+            // Trigger selesai jika sudah di bawah (toleransi 50px)
             if (scrollHeight - scrollTop <= 50) {
                 unlockNextButton();
             }
@@ -163,16 +174,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Fallback: Jika konten Youtube Embed (Tidak bisa track 'ended' mudah via iframe)
-    // Kita unlock otomatis atau biarkan user klik manual (tergantung kebijakan)
-    // Di sini kita unlock manual jika user scroll mentok khusus untuk youtube embed
+    // Fallback: Youtube Embed Scroll
     if(isVideoContent && !isVideo && !isAlreadyDone) {
-        // Bisa pakai timer atau scroll mentok sebagai pengganti tracking API Youtube
         if(scrollContainer) {
              scrollContainer.addEventListener('scroll', () => {
+                if (isCompleted || isAlreadyDone) return; // Fix scroll fallback juga
+
                 const scrollTop = scrollContainer.scrollTop;
                 const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-                if (scrollHeight - scrollTop <= 20) { // Kalau user scroll sampai bawah iframe
+                if (scrollHeight - scrollTop <= 20) {
                     unlockNextButton();
                 }
              });

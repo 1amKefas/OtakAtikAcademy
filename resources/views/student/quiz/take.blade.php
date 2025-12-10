@@ -8,10 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    {{-- TAMBAHKAN crossorigin="anonymous" --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
-    
-    {{-- TAMBAHKAN crossorigin="anonymous" --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" crossorigin="anonymous"></script>
     
     <script src="{{ asset('js/quiz-app.js') }}"></script>
@@ -22,8 +19,13 @@
     </style>
 </head>
 
+{{-- [FIX] Definisikan savedAnswers dari submission --}}
+@php
+    $savedAnswers = $submission->answers ?? [];
+@endphp
+
 <body class="bg-gray-50 text-gray-800 h-screen flex flex-col font-sans overflow-hidden"
-      x-data="quizApp({{ $quiz->duration_minutes * 60 }}, {{ $quiz->questions->count() }})">
+      x-data="quizApp({{ $timeRemaining }}, {{ $quiz->questions->count() }})"></body>
 
     <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 h-16 fixed w-full top-0 z-50 shadow-sm flex items-center justify-between px-6">
         <div class="flex items-center gap-4">
@@ -69,6 +71,8 @@
             <div class="flex-1 overflow-y-auto p-5 custom-scrollbar">
                 <div class="grid grid-cols-4 gap-3">
                     @foreach($quiz->questions as $index => $q)
+                    {{-- [FIX] Logic isAnswered dicek via PHP juga buat class awal --}}
+                    @php $isDone = isset($savedAnswers[$q->id]); @endphp
                     <button @click="currentIndex = {{ $index }}; scrollToTop()" 
                             class="w-10 h-10 rounded-lg text-sm font-bold transition-all border-2 relative flex items-center justify-center"
                             :class="{
@@ -122,15 +126,23 @@
                                     @if($q->question_type === 'multiple_choice')
                                         @foreach(json_decode($q->options) as $key => $option)
                                         <label class="flex items-center group cursor-pointer">
+                                            {{-- [FIX] Tambahkan class 'peer' --}}
                                             <input type="radio" name="answers[{{ $q->id }}]" value="{{ $key }}" 
-                                                   class="custom-radio sr-only"
-                                                   @if(isset($savedAnswers[$q->id]) && $savedAnswers[$q->id] == $key) checked @endif
+                                                   class="custom-radio sr-only peer"
+                                                   @if(isset($savedAnswers[$q->id]) && (string)$savedAnswers[$q->id] === (string)$key) checked @endif
                                                    @change="markAnswered({{ $q->id }})">
-                                            <div class="w-full p-5 rounded-xl border-2 border-gray-200 hover:border-blue-400 bg-white transition-all flex items-center gap-5 group-hover:shadow-sm">
-                                                <div class="w-10 h-10 flex-shrink-0 rounded-lg border-2 border-gray-300 flex items-center justify-center text-sm font-bold text-gray-500 group-hover:border-blue-500 group-hover:text-blue-500 transition bg-gray-50">
+                                            
+                                            {{-- [FIX] Tambahkan style peer-checked untuk blocking warna --}}
+                                            <div class="w-full p-5 rounded-xl border-2 bg-white transition-all flex items-center gap-5 group-hover:shadow-sm
+                                                        border-gray-200 hover:border-blue-400 
+                                                        peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:shadow-md">
+                                                
+                                                <div class="w-10 h-10 flex-shrink-0 rounded-lg border-2 border-gray-300 flex items-center justify-center text-sm font-bold text-gray-500 
+                                                            group-hover:border-blue-500 group-hover:text-blue-500 transition bg-gray-50
+                                                            peer-checked:border-blue-600 peer-checked:text-blue-600 peer-checked:bg-white">
                                                     {{ chr(65 + $key) }}
                                                 </div>
-                                                <span class="text-lg text-gray-700 font-medium">{{ $option }}</span>
+                                                <span class="text-lg text-gray-700 font-medium peer-checked:text-gray-900">{{ $option }}</span>
                                             </div>
                                         </label>
                                         @endforeach
@@ -138,14 +150,22 @@
                                     @elseif($q->question_type === 'true_false')
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <label class="cursor-pointer group">
-                                                <input type="radio" name="answers[{{ $q->id }}]" value="true" class="custom-radio sr-only" @change="markAnswered({{ $q->id }})">
-                                                <div class="p-8 rounded-xl border-2 border-gray-200 hover:border-green-500 bg-white text-center transition-all h-full flex flex-col justify-center hover:shadow-md">
+                                                <input type="radio" name="answers[{{ $q->id }}]" value="true" class="custom-radio sr-only peer" 
+                                                       @if(isset($savedAnswers[$q->id]) && (string)$savedAnswers[$q->id] === 'true') checked @endif
+                                                       @change="markAnswered({{ $q->id }})">
+                                                <div class="p-8 rounded-xl border-2 bg-white text-center transition-all h-full flex flex-col justify-center hover:shadow-md
+                                                            border-gray-200 hover:border-green-500
+                                                            peer-checked:border-green-600 peer-checked:bg-green-50 peer-checked:shadow-md">
                                                     <span class="font-bold text-green-600 text-2xl block mb-1">BENAR</span>
                                                 </div>
                                             </label>
                                             <label class="cursor-pointer group">
-                                                <input type="radio" name="answers[{{ $q->id }}]" value="false" class="custom-radio sr-only" @change="markAnswered({{ $q->id }})">
-                                                <div class="p-8 rounded-xl border-2 border-gray-200 hover:border-red-500 bg-white text-center transition-all h-full flex flex-col justify-center hover:shadow-md">
+                                                <input type="radio" name="answers[{{ $q->id }}]" value="false" class="custom-radio sr-only peer" 
+                                                       @if(isset($savedAnswers[$q->id]) && (string)$savedAnswers[$q->id] === 'false') checked @endif
+                                                       @change="markAnswered({{ $q->id }})">
+                                                <div class="p-8 rounded-xl border-2 bg-white text-center transition-all h-full flex flex-col justify-center hover:shadow-md
+                                                            border-gray-200 hover:border-red-500
+                                                            peer-checked:border-red-600 peer-checked:bg-red-50 peer-checked:shadow-md">
                                                     <span class="font-bold text-red-600 text-2xl block mb-1">SALAH</span>
                                                 </div>
                                             </label>
@@ -155,16 +175,33 @@
                                         <textarea name="answers[{{ $q->id }}]" rows="8" 
                                                   class="w-full px-6 py-5 border-2 border-gray-200 rounded-xl bg-white text-gray-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition placeholder-gray-400 text-lg shadow-sm outline-none"
                                                   placeholder="Ketikan jawaban Anda..."
-                                                  @input="checkTextarea({{ $q->id }}, $el)"></textarea>
+                                                  @input="checkTextarea({{ $q->id }}, $el)">{{ $savedAnswers[$q->id] ?? '' }}</textarea>
 
                                     @elseif($q->question_type === 'multiple_select')
                                         <div class="space-y-3">
                                             @foreach(json_decode($q->options) as $key => $option)
-                                            <label class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-blue-400 cursor-pointer transition group bg-white hover:shadow-sm">
+                                            <label class="flex items-center p-0 cursor-pointer transition group bg-white hover:shadow-sm">
+                                                {{-- [FIX] Logic Checked untuk Array + Style Peer --}}
+                                                @php 
+                                                    $isChecked = false;
+                                                    if(isset($savedAnswers[$q->id]) && is_array($savedAnswers[$q->id])) {
+                                                        $isChecked = in_array((string)$key, $savedAnswers[$q->id]);
+                                                    }
+                                                @endphp
                                                 <input type="checkbox" name="answers[{{ $q->id }}][]" value="{{ $key }}" 
-                                                       class="w-6 h-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                       class="custom-checkbox sr-only peer"
+                                                       @if($isChecked) checked @endif
                                                        @change="checkCheckbox({{ $q->id }})"> 
-                                                <span class="ml-4 text-gray-700 text-lg font-medium group-hover:text-blue-600 transition">{{ $option }}</span>
+                                                
+                                                <div class="w-full p-5 border-2 rounded-xl flex items-center
+                                                            border-gray-200 hover:border-blue-400
+                                                            peer-checked:border-blue-600 peer-checked:bg-blue-50">
+                                                    <div class="w-6 h-6 border-2 border-gray-300 rounded flex items-center justify-center mr-4 
+                                                                peer-checked:bg-blue-600 peer-checked:border-blue-600 transition">
+                                                        <i class="fas fa-check text-white text-xs opacity-0 peer-checked:opacity-100"></i>
+                                                    </div>
+                                                    <span class="text-gray-700 text-lg font-medium group-hover:text-blue-600 transition peer-checked:text-gray-900">{{ $option }}</span>
+                                                </div>
                                             </label>
                                             @endforeach
                                         </div>

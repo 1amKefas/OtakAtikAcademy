@@ -683,12 +683,15 @@ class QuizController extends Controller
      */
     private function getTimeRemaining(QuizSubmission $submission, Quiz $quiz): int
     {
-        $startTime = $submission->started_at;
+        // Pastikan started_at jadi object Carbon
+        $startTime = \Carbon\Carbon::parse($submission->started_at);
         $durationMinutes = $quiz->duration_minutes;
-        $endTime = $startTime->addMinutes($durationMinutes);
+        $endTime = $startTime->copy()->addMinutes($durationMinutes);
 
-        $remainingMinutes = now()->diffInMinutes($endTime);
+        // [FIX] Gunakan diffInSeconds biar akurat sampai detik
+        // Parameter 'false' penting biar kalau lewat waktu hasilnya negatif (bukan absolute)
+        $remainingSeconds = now()->diffInSeconds($endTime, false);
         
-        return max($remainingMinutes * 60, 0); // Return in seconds
+        return max((int) $remainingSeconds, 0); // Return in seconds
     }
 }
