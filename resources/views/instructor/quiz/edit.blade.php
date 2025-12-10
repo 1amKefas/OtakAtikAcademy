@@ -6,10 +6,9 @@
 {{-- Load CSS & JS Eksternal --}}
 <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
 
-{{-- [TAMBAHAN] Load TinyMCE (cdnjs) --}}
+{{-- CDN TinyMCE --}}
 <script src="https://cdn.tiny.cloud/1/40wmpfbvzkycl0abvcvdpedgmg1a5pa6mu5yyv37jgk0thqo/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 
-{{-- Script Custom Kita --}}
 <script src="{{ asset('js/instructor-quiz-editor.js') }}"></script>
 
 <div class="bg-gray-50 min-h-screen pb-20" 
@@ -32,7 +31,7 @@
             </div>
         </div>
 
-        {{-- SCORE MONITORING BAR (Fitur Baru) --}}
+        {{-- SCORE MONITORING BAR --}}
         <div class="flex-1 w-full md:max-w-md px-4">
             <div class="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
                 <span class="text-gray-500">Total Nilai</span>
@@ -68,7 +67,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         
-        {{-- [BARU] FORM PENGATURAN QUIZ --}}
+        {{-- FORM PENGATURAN QUIZ --}}
         <div class="bg-white p-6 rounded-xl border border-gray-200 mb-6 shadow-sm" x-data="{ openSettings: false }">
             <div class="flex justify-between items-center cursor-pointer" @click="openSettings = !openSettings">
                 <div class="flex items-center gap-3">
@@ -138,8 +137,7 @@
             </div>
         </div>
 
-        {{-- INPUT SETTING MAX SCORE (Manual Input) --}}
-        {{-- Ini dummy form action kalau mau update setting quiz, atau pake JS ajax --}}
+        {{-- INPUT SETTING MAX SCORE --}}
         <div class="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-sm flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
@@ -151,7 +149,6 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                {{-- Kita pake x-model.lazy biar gak render ulang tiap ketik --}}
                 <input type="number" x-model.number="maxScore" class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-center font-bold text-gray-700 focus:ring-indigo-500">
                 <span class="text-sm font-bold text-gray-500">Poin</span>
             </div>
@@ -168,10 +165,9 @@
 
                 <div id="questions-list" class="questions-scroll-list space-y-3">
                     @forelse($questions as $index => $q)
-                    {{-- Kita bind click event ke Alpine --}}
                     <div class="question-card bg-white p-4 rounded-xl border-l-4 shadow-sm hover:shadow-md transition cursor-pointer group relative border-gray-200 hover:border-indigo-300"
                          :class="{ 'question-card-active': currentQuestionId === {{ $q->id }} }"
-                         @click="loadQuestion({{ $q }})"> {{-- Pass full object --}}
+                         @click="loadQuestion({{ $q }})">
                         
                         <div class="flex justify-between items-start gap-3">
                             <div class="flex items-start gap-3 overflow-hidden">
@@ -181,8 +177,15 @@
                                         {{ strip_tags($q->question) }}
                                     </p>
                                     <div class="mt-2 flex items-center gap-2">
+                                        {{-- [FIXED] LABEL SOAL SEKARANG HUMAN READABLE --}}
                                         <span class="text-[10px] px-2 py-0.5 rounded-full border bg-gray-50 border-gray-200 text-gray-600">
-                                            {{ $q->question_type }}
+                                            @switch($q->question_type)
+                                                @case('multiple_choice') Pilihan Ganda @break
+                                                @case('multiple_select') Multiple Choice @break
+                                                @case('true_false') Benar / Salah @break
+                                                @case('essay') Essay @break
+                                                @default {{ $q->question_type }}
+                                            @endswitch
                                         </span>
                                         <span class="text-[10px] font-bold" :class="{{ $q->points }} > 20 ? 'text-orange-500' : 'text-gray-400'">
                                             {{ $q->points }} Poin
@@ -191,7 +194,7 @@
                                 </div>
                             </div>
                             
-                            {{-- Delete Button (Stop Propagation) --}}
+                            {{-- Delete Button --}}
                             <form action="{{ route('instructor.quiz.question.delete', [$course->id, $quiz->id, $q->id]) }}" method="POST" onsubmit="return confirm('Hapus soal ini?');" 
                                   @click.stop>
                                 @csrf @method('DELETE')
@@ -245,7 +248,7 @@
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Soal</label>
                                     <select name="question_type" x-model="questionType" @change="changeType($event.target.value)" 
                                             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
-                                        <option value="pilihan ganda">Pilihan Ganda</option>
+                                        <option value="multiple_choice">Pilihan Ganda </option>
                                         <option value="multiple_select">Multiple Choice</option>
                                         <option value="true_false">Benar / Salah</option>
                                         <option value="essay">Essay</option>
