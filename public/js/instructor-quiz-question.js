@@ -62,6 +62,8 @@ window.removeOption = function(btn) {
     window.updateCorrectAnswerOptions();
 };
 
+// public/js/instructor-quiz-question.js
+
 window.updateCorrectAnswerOptions = function() {
     const options = Array.from(document.querySelectorAll('input[name="options[]"]')).map(el => el.value);
     const containerRadio = document.getElementById('correctAnswerOptions');
@@ -70,13 +72,53 @@ window.updateCorrectAnswerOptions = function() {
     let htmlRadio = '';
     let htmlCheck = '';
 
+    // Ambil data yang kita lempar dari Blade tadi
+    let savedAnswer = window.savedCorrectAnswer; 
+
     options.forEach((opt, idx) => {
         if(opt) {
             const letter = String.fromCharCode(65 + idx);
-            // Radio
-            htmlRadio += `<label class="flex items-center"><input type="radio" name="correct_answer" value="${idx}" class="w-4 h-4 text-indigo-600"><span class="ml-2 text-gray-800">${letter}: ${opt}</span></label>`;
-            // Checkbox
-            htmlCheck += `<label class="flex items-center"><input type="checkbox" name="correct_answers[]" value="${idx}" class="w-4 h-4 text-indigo-600 rounded"><span class="ml-2 text-gray-800">${letter}: ${opt}</span></label>`;
+            const strIdx = String(idx); // Convert index ke string biar aman bandinginnya
+
+            // LOGIC CHECKED UNTUK RADIO (Single Choice)
+            // Cek apakah index ini SAMA dengan yang tersimpan di DB
+            let isRadioChecked = '';
+            if (savedAnswer !== null && String(savedAnswer) === strIdx) {
+                isRadioChecked = 'checked';
+            }
+
+            // LOGIC CHECKED UNTUK CHECKBOX (Multiple Select)
+            // Kalau multiple, DB nyimpennya string JSON '["0","2"]', jadi kita parse dulu kalau string
+            let isBoxChecked = '';
+            if (savedAnswer !== null) {
+                let ansArray = [];
+                try {
+                    // Kalau tipe datanya array (dari json blade), pake langsung. Kalau string, parse.
+                    ansArray = Array.isArray(savedAnswer) ? savedAnswer : JSON.parse(savedAnswer);
+                    
+                    // Pastikan semua elemen jadi string buat perbandingan
+                    ansArray = ansArray.map(String);
+                    
+                    if (ansArray.includes(strIdx)) {
+                        isBoxChecked = 'checked';
+                    }
+                } catch (e) {
+                    // Fallback kalau bukan JSON valid (misal data lama)
+                    console.log("Error parsing answers", e);
+                }
+            }
+
+            // Radio HTML
+            htmlRadio += `<label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                <input type="radio" name="correct_answer" value="${idx}" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500" ${isRadioChecked}>
+                <span class="ml-2 text-gray-800 font-medium">${letter}. ${opt}</span>
+            </label>`;
+            
+            // Checkbox HTML
+            htmlCheck += `<label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                <input type="checkbox" name="correct_answers[]" value="${idx}" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500" ${isBoxChecked}>
+                <span class="ml-2 text-gray-800 font-medium">${letter}. ${opt}</span>
+            </label>`;
         }
     });
 

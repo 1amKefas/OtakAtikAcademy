@@ -237,6 +237,8 @@ class QuizController extends Controller
             'question' => $request->question, // [FIX] Ganti 'question_text' jadi 'question'
             'question_type' => $request->question_type, 
             'points' => $request->points ?? 10,
+            // [FIX] Tambahkan baris ini biar urutan tersimpan!
+            'order' => $request->order ?? ($quiz->questions()->max('order') + 1),
         ];
 
         // --- Logic Simpan Jawaban (Sama seperti sebelumnya) ---
@@ -246,7 +248,8 @@ class QuizController extends Controller
                 'options' => 'required|array|min:2',
                 'correct_answer' => 'required|integer',
             ]);
-            $questionData['options'] = json_encode($request->options);
+            // LANGSUNG ASSIGN ARRAY
+            $questionData['options'] = $request->options; 
             $questionData['correct_answer'] = $request->correct_answer;
 
         } elseif ($request->question_type === 'multiple_select') {
@@ -254,7 +257,8 @@ class QuizController extends Controller
                 'options' => 'required|array|min:2',
                 'correct_answers' => 'required|array|min:1',
             ]);
-            $questionData['options'] = json_encode($request->options);
+            // LANGSUNG ASSIGN ARRAY
+            $questionData['options'] = $request->options;
             
             $answers = $request->correct_answers;
             sort($answers); 

@@ -4,6 +4,11 @@
 
 @section('content')
 {{-- Load External Script --}}
+<script>
+    // Ambil data dari PHP, ubah ke format yang aman buat JS
+    window.savedCorrectAnswer = @json(isset($question) ? $question->correct_answer : null);
+</script>
+
 <script src="{{ asset('js/instructor-quiz-question.js') }}" defer></script>
 
 <div class="bg-white">
@@ -100,7 +105,16 @@
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">🔤 Pilihan Jawaban</h3>
                     <div id="optionsContainer" class="space-y-3">
                         @php
-                            $options = old('options', isset($question) ? ($question->options ?? []) : []);
+                            // Ambil options dari question jika ada
+                            $currentOptions = $question->options ?? [];
+                            
+                            // [FIX ERROR STRING] Jika karena double-encode datanya jadi string, kita decode paksa
+                            if (is_string($currentOptions)) {
+                                $currentOptions = json_decode($currentOptions, true) ?? [];
+                            }
+
+                            // Pakai data old input kalau ada error validasi, kalau gak pake data dari DB
+                            $options = old('options', isset($question) ? $currentOptions : []);
                         @endphp
                         @forelse($options as $index => $option)
                         <div class="flex items-center gap-3 optionItem">
