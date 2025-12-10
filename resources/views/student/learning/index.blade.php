@@ -17,6 +17,11 @@
     <script src="{{ asset('js/learning-app.js') }}"></script>
 
     <link rel="stylesheet" href="{{ asset('css/learning.css') }}">
+    <style>
+        /* Embed Responsive Video Support */
+        .video-embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.75rem; background: #000; }
+        .video-embed-container iframe, .video-embed-container object, .video-embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
 </head>
 
 <body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col transition-colors duration-300 font-sans"
@@ -88,9 +93,12 @@
                             @foreach($module->materials as $mat)
                             @php
                                 $isActive = ($type == 'material' && $currentContent->id == $mat->id);
-                                // Gunakan $completedMap yang dikirim dari controller (Lebih Ringan)
                                 $itemKey = 'material_' . $mat->id;
                                 $isCompleted = isset($completedMap[$itemKey]);
+                                // Deteksi Video di Sidebar (Icon Play)
+                                $matIsVideo = false;
+                                if($mat->file_path && \Illuminate\Support\Str::contains($mat->mime_type ?? '', 'video')) $matIsVideo = true;
+                                if(\Illuminate\Support\Str::contains($mat->description, '<iframe')) $matIsVideo = true;
                             @endphp
                             <a href="{{ route('student.learning.content', [$course->id, 'material', $mat->id]) }}" 
                                class="flex items-center gap-3 px-4 py-2.5 text-sm transition relative {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-100 dark:hover:bg-slate-700' }}">
@@ -104,8 +112,8 @@
                                     @endif
                                 </div>
                                 <span class="flex-1 truncate">{{ $mat->title }}</span>
-                                @if($mat->type == 'video') 
-                                    <i class="fas fa-play text-[10px] text-gray-400"></i> 
+                                @if($matIsVideo) 
+                                    <i class="fas fa-play text-[10px] text-red-400"></i> 
                                 @else
                                     <i class="fas fa-align-left text-[10px] text-gray-400"></i>
                                 @endif
@@ -123,7 +131,6 @@
                                class="flex items-center gap-3 px-4 py-2.5 text-sm transition {{ $isActive ? 'nav-item-active' : 'nav-item-inactive hover:bg-gray-100 dark:hover:bg-slate-700' }}">
                                 <div class="flex-shrink-0 w-5 text-center">
                                     @if($isQuizCompleted)
-                                        {{-- [FIXED] Tampilkan Checklist jika Quiz Selesai --}}
                                         <i class="fas fa-check-circle text-green-500 text-sm"></i>
                                     @else
                                         <i class="fas fa-question-circle {{ $isActive ? 'text-blue-600 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400' }}"></i>
@@ -146,15 +153,43 @@
                 
                 <div class="bg-white dark:bg-slate-800 shadow-none border-0 flex-1 flex flex-col transition-colors">
                     
+                    {{-- Logic Deteksi Konten Video --}}
+                    @php
+                        $isVideoContent = false;
+                        $hasVideoUpload = false;
+                        
+                        if ($type == 'material') {
+                            // Cek File Upload Video
+                            if ($currentContent->file_path && \Illuminate\Support\Str::contains($currentContent->mime_type ?? '', 'video')) {
+                                $isVideoContent = true;
+                                $hasVideoUpload = true;
+                            } 
+                            // Cek Embed Youtube di Deskripsi
+                            elseif (\Illuminate\Support\Str::contains($currentContent->description, '<iframe')) {
+                                $isVideoContent = true;
+                            }
+                        }
+                    @endphp
+
                     <div class="px-6 py-5 md:px-10 md:py-6 border-b border-gray-100 dark:border-gray-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur sticky top-0 z-20 transition-colors flex items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block">
-                                {{ $type == 'material' ? 'Materi Pembelajaran' : 'Evaluasi' }}
+                            {{-- [UPDATE] Label Badge Dinamis --}}
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 inline-block
+                                {{ $isVideoContent ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 
+                                   ($type == 'quiz' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400') }}">
+                                @if($type == 'quiz')
+                                    EVALUASI / UJIAN
+                                @elseif($isVideoContent)
+                                    <i class="fas fa-video mr-1"></i> VIDEO PEMBELAJARAN
+                                @else
+                                    <i class="fas fa-book-open mr-1"></i> MATERI BACAAN
+                                @endif
                             </span>
                             <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight">{{ $currentContent->title }}</h2>
                         </div>
 
-                        @if($type == 'material')
+                        {{-- Progress Circle hanya untuk Bacaan biasa, kalau Video pake logic tracking --}}
+                        @if($type == 'material' && !$isVideoContent)
                         <div class="relative w-12 h-12 flex items-center justify-center flex-shrink-0" title="Scroll Progress">
                             <svg class="progress-ring" width="44" height="44">
                                 <circle class="text-gray-100 dark:text-slate-700" stroke="currentColor" stroke-width="4" fill="transparent" r="18" cx="22" cy="22"/>
@@ -166,22 +201,37 @@
                     </div>
 
                     <div id="contentBody" class="p-6 md:p-10 flex-1">
-                        <div class="w-full">
+                        {{-- [UPDATE] Container Width: Full jika video, Max-4xl jika teks --}}
+                        <div class="w-full {{ $isVideoContent ? '' : 'max-w-4xl' }} mx-auto">
                             
                             @if($type == 'material')
-                                @if($currentContent->type == 'video' && $currentContent->external_url)
-                                    <div class="aspect-w-16 aspect-h-9 mb-8 bg-black rounded-xl overflow-hidden shadow-lg ring-1 ring-gray-900/5 w-full">
-                                        <iframe src="{{ str_replace('watch?v=', 'embed/', $currentContent->external_url) }}" frameborder="0" allowfullscreen class="w-full h-full"></iframe>
+                                
+                                {{-- 1. VIDEO UPLOAD PLAYER (Tracking Supported) --}}
+                                @if($hasVideoUpload)
+                                    <div class="relative w-full overflow-hidden rounded-xl shadow-2xl bg-black mb-8 aspect-video">
+                                        <video id="courseVideo" class="absolute top-0 left-0 w-full h-full" controls controlsList="nodownload">
+                                            <source src="{{ asset('storage/' . $currentContent->file_path) }}" type="video/mp4">
+                                            Browser Anda tidak support video html5.
+                                        </video>
                                     </div>
                                 @endif
 
+                                {{-- 2. DESKRIPSI / TEXT CONTENT / YOUTUBE EMBED --}}
                                 @if($currentContent->description)
-                                    <div class="prose dark:prose-invert max-w-none text-lg leading-relaxed w-full">
+                                    <div class="prose dark:prose-invert max-w-none text-lg leading-relaxed w-full {{ $isVideoContent && !$hasVideoUpload ? 'video-embed-wrapper' : '' }}">
                                         {!! $currentContent->description !!}
                                     </div>
+                                    
+                                    {{-- CSS Khusus biar Iframe Youtube Responsif & Full Width --}}
+                                    @if($isVideoContent && !$hasVideoUpload)
+                                        <style>
+                                            .video-embed-wrapper iframe { width: 100%; aspect-ratio: 16/9; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+                                        </style>
+                                    @endif
                                 @endif
 
-                                @if($currentContent->file_path)
+                                {{-- 3. FILE ATTACHMENT (Non-Video) --}}
+                                @if($currentContent->file_path && !$hasVideoUpload)
                                     <div class="mt-10 p-5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-blue-300 dark:hover:border-blue-600 transition w-full">
                                         <div class="flex items-center gap-4">
                                             <div class="w-12 h-12 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center shadow-sm text-blue-600 dark:text-blue-400 text-2xl group-hover:scale-110 transition">
@@ -198,9 +248,11 @@
                                     </div>
                                 @endif
                                 
+                                @if(!$isVideoContent)
                                 <div class="h-32 flex items-center justify-center">
                                     <p class="text-xs text-gray-400 uppercase tracking-widest animate-pulse">Scroll to complete</p>
                                 </div>
+                                @endif
 
                             @elseif($type == 'quiz')
                                 <div class="flex flex-col items-center justify-center py-20 text-center w-full">
@@ -259,7 +311,9 @@
                     <div id="content-data" 
                          data-next-url="{{ $nextUrl }}"
                          data-complete-url="{{ route('student.learning.complete-material', [$course->id, $currentContent->id ?? 0]) }}"
-                         data-already-done="{{ $alreadyDone ? '1' : '0' }}">
+                         data-already-done="{{ $alreadyDone ? '1' : '0' }}"
+                         data-is-video="{{ $hasVideoUpload ? '1' : '0' }}" 
+                         data-is-video-content="{{ $isVideoContent ? '1' : '0' }}">
                     </div>
 
                     <div class="px-6 py-5 md:px-10 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 backdrop-blur flex justify-between items-center sticky bottom-0 z-20">
@@ -268,10 +322,17 @@
                         </a>
                         
                         @if($type == 'material')
-                            <button id="btnNext" type="button" disabled 
-                                class="px-8 py-3 bg-gray-300 dark:bg-slate-700 text-gray-500 dark:text-gray-400 font-bold rounded-xl cursor-not-allowed transition-all flex items-center gap-3 shadow-none">
-                                <span>Lanjut Materi</span>
-                                <i class="fas fa-arrow-right"></i>
+                            {{-- [UPDATE] Tombol Next default Disabled kalau Video --}}
+                            <button id="btnNext" type="button" 
+                                @if(!$alreadyDone && $isVideoContent) disabled @endif
+                                class="px-8 py-3 font-bold rounded-xl transition-all flex items-center gap-3 shadow-none 
+                                {{ (!$alreadyDone && $isVideoContent) ? 'bg-gray-300 dark:bg-slate-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg' }}">
+                                
+                                @if(!$alreadyDone && $isVideoContent)
+                                    <i class="fas fa-lock"></i> <span>Tonton Sampai Habis</span>
+                                @else
+                                    <span>Lanjut Materi</span> <i class="fas fa-arrow-right"></i>
+                                @endif
                             </button>
                         @endif
                     </div>

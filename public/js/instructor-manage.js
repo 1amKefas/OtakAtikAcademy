@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
             height: 400,
             menubar: false,
             plugins: 'image media link lists table code preview',
-            toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image media | code',
+            toolbar: 'undo redo | fontfamily fontsize | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | link image media | code | preview | table | removeformat | help | forecolor backcolor | fullscreen',
             file_picker_types: 'image', 
         });
     }
