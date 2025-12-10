@@ -20,77 +20,57 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-
-        // [OPTIMASI] 1 Query untuk Semua Statistik User
-        $userCounts = User::selectRaw('count(*) as total')
+        // [OPTIMASI] Hitung semua user stats dalam 1 query
+        $userStats = User::selectRaw('count(*) as total')
             ->selectRaw("count(case when is_admin = true then 1 end) as admins")
             ->selectRaw("count(case when is_instructor = true then 1 end) as instructors")
-            ->selectRaw("count(case when is_admin = false and is_instructor = false then 1 end) as regulars")
             ->selectRaw("count(case when created_at >= ? then 1 end) as new_active", [now()->subDays(30)])
             ->first();
 
-        // [OPTIMASI] 1 Query untuk Statistik Course
-        $courseCounts = Course::selectRaw('count(*) as total')
+        // [OPTIMASI] Hitung course stats dalam 1 query
+        $courseStats = Course::selectRaw('count(*) as total')
             ->selectRaw("count(case when is_active = true then 1 end) as active")
-            ->selectRaw("count(case when is_active = false then 1 end) as inactive")
             ->first();
 
-        // [OPTIMASI] 1 Query untuk Statistik Transaksi & Revenue (Paling Penting!)
-        $regCounts = CourseRegistration::selectRaw('count(*) as total')
+        // [OPTIMASI] Hitung Transaksi & Revenue (Yang paling berat) dalam 1 query
+        $regStats = CourseRegistration::selectRaw('count(*) as total')
             ->selectRaw("count(case when status = 'pending' then 1 end) as pending")
             ->selectRaw("count(case when status = 'paid' then 1 end) as paid")
             ->selectRaw("count(case when status = 'cancelled' then 1 end) as cancelled")
             ->selectRaw("sum(case when status = 'paid' then final_price else 0 end) as total_revenue")
-            ->selectRaw("sum(case when status = 'paid' and created_at >= ? then final_price else 0 end) as monthly_revenue", [now()->subDays(30)])
             ->first();
 
-        // Mapping ulang ke format array view kamu
+        // Mapping ulang biar view gak error
         $stats = [
-            'total_users' => $userCounts->total,
-            'admin_users' => $userCounts->admins,
-            'instructor_users' => $userCounts->instructors,
-            'regular_users' => $userCounts->regulars,
-            'active_this_month' => $userCounts->new_active,
+            'total_users' => $userStats->total,
+            'admin_users' => $userStats->admins,
+            'instructor_users' => $userStats->instructors,
+            'regular_users' => $userStats->total - ($userStats->admins + $userStats->instructors),
+            'active_this_month' => $userStats->new_active,
             
-            'total_courses' => $courseCounts->total,
-            'active_courses' => $courseCounts->active,
-            'inactive_courses' => $courseCounts->inactive,
+            'total_courses' => $courseStats->total,
+            'active_courses' => $courseStats->active,
+            'inactive_courses' => $courseStats->total - $courseStats->active,
             
-            'total_registrations' => $regCounts->total,
-            'pending_registrations' => $regCounts->pending,
-            'paid_registrations' => $regCounts->paid,
-            'cancelled_registrations' => $regCounts->cancelled,
-            'total_revenue' => $regCounts->total_revenue ?? 0,
-            'monthly_revenue' => $regCounts->monthly_revenue ?? 0,
+            'total_registrations' => $regStats->total,
+            'pending_registrations' => $regStats->pending,
+            'paid_registrations' => $regStats->paid,
+            'cancelled_registrations' => $regStats->cancelled,
+            'total_revenue' => $regStats->total_revenue ?? 0,
             
-            // Refund biarkan terpisah dulu karena tabel beda, kecuali mau di-join (tapi ini cukup)
+            // Sisa query ringan lainnya biarkan saja
             'pending_refunds' => Refund::where('status', 'pending')->count(),
             'pending_refund_amount' => Refund::where('status', 'pending')->sum('amount'),
             'total_refunded' => Refund::where('status', 'approved')->sum('amount'),
+            'monthly_revenue' => CourseRegistration::where('status', 'paid')->where('created_at', '>=', now()->subDays(30))->sum('final_price'),
         ];
 
-        // Recent registrations
-        $recentRegistrations = CourseRegistration::with(['user', 'course'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Recent refunds
-        $recentRefunds = Refund::with(['user', 'registration.course'])
-            ->where('status', 'pending')
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Popular courses
-        $popularCourses = Course::withCount(['registrations' => function($query) {
-                $query->where('status', 'paid');
-            }])
-            ->orderBy('registrations_count', 'desc')
-            ->take(5)
-            ->get();
-
-        // Revenue chart data
+        // ... sisa code (recentRegistrations, dll) biarkan sama ...
+        
+        // (JANGAN LUPA: Pastikan $recentRegistrations dll tetap ada di bawah sini)
+        $recentRegistrations = CourseRegistration::with(['user', 'course'])->latest()->take(5)->get();
+        $recentRefunds = Refund::with(['user', 'registration.course'])->where('status', 'pending')->latest()->take(5)->get();
+        $popularCourses = Course::withCount(['registrations' => function($q) { $q->where('status', 'paid'); }])->orderBy('registrations_count', 'desc')->take(5)->get();
         $revenueData = $this->getRevenueChartData();
 
         return view('admin.dashboard', compact('stats', 'recentRegistrations', 'recentRefunds', 'popularCourses', 'revenueData'));

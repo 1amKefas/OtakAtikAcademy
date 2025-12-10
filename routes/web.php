@@ -19,6 +19,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\FinancialController;
+use App\Http\Controllers\HomeController;
 use App\Models\Category;
 
 // --- GOOGLE AUTH ROUTES ---
@@ -74,13 +75,8 @@ Route::post('/email/verification-notification', function (Request $request) {
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Public Routes
-Route::get('/', function () {
-    // Ambil kategori biar slidernya jalan
-    $categories = \App\Models\Category::orderBy('sort_order', 'asc')->get();
-    
-    // Kirim ke view
-    return view('dashboard', compact('categories'));
-})->name('home');
+// GANTI JADI:
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/help', [HelpController::class, 'index'])->name('help');
