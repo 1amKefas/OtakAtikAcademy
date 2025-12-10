@@ -20,40 +20,50 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        // User stats
-        $userStats = [
-            'total_users' => User::count(),
-            'admin_users' => User::where('is_admin', true)->count(),
-            'instructor_users' => User::where('is_instructor', true)->count(),
-            'regular_users' => User::where('is_admin', false)->where('is_instructor', false)->count(),
-            'active_this_month' => User::where('created_at', '>=', now()->subDays(30))->count(),
-        ];
 
-        // Course stats
-        $courseStats = [
-            'total_courses' => Course::count(),
-            'active_courses' => Course::where('is_active', true)->count(),
-            'inactive_courses' => Course::where('is_active', false)->count(),
-        ];
+        // [OPTIMASI] 1 Query untuk Semua Statistik User
+        $userCounts = User::selectRaw('count(*) as total')
+            ->selectRaw("count(case when is_admin = true then 1 end) as admins")
+            ->selectRaw("count(case when is_instructor = true then 1 end) as instructors")
+            ->selectRaw("count(case when is_admin = false and is_instructor = false then 1 end) as regulars")
+            ->selectRaw("count(case when created_at >= ? then 1 end) as new_active", [now()->subDays(30)])
+            ->first();
 
-        // Registration & Revenue stats
+        // [OPTIMASI] 1 Query untuk Statistik Course
+        $courseCounts = Course::selectRaw('count(*) as total')
+            ->selectRaw("count(case when is_active = true then 1 end) as active")
+            ->selectRaw("count(case when is_active = false then 1 end) as inactive")
+            ->first();
+
+        // [OPTIMASI] 1 Query untuk Statistik Transaksi & Revenue (Paling Penting!)
+        $regCounts = CourseRegistration::selectRaw('count(*) as total')
+            ->selectRaw("count(case when status = 'pending' then 1 end) as pending")
+            ->selectRaw("count(case when status = 'paid' then 1 end) as paid")
+            ->selectRaw("count(case when status = 'cancelled' then 1 end) as cancelled")
+            ->selectRaw("sum(case when status = 'paid' then final_price else 0 end) as total_revenue")
+            ->selectRaw("sum(case when status = 'paid' and created_at >= ? then final_price else 0 end) as monthly_revenue", [now()->subDays(30)])
+            ->first();
+
+        // Mapping ulang ke format array view kamu
         $stats = [
-            'total_users' => $userStats['total_users'],
-            'admin_users' => $userStats['admin_users'],
-            'instructor_users' => $userStats['instructor_users'],
-            'regular_users' => $userStats['regular_users'],
-            'active_this_month' => $userStats['active_this_month'],
-            'total_courses' => $courseStats['total_courses'],
-            'active_courses' => $courseStats['active_courses'],
-            'inactive_courses' => $courseStats['inactive_courses'],
-            'total_registrations' => CourseRegistration::count(),
-            'pending_registrations' => CourseRegistration::where('status', 'pending')->count(),
-            'paid_registrations' => CourseRegistration::where('status', 'paid')->count(),
-            'cancelled_registrations' => CourseRegistration::where('status', 'cancelled')->count(),
-            'total_revenue' => CourseRegistration::where('status', 'paid')->sum('final_price'),
-            'monthly_revenue' => CourseRegistration::where('status', 'paid')
-                ->where('created_at', '>=', now()->subDays(30))
-                ->sum('final_price'),
+            'total_users' => $userCounts->total,
+            'admin_users' => $userCounts->admins,
+            'instructor_users' => $userCounts->instructors,
+            'regular_users' => $userCounts->regulars,
+            'active_this_month' => $userCounts->new_active,
+            
+            'total_courses' => $courseCounts->total,
+            'active_courses' => $courseCounts->active,
+            'inactive_courses' => $courseCounts->inactive,
+            
+            'total_registrations' => $regCounts->total,
+            'pending_registrations' => $regCounts->pending,
+            'paid_registrations' => $regCounts->paid,
+            'cancelled_registrations' => $regCounts->cancelled,
+            'total_revenue' => $regCounts->total_revenue ?? 0,
+            'monthly_revenue' => $regCounts->monthly_revenue ?? 0,
+            
+            // Refund biarkan terpisah dulu karena tabel beda, kecuali mau di-join (tapi ini cukup)
             'pending_refunds' => Refund::where('status', 'pending')->count(),
             'pending_refund_amount' => Refund::where('status', 'pending')->sum('amount'),
             'total_refunded' => Refund::where('status', 'approved')->sum('amount'),
@@ -204,33 +214,39 @@ class AdminController extends Controller
 
     public function exportCourses()
     {
-        $registrations = CourseRegistration::with(['user', 'course'])->get();
-        
         $fileName = 'course_registrations_' . date('Y-m-d') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ];
 
-        $handle = fopen('php://output', 'w');
-        fputcsv($handle, ['ID', 'User Name', 'User Email', 'Course Title', 'Price', 'Final Price', 'Status', 'Registration Date']);
+        return response()->streamDownload(function() {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'User Name', 'User Email', 'Course Title', 'Price', 'Final Price', 'Status', 'Registration Date']);
 
-        foreach ($registrations as $registration) {
-            fputcsv($handle, [
-                $registration->id,
-                $registration->user->name,
-                $registration->user->email,
-                $registration->course->title,
-                $registration->price,
-                $registration->final_price,
-                $registration->status,
-                $registration->created_at->format('Y-m-d H:i:s')
-            ]);
-        }
+            // [OPTIMASI] Gunakan cursor() untuk streaming data besar tanpa membebani RAM
+            // Perhatikan: cursor() tidak support eager loading 'with' secara tradisional, 
+            // tapi karena kita streaming, query N+1 di sini lebih aman daripada OOM (Out of Memory).
+            // ATAU, gunakan chunk() jika ingin tetap pakai eager loading.
+            // Di sini saya sarankan chunk() untuk keseimbangan speed & memory.
+            
+            CourseRegistration::with(['user', 'course'])
+                ->chunk(100, function($registrations) use ($handle) {
+                    foreach ($registrations as $registration) {
+                        fputcsv($handle, [
+                            $registration->id,
+                            $registration->user->name ?? 'Deleted User', // Handle null safely
+                            $registration->user->email ?? '-',
+                            $registration->course->title ?? 'Deleted Course',
+                            $registration->price,
+                            $registration->final_price,
+                            $registration->status,
+                            $registration->created_at->format('Y-m-d H:i:s')
+                        ]);
+                    }
+                });
 
-        fclose($handle);
-        
-        return response()->streamDownload(function() use ($handle) {
+            fclose($handle);
         }, $fileName, $headers);
     }
 
@@ -240,11 +256,18 @@ class AdminController extends Controller
             ->latest()
             ->paginate(15);
 
+        // [OPTIMASI] Gabungkan count stats
+        $counts = CourseRegistration::selectRaw('count(*) as total')
+            ->selectRaw("count(case when status = 'paid' then 1 end) as paid")
+            ->selectRaw("count(case when status = 'pending' then 1 end) as pending")
+            ->selectRaw("count(case when status = 'cancelled' then 1 end) as cancelled")
+            ->first();
+
         $stats = [
-            'total' => CourseRegistration::count(),
-            'paid' => CourseRegistration::where('status', 'paid')->count(),
-            'pending' => CourseRegistration::where('status', 'pending')->count(),
-            'cancelled' => CourseRegistration::where('status', 'cancelled')->count(),
+            'total' => $counts->total,
+            'paid' => $counts->paid,
+            'pending' => $counts->pending,
+            'cancelled' => $counts->cancelled,
         ];
 
         return view('admin.registrations', compact('registrations', 'stats'));
