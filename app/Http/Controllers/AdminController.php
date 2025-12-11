@@ -140,22 +140,49 @@ class AdminController extends Controller
             ];
         })->toArray(); // <--- INI KUNCINYA
 
-        // 5. Real Location Distribution
-        $locData = User::whereNotNull('location')
-            ->select('location', DB::raw('count(*) as total'))
-            ->groupBy('location')
-            ->orderByDesc('total')
-            ->take(5)
-            ->get();
-            
-        // [FIX] Tambahkan ->toArray() di akhir
-        $locationDistribution = $locData->map(function($item, $key) use ($eduColors) {
-             return [
-                'location' => ucfirst($item->location),
-                'count' => $item->total,
-                'color' => $eduColors[$key % count($eduColors)]
-            ];
-        })->toArray(); // <--- INI KUNCINYA
+        // 5. [ADVANCED] Real Location Distribution with Drill-down
+        // Format di DB: "NAMA KOTA, NAMA PROVINSI"
+        $allLocations = User::whereNotNull('location')->pluck('location');
+        
+        $stats = []; // Struktur: ['Jawa Barat' => ['Bandung' => 10, 'Bogor' => 5], 'DKI Jakarta' => [...]]
+
+        foreach ($allLocations as $loc) {
+            $parts = explode(',', $loc);
+            if (count($parts) >= 2) {
+                $city = trim($parts[0]);
+                $province = trim($parts[1]);
+                
+                if (!isset($stats[$province])) {
+                    $stats[$province] = [];
+                }
+                if (!isset($stats[$province][$city])) {
+                    $stats[$province][$city] = 0;
+                }
+                $stats[$province][$city]++;
+            }
+        }
+
+        // Siapkan Data untuk Provinsi (Level 1)
+        $provinceLabels = [];
+        $provinceData = [];
+        // Urutkan berdasarkan jumlah user terbanyak
+        uasort($stats, function($a, $b) {
+            return array_sum($b) - array_sum($a);
+        });
+        
+        $topProvinces = array_slice($stats, 0, 5, true); // Ambil top 5 provinsi
+        
+        foreach ($topProvinces as $prov => $cities) {
+            $provinceLabels[] = $prov;
+            $provinceData[] = array_sum($cities);
+        }
+
+        $locationDistribution = [
+            'level' => 'province', // Penanda level awal
+            'labels' => $provinceLabels,
+            'data' => $provinceData,
+            'details' => $topProvinces // Kirim data detail kota ke frontend
+        ];
 
         return view('admin.users', compact('users', 'userStats', 'ageDistribution', 'educationDistribution', 'locationDistribution'));
     }

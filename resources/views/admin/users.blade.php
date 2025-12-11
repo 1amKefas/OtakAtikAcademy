@@ -177,8 +177,14 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">Location Distribution</h3>
+                    <div class="bg-white rounded-2xl shadow-lg p-6 relative">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-800" id="locChartTitle">Top Provinces</h3>
+                            {{-- Tombol Back (Hidden Default) --}}
+                            <button id="btnResetLocation" class="hidden text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-gray-700 transition">
+                                <i class="fas fa-arrow-left mr-1"></i> Back to Provinces
+                            </button>
+                        </div>
                         <div class="h-64">
                             <canvas id="locationChart"></canvas>
                         </div>
@@ -442,7 +448,8 @@
             location: {
                 labels: {!! json_encode(array_column($locationDistribution, 'location')) !!},
                 data: {!! json_encode(array_column($locationDistribution, 'count')) !!},
-                colors: {!! json_encode(array_column($locationDistribution, 'color')) !!}
+                colors: {!! json_encode(array_column($locationDistribution, 'color')) !!},
+                location: {!! json_encode($locationDistribution) !!}
             }
         };
     </script>

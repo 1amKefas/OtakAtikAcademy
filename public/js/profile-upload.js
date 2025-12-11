@@ -73,17 +73,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================
-   TAMBAHAN: LOGIC WILAYAH INDONESIA (API)
+   TAMBAHAN: LOGIC WILAYAH INDONESIA (AUTO-SELECT)
    ========================================== */
 document.addEventListener('DOMContentLoaded', () => {
     const provinceSelect = document.getElementById('provinceSelect');
     const citySelect = document.getElementById('citySelect');
     const locationInput = document.getElementById('locationInput');
 
-    // Cek keberadaan elemen (biar gak error kalau dibuka di halaman lain)
     if (!provinceSelect || !citySelect || !locationInput) return;
 
     let selectedProvinceName = '';
+    
+    // Cek apakah ada data lama (Format: "Nama Kota, Nama Provinsi")
+    const savedLocation = locationInput.value;
+    let savedCity = '';
+    let savedProvince = '';
+
+    if (savedLocation && savedLocation.includes(',')) {
+        const parts = savedLocation.split(',');
+        savedCity = parts[0].trim();
+        savedProvince = parts[1].trim();
+    }
 
     // 1. Ambil Data Provinsi
     fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
@@ -91,49 +101,70 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(provinces => {
             provinces.forEach(province => {
                 const option = document.createElement('option');
-                option.value = province.id; // ID API
+                option.value = province.id; 
                 option.text = province.name;
-                option.dataset.name = province.name; // Simpan nama buat digabung nanti
+                option.dataset.name = province.name;
+                
+                // AUTO-SELECT PROVINSI
+                if (savedProvince && province.name.toUpperCase() === savedProvince.toUpperCase()) {
+                    option.selected = true;
+                    selectedProvinceName = province.name; // Simpan nama
+                }
+                
                 provinceSelect.appendChild(option);
             });
+
+            // Jika ada provinsi terpilih dari data lama, trigger load kota
+            if (provinceSelect.value) {
+                loadCities(provinceSelect.value, savedCity);
+            }
         })
         .catch(err => console.error('Gagal load provinsi:', err));
 
-    // 2. Listener Ganti Provinsi
-    provinceSelect.addEventListener('change', function() {
-        const provinceId = this.value;
-        // Ambil nama provinsi dari dataset
-        selectedProvinceName = this.options[this.selectedIndex].dataset.name || '';
-        
-        // Reset Kota
+    // Fungsi Load Kota (Dipisah biar bisa dipanggil manual)
+    function loadCities(provinceId, autoSelectCity = null) {
         citySelect.innerHTML = '<option value="">Loading...</option>';
         citySelect.disabled = true;
-        
-        // Jangan hapus value input dulu biar data lama gak ilang kalo user cuma iseng klik
 
-        if(provinceId) {
-            fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`)
-                .then(response => response.json())
-                .then(cities => {
-                    citySelect.innerHTML = '<option value="">Pilih Kota/Kabupaten...</option>';
-                    cities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.name; // Simpan Nama Kota Langsung
-                        option.text = city.name;
-                        citySelect.appendChild(option);
-                    });
-                    citySelect.disabled = false;
+        fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`)
+            .then(response => response.json())
+            .then(cities => {
+                citySelect.innerHTML = '<option value="">Pilih Kota/Kabupaten...</option>';
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.name;
+                    option.text = city.name;
+                    
+                    // AUTO-SELECT KOTA
+                    if (autoSelectCity && city.name.toUpperCase() === autoSelectCity.toUpperCase()) {
+                        option.selected = true;
+                    }
+
+                    citySelect.appendChild(option);
                 });
+                citySelect.disabled = false;
+            });
+    }
+
+    // 2. Listener Ganti Provinsi (Manual User)
+    provinceSelect.addEventListener('change', function() {
+        const provinceId = this.value;
+        selectedProvinceName = this.options[this.selectedIndex].dataset.name || '';
+        
+        if (provinceId) {
+            loadCities(provinceId);
+            // Reset input hidden sementara sampai user pilih kota
+            locationInput.value = ''; 
         } else {
             citySelect.innerHTML = '<option value="">Pilih Provinsi Dahulu...</option>';
+            citySelect.disabled = true;
         }
     });
 
-    // 3. Listener Ganti Kota -> Update Input Hidden
+    // 3. Listener Ganti Kota (Update Input Hidden)
     citySelect.addEventListener('change', function() {
         const cityName = this.value;
-        if(cityName && selectedProvinceName) {
-            // Format: "KOTA BANDUNG, JAWA BARAT"
+        if (cityName && selectedProvinceName) {
             locationInput.value = `${cityName}, ${selectedProvinceName}`;
         }
     });
