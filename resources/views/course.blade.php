@@ -161,12 +161,13 @@
                         <div class="flex items-center gap-3 text-xs text-gray-500 mb-4 mt-auto">
                             <div class="flex items-center text-yellow-500">
                                 <i class="fas fa-star text-[10px] mr-1"></i>
-                                <span class="font-bold text-gray-700">4.8</span>
-                                <span class="text-gray-400 ml-1">(120)</span>
+                                {{-- [FIX] Gunakan data asli dari database, fallback ke 0 jika null --}}
+                                <span class="font-bold text-gray-700">{{ number_format($course->average_rating ?? 0, 1) }}</span>
+                                <span class="text-gray-400 ml-1">({{ $course->rating_count ?? 0 }})</span>
                             </div>
                             <span class="text-gray-300">|</span>
                             <span class="flex items-center">
-                                <i class="far fa-clock mr-1"></i> {{ $course->duration_days }} Hari
+                                <i class="far fa-clock mr-1"></i> {{ $course->duration_days ?? '-' }} Hari
                             </span>
                         </div>
 

@@ -121,11 +121,15 @@
                             <div class="grid grid-cols-2 gap-2 mb-6 py-3 border-t border-b border-gray-100 bg-gray-50/50 rounded-lg">
                                 <div class="text-center">
                                     <p class="text-xs text-gray-400 uppercase tracking-wide">Modules</p>
+                                    {{-- [FIX] Data ini sekarang sudah tersedia dari Controller --}}
                                     <p class="font-bold text-gray-700 text-lg">{{ $course->modules_count ?? 0 }}</p>
                                 </div>
                                 <div class="text-center border-l border-gray-200">
                                     <p class="text-xs text-gray-400 uppercase tracking-wide">Contents</p>
-                                    <p class="font-bold text-gray-700 text-lg">{{ ($course->materials_count ?? 0) + ($course->assignments_count ?? 0) }}</p>
+                                    {{-- [FIX] Penjumlahan total konten (Materi + Tugas + Quiz) --}}
+                                    <p class="font-bold text-gray-700 text-lg">
+                                        {{ ($course->materials_count ?? 0) + ($course->assignments_count ?? 0) + ($course->quizzes_count ?? 0) }}
+                                    </p>
                                 </div>
                             </div>
                             

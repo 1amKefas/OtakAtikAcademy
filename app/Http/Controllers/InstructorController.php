@@ -223,11 +223,18 @@ class InstructorController extends Controller
                       $sq->where('users.id', $instructor->id);
                   });
             })
-            ->withCount(['registrations' => function($query) {
-                $query->where('status', 'paid');
-            }])
+            // [FIX] Tambahkan withCount untuk menghitung total item secara otomatis
+            ->withCount([
+                'registrations' => function($query) {
+                    $query->where('status', 'paid');
+                },
+                'modules',      // Menghitung jumlah modul
+                'materials',    // Menghitung jumlah materi
+                'assignments',  // Menghitung jumlah tugas
+                'quizzes'       // Menghitung jumlah quiz
+            ])
             ->latest()
-            ->paginate(10); // [OPTIMASI] Load 10 per halaman
+            ->paginate(10);
 
         return view('instructor.courses', compact('courses'));
     }
