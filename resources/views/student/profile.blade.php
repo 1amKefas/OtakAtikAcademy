@@ -111,11 +111,31 @@
                                            placeholder="+62812345678">
                                 </div>
 
+                                {{-- [UPDATE] Domisili Dropdown --}}
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Domisili</label>
-                                    <input type="text" name="location" value="{{ old('location', $user->location) }}"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                                           placeholder="Kota, Provinsi">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Domisili (Lokasi)</label>
+                                    
+                                    {{-- Input Hidden buat nyimpen data final ke database --}}
+                                    <input type="hidden" name="location" id="locationInput" value="{{ old('location', $user->location) }}">
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {{-- Dropdown Provinsi --}}
+                                        <select id="provinceSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition bg-white">
+                                            <option value="">Pilih Provinsi...</option>
+                                        </select>
+                                        
+                                        {{-- Dropdown Kota --}}
+                                        <select id="citySelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition bg-white disabled:bg-gray-100 disabled:text-gray-400" disabled>
+                                            <option value="">Pilih Kota...</option>
+                                        </select>
+                                    </div>
+                                    
+                                    @if($user->location)
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        Lokasi saat ini: <strong class="text-gray-700">{{ $user->location }}</strong> 
+                                        (Pilih ulang di atas jika ingin mengubah)
+                                    </p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
