@@ -373,6 +373,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/view/{id}', [RefundController::class, 'view'])->name('view');
     });
 
+    // [TAMBAHAN BARU] Review Course
+    Route::post('/student/course/{id}/review', [StudentController::class, 'storeReview'])->name('student.course.review');
+
     // --- LEARNING PAGE (LMS) ---
     // Halaman utama belajar (menampilkan materi saat ini)
     Route::get('/learning/{courseId}', [StudentController::class, 'learningPage'])->name('student.learning.index');

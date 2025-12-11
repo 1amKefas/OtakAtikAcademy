@@ -658,4 +658,51 @@ class StudentController extends Controller
 
         return back();
     }
+
+    /**
+     * Store Review & Rating
+     */
+    public function storeReview(Request $request, $courseId)
+    {
+        $user = Auth::user();
+        
+        // 1. Validasi Input
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'required|string|min:10|max:500',
+        ]);
+
+        // 2. Cek apakah user berhak (Harus sudah enroll dan completed)
+        $registration = \App\Models\CourseRegistration::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->where('status', 'paid')
+            ->firstOrFail();
+
+        // Cek Progress 100% (Opsional: Kalau mau strict harus lulus dulu)
+        if ($registration->progress < 100) {
+            return back()->with('error', 'Selesaikan kursus 100% dulu sebelum memberi review!');
+        }
+
+        // 3. Simpan / Update Review (Pakai updateOrCreate biar 1 user cuma 1 review per course)
+        \App\Models\CourseReview::updateOrCreate(
+            ['user_id' => $user->id, 'course_id' => $courseId],
+            [
+                'rating' => $request->rating,
+                'review' => $request->review,
+                'is_approved' => true // Default auto-approve
+            ]
+        );
+
+        // 4. Hitung Ulang Rata-rata Rating Course (PENTING BIAR CATALOG UPDATE)
+        $course = \App\Models\Course::findOrFail($courseId);
+        $avg = $course->reviews()->avg('rating');
+        $count = $course->reviews()->count();
+
+        $course->update([
+            'average_rating' => $avg,
+            'rating_count' => $count
+        ]);
+
+        return back()->with('success', 'Terima kasih! Review Anda berhasil disimpan.');
+    }
 }

@@ -483,4 +483,21 @@ public function getCheckoutUrlAttribute()
     {
         return $this->hasMany(CourseClass::class);
     }
+
+    /**
+     * Get the reviews for the course.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(CourseReview::class)->latest();
+    }
+
+    /**
+     * Cek apakah user tertentu sudah review course ini
+     */
+    public function isReviewedBy($userId)
+    {
+        return $this->reviews()->where('user_id', $userId)->exists();
+    }
+    
 }

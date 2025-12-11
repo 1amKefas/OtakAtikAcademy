@@ -223,6 +223,56 @@
                             <p class="text-xs text-green-600 text-right">{{ $userRegistration->progress }}% Selesai</p>
                         </div>
 
+                        {{-- FITUR REVIEW & RATING --}}
+            <div class="mt-8 pt-8 border-t border-gray-100">
+                <h4 class="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wider">Rating Kursus</h4>
+                
+                @if($course->isReviewedBy(auth()->id()))
+                    {{-- Tampilan Kalau Sudah Review --}}
+                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl text-center">
+                        <div class="flex justify-center text-yellow-400 mb-2">
+                            @for($i=1; $i<=5; $i++)
+                                <i class="fas fa-star {{ $i <= $course->reviews->where('user_id', auth()->id())->first()->rating ? '' : 'text-gray-300' }}"></i>
+                            @endfor
+                        </div>
+                        <p class="text-xs text-yellow-800 font-medium">Anda sudah memberi ulasan.</p>
+                    </div>
+
+                @elseif($registration->progress >= 100)
+                    {{-- Form Review (Hanya muncul jika Progress 100%) --}}
+                    <form action="{{ route('student.course.review', $course->id) }}" method="POST" class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                        @csrf
+                        <div class="mb-3 text-center" x-data="{ rating: 0, hover: 0 }">
+                            <label class="block text-xs font-bold text-gray-500 mb-2">Beri Bintang</label>
+                            <div class="flex justify-center gap-1 cursor-pointer">
+                                <template x-for="star in 5">
+                                    <i class="fas fa-star text-lg transition-colors"
+                                       :class="(hover || rating) >= star ? 'text-yellow-400' : 'text-gray-300'"
+                                       @mouseenter="hover = star"
+                                       @mouseleave="hover = 0"
+                                       @click="rating = star"></i>
+                                </template>
+                            </div>
+                            <input type="hidden" name="rating" :value="rating" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <textarea name="review" rows="3" placeholder="Tulis pengalaman belajarmu..." class="w-full text-xs p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-lg transition">
+                            Kirim Ulasan
+                        </button>
+                    </form>
+                @else
+                    {{-- Pesan Kalau Belum Selesai --}}
+                    <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl text-center">
+                        <i class="fas fa-lock text-gray-300 text-xl mb-2"></i>
+                        <p class="text-xs text-gray-500">Selesaikan kursus 100% untuk membuka fitur ulasan.</p>
+                    </div>
+                @endif
+            </div>
+
                         @if($userRegistration->course_class_id && in_array(strtolower($course->type), ['hybrid', 'offline', 'tatap muka']))
                             <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-4 flex items-start gap-3 animate-fade-in">
                                 <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
