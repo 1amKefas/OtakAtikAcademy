@@ -81,23 +81,19 @@ class AdminController extends Controller
      */
     public function users(Request $request) 
     {
-        // 1. Logic Search & Pagination
+        // 1. Logic Search & Pagination (Biarkan tetap sama)
         $query = User::withCount('courseRegistrations')->latest();
-
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('email', 'LIKE', "%{$search}%");
-                if (is_numeric($search)) {
-                    $q->orWhere('id', $search);
-                }
+                if (is_numeric($search)) $q->orWhere('id', $search);
             });
         }
-
         $users = $query->paginate(10)->withQueryString();
         
-        // 2. User Stats
+        // 2. User Stats (Biarkan tetap sama)
         $userStats = [
             'total_users' => User::count(),
             'admin_users' => User::where('is_admin', true)->count(),
@@ -106,82 +102,60 @@ class AdminController extends Controller
             'active_this_month' => User::where('created_at', '>=', now()->subDays(30))->count(),
         ];
 
-        // 3. Real Age Distribution
-        $rawAges = User::whereNotNull('date_of_birth')->get()
-            ->map(function ($user) {
-                return $user->date_of_birth->age;
-            });
-
-        // Ini ARRAY BIASA (Aman)
+        // 3. Age & Education (Biarkan tetap sama)
+        $rawAges = User::whereNotNull('date_of_birth')->get()->map->age;
         $ageDistribution = [
-            ['range' => '18-24', 'count' => $rawAges->filter(fn($age) => $age >= 18 && $age <= 24)->count(), 'color' => '#3B82F6'],
-            ['range' => '25-34', 'count' => $rawAges->filter(fn($age) => $age >= 25 && $age <= 34)->count(), 'color' => '#10B981'],
-            ['range' => '35-44', 'count' => $rawAges->filter(fn($age) => $age >= 35 && $age <= 44)->count(), 'color' => '#F59E0B'],
-            ['range' => '45-54', 'count' => $rawAges->filter(fn($age) => $age >= 45 && $age <= 54)->count(), 'color' => '#EF4444'],
-            ['range' => '55+',   'count' => $rawAges->filter(fn($age) => $age >= 55)->count(),             'color' => '#8B5CF6'],
+            ['range' => '18-24', 'count' => $rawAges->filter(fn($a)=>$a>=18&&$a<=24)->count(), 'color' => '#3B82F6'],
+            ['range' => '25-34', 'count' => $rawAges->filter(fn($a)=>$a>=25&&$a<=34)->count(), 'color' => '#10B981'],
+            ['range' => '35-44', 'count' => $rawAges->filter(fn($a)=>$a>=35&&$a<=44)->count(), 'color' => '#F59E0B'],
+            ['range' => '45-54', 'count' => $rawAges->filter(fn($a)=>$a>=45&&$a<=54)->count(), 'color' => '#EF4444'],
+            ['range' => '55+',   'count' => $rawAges->filter(fn($a)=>$a>=55)->count(),             'color' => '#8B5CF6'],
         ];
 
-        // 4. Real Education Distribution
-        $eduData = User::whereNotNull('education_level')
+        $eduColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+        $educationDistribution = User::whereNotNull('education_level')
             ->select('education_level', DB::raw('count(*) as total'))
             ->groupBy('education_level')
             ->orderByDesc('total')
-            ->take(5)
-            ->get();
-
-        $eduColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
-        
-        // [FIX] Tambahkan ->toArray() di akhir
-        $educationDistribution = $eduData->map(function($item, $key) use ($eduColors) {
-            return [
+            ->take(5)->get()
+            ->map(fn($item, $k) => [
                 'level' => ucfirst($item->education_level),
                 'count' => $item->total,
-                'color' => $eduColors[$key % count($eduColors)]
-            ];
-        })->toArray(); // <--- INI KUNCINYA
+                'color' => $eduColors[$k % 5]
+            ])->toArray();
 
-        // 5. [ADVANCED] Real Location Distribution with Drill-down
-        // Format di DB: "NAMA KOTA, NAMA PROVINSI"
+        // 4. [LOGIC BARU] Location Drill-down (Provinsi -> Kota)
         $allLocations = User::whereNotNull('location')->pluck('location');
-        
-        $stats = []; // Struktur: ['Jawa Barat' => ['Bandung' => 10, 'Bogor' => 5], 'DKI Jakarta' => [...]]
+        $stats = []; 
 
         foreach ($allLocations as $loc) {
+            // Pecah string "Kota, Provinsi"
             $parts = explode(',', $loc);
             if (count($parts) >= 2) {
-                $city = trim($parts[0]);
-                $province = trim($parts[1]);
+                $city = trim($parts[0]);     // Index 0: Kota
+                $province = trim($parts[1]); // Index 1: Provinsi
                 
-                if (!isset($stats[$province])) {
-                    $stats[$province] = [];
-                }
-                if (!isset($stats[$province][$city])) {
-                    $stats[$province][$city] = 0;
-                }
+                if (!isset($stats[$province])) $stats[$province] = [];
+                if (!isset($stats[$province][$city])) $stats[$province][$city] = 0;
+                
                 $stats[$province][$city]++;
             }
         }
 
-        // Siapkan Data untuk Provinsi (Level 1)
-        $provinceLabels = [];
-        $provinceData = [];
-        // Urutkan berdasarkan jumlah user terbanyak
+        // Urutkan Provinsi berdasarkan total populasi terbanyak
         uasort($stats, function($a, $b) {
             return array_sum($b) - array_sum($a);
         });
         
-        $topProvinces = array_slice($stats, 0, 5, true); // Ambil top 5 provinsi
-        
-        foreach ($topProvinces as $prov => $cities) {
-            $provinceLabels[] = $prov;
-            $provinceData[] = array_sum($cities);
-        }
+        $topProvinces = array_slice($stats, 0, 5, true); 
+        $provinceLabels = array_keys($topProvinces);
+        $provinceData = array_map(fn($cities) => array_sum($cities), $topProvinces);
 
+        // Struktur Data yang dikirim ke JS
         $locationDistribution = [
-            'level' => 'province', // Penanda level awal
             'labels' => $provinceLabels,
             'data' => $provinceData,
-            'details' => $topProvinces // Kirim data detail kota ke frontend
+            'details' => $topProvinces // Ini kunci drill-down nya
         ];
 
         return view('admin.users', compact('users', 'userStats', 'ageDistribution', 'educationDistribution', 'locationDistribution'));
