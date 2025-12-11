@@ -297,6 +297,7 @@ class AdminController extends Controller
 
     public function financial()
     {
+        // --- 1. STATS KARTU ATAS (Existing Logic) ---
         $currentMonth = now()->month;
         $lastMonth = now()->subMonth()->month;
 
@@ -324,21 +325,13 @@ class AdminController extends Controller
             'pending_revenue' => CourseRegistration::where('status', 'pending')->sum('final_price'),
         ];
 
+        // --- 2. DATA TABEL TRANSAKSI (Existing) ---
         $recentTransactions = CourseRegistration::with('user', 'course')
             ->latest()
             ->take(10)
-            ->get()
-            ->map(function($reg) {
-                return (object) [
-                    'id' => $reg->order_id ?? $reg->id,
-                    'user' => $reg->user,
-                    'course' => $reg->course ? $reg->course->title : 'Course Deleted',
-                    'price' => $reg->final_price,
-                    'status' => $reg->status,
-                    'created_at' => $reg->created_at
-                ];
-            });
+            ->get(); // Note: Mapping object saya hapus biar simple, view tetep jalan pakai eloquent
 
+        // --- 3. DATA SIDEBAR REVENUE (Existing) ---
         $revenueByCourse = DB::table('course_registrations')
             ->join('courses', 'course_registrations.course_id', '=', 'courses.id')
             ->select('courses.title as course', DB::raw('SUM(course_registrations.final_price) as total_revenue'))
@@ -354,12 +347,78 @@ class AdminController extends Controller
             'cancelled' => CourseRegistration::where('status', 'cancelled')->count(),
         ];
 
+        // --- 4. [BARU] DATA UNTUK CHART REVENUE (Bulanan Tahun Ini) ---
+        $revenueChart = $this->getMonthlyRevenueChart();
+
+        // --- 5. [BARU] DATA UNTUK CHART COURSE PERFORMANCE (Top 5 Profit, No Free) ---
+        $coursePerformance = $this->getTopPerformingCoursesChart();
+
         return view('admin.financial', compact(
             'financialStats', 
             'recentTransactions', 
             'revenueByCourse', 
-            'paymentStats'
+            'paymentStats',
+            'revenueChart',       // Variable Baru
+            'coursePerformance'   // Variable Baru
         ));
+    }
+
+    /**
+     * Helper: Get Monthly Revenue for Current Year
+     */
+    private function getMonthlyRevenueChart()
+    {
+        $year = now()->year;
+        $monthlyData = [];
+        $months = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $revenue = CourseRegistration::where('status', 'paid')
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $m)
+                ->sum('final_price');
+            
+            $monthlyData[] = $revenue;
+            $months[] = date('M', mktime(0, 0, 0, $m, 1));
+        }
+
+        return [
+            'labels' => $months,
+            'data' => $monthlyData
+        ];
+    }
+
+    /**
+     * Helper: Get Top Courses by Revenue (Exclude Free)
+     */
+    private function getTopPerformingCoursesChart()
+    {
+        // Ambil top 5 course dengan revenue tertinggi
+        // Filter: final_price > 0 (Exclude Gratisan)
+        $courses = DB::table('course_registrations')
+            ->join('courses', 'course_registrations.course_id', '=', 'courses.id')
+            ->select('courses.title', DB::raw('SUM(course_registrations.final_price) as total_revenue'))
+            ->where('course_registrations.status', 'paid')
+            ->where('course_registrations.final_price', '>', 0) // [PENTING] Filter gratisan
+            ->groupBy('courses.id', 'courses.title')
+            ->orderByDesc('total_revenue')
+            ->limit(5)
+            ->get();
+
+        if ($courses->isEmpty()) {
+            return [
+                'labels' => ['Belum ada data'],
+                'data' => [1],
+                'colors' => ['#e5e7eb'] // Abu-abu
+            ];
+        }
+
+        return [
+            'labels' => $courses->pluck('title')->toArray(),
+            'data' => $courses->pluck('total_revenue')->toArray(),
+            // Warna-warni untuk chart doughnut
+            'colors' => ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'] 
+        ];
     }
 
     public function analytics()

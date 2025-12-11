@@ -6,20 +6,25 @@
     <title>Financial Analytics - OtakAtik Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    
+    {{-- Load Library Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    {{-- Load CSS Admin --}}
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    
+    {{-- Load Custom JS Financial --}}
+    <script src="{{ asset('js/admin-financial.js') }}" defer></script>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="sidebar w-64 text-white flex flex-col">
-            <!-- Logo -->
             <div class="p-6 border-b border-gray-700">
                 <h1 class="text-2xl font-bold text-white">OtakAtik<span class="text-blue-400">Admin</span></h1>
             </div>
             
-            <!-- Navigation -->
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
                     <li>
@@ -75,7 +80,6 @@
                 </ul>
             </nav>
             
-            <!-- User Section -->
             <div class="p-4 border-t border-gray-700">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
@@ -96,9 +100,7 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -114,11 +116,8 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6">
-                <!-- Financial Overview Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Total Revenue -->
                     <div class="card-gradient rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -130,7 +129,6 @@
                         </div>
                     </div>
 
-                    <!-- Monthly Growth -->
                     <div class="stats-card-pink rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -142,7 +140,6 @@
                         </div>
                     </div>
 
-                    <!-- Average Order Value -->
                     <div class="finance-card  rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -154,7 +151,6 @@
                         </div>
                     </div>
 
-                    <!-- Pending Revenue -->
                     <div class="users-card  rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
@@ -168,24 +164,30 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <!-- Revenue Chart -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">Revenue Overview</h3>
                         <div class="h-80">
-                            <canvas id="revenueChart"></canvas>
+                            {{-- [FIXED] Pindahkan data ke attribute, bukan inline script --}}
+                            <canvas id="revenueChart" 
+                                    data-labels="{{ json_encode($revenueChart['labels']) }}"
+                                    data-values="{{ json_encode($revenueChart['data']) }}">
+                            </canvas>
                         </div>
                     </div>
 
-                    <!-- Course Performance -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">Course Performance</h3>
                         <div class="h-80">
-                            <canvas id="courseChart"></canvas>
+                            {{-- [FIXED] Pindahkan data ke attribute, bukan inline script --}}
+                            <canvas id="courseChart"
+                                    data-labels="{{ json_encode($coursePerformance['labels']) }}"
+                                    data-values="{{ json_encode($coursePerformance['data']) }}"
+                                    data-colors="{{ json_encode($coursePerformance['colors']) }}">
+                            </canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- Transaction History -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold text-gray-800">Recent Transactions</h3>
@@ -223,10 +225,10 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-900">{{ $transaction->course }}</div>
+                                        <div class="text-sm text-gray-900">{{ $transaction->course->title ?? 'Course Deleted' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">Rp{{ number_format($transaction->price, 0, ',', '.') }}</div>
+                                        <div class="text-sm font-medium text-gray-900">Rp{{ number_format($transaction->final_price, 0, ',', '.') }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-3 py-1 rounded-full text-xs font-medium
@@ -253,9 +255,7 @@
                     </div>
                 </div>
 
-                <!-- Financial Summary -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Revenue by Course -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">Revenue by Course</h3>
                         <div class="space-y-4">
@@ -275,7 +275,6 @@
                         </div>
                     </div>
 
-                    <!-- Payment Status -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">Payment Status</h3>
                         <div class="space-y-4">
@@ -303,7 +302,6 @@
                         </div>
                     </div>
 
-                    <!-- Quick Financial Actions -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-6">Financial Actions</h3>
                         <div class="space-y-3">
@@ -326,7 +324,6 @@
         </div>
     </div>
 
-    <!-- Success Message Handler -->
     @if(session('success'))
     <div class="fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3">
         <i class="fas fa-check-circle"></i>
@@ -339,73 +336,7 @@
         }, 5000);
     </script>
     @endif
-
-    <script>
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Revenue (Rp)',
-                    data: [1200000, 1900000, 1500000, 2500000, 2200000, 3000000, 2800000, 3500000, 3200000, 4000000, 3800000, 4500000],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return 'Rp' + (value / 1000000).toFixed(1) + 'M';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Course Performance Chart
-        const courseCtx = document.getElementById('courseChart').getContext('2d');
-        new Chart(courseCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Starter', 'Pro Learner', 'Expert Mode'],
-                datasets: [{
-                    data: [45, 30, 25],
-                    backgroundColor: [
-                        '#f59e0b',
-                        '#3b82f6',
-                        '#8b5cf6'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    </script>
-
+    
+    {{-- Scripts Moved to Header/External File --}}
 </body>
 </html>
