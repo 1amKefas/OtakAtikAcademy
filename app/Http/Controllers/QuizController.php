@@ -496,29 +496,28 @@ class QuizController extends Controller
     {
         $course = Course::findOrFail($courseId);
         $quiz = Quiz::findOrFail($quizId);
+        $user = Auth::user();
 
-        // Check if student is enrolled
-        $registration = Auth::user()->courseRegistrations()
-            ->where('course_id', $courseId)
-            ->where('status', 'paid')
-            ->firstOrFail();
+        // [UPDATE] Cek apakah user adalah Instruktur pemilik course
+        $isInstructorOwner = ($user->id === $course->instructor_id);
 
-        // Check if quiz is published and available
-        if (!$quiz->is_published) {
-            abort(403, 'Quiz tidak tersedia.');
+        if (!$isInstructorOwner) {
+            // Kalau BUKAN instruktur, wajib cek enrollment (bayar/tidak)
+            // Error 404 kamu sebelumnya berasal dari baris ini:
+            $registration = $user->courseRegistrations()
+                ->where('course_id', $courseId)
+                ->where('status', 'paid')
+                ->firstOrFail();
+
+            // Cek ketersediaan quiz (hanya untuk siswa)
+            if (!$quiz->is_published) abort(403, 'Quiz tidak tersedia.');
+            if ($quiz->available_from && $quiz->available_from > now()) abort(403, 'Quiz belum dibuka.');
+            if ($quiz->available_until && $quiz->available_until < now()) abort(403, 'Quiz sudah ditutup.');
         }
 
-        if ($quiz->available_from && $quiz->available_from > now()) {
-            abort(403, 'Quiz belum bisa diakses.');
-        }
-
-        if ($quiz->available_until && $quiz->available_until < now()) {
-            abort(403, 'Quiz sudah ditutup.');
-        }
-
-        // Check if student already has ongoing submission
+        // Cek submission yang belum selesai
         $ongoingSubmission = $quiz->submissions()
-            ->where('user_id', Auth::id())
+            ->where('user_id', $user->id)
             ->whereNull('submitted_at')
             ->first();
 
@@ -526,11 +525,11 @@ class QuizController extends Controller
             return redirect()->route('student.quiz.continue', [$courseId, $quizId, $ongoingSubmission->id]);
         }
 
-        // Create new submission
+        // Buat submission baru
         $submission = $quiz->submissions()->create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'started_at' => now(),
-            'answers' => []
+            'answers' => [] // Pastikan default array kosong
         ]);
 
         return redirect()->route('student.quiz.continue', [$courseId, $quizId, $submission->id]);
@@ -544,8 +543,12 @@ class QuizController extends Controller
         $course = Course::findOrFail($courseId);
         $quiz = Quiz::findOrFail($quizId);
         $submission = QuizSubmission::findOrFail($submissionId);
+        $user = Auth::user();
 
-        if ($submission->user_id !== Auth::id() || $submission->quiz_id !== $quiz->id) {
+        // [UPDATE] Bypass akses untuk Instruktur
+        $isInstructorOwner = ($user->id === $course->instructor_id);
+        
+        if ($submission->user_id !== $user->id && !$isInstructorOwner) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -553,13 +556,16 @@ class QuizController extends Controller
             return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId]);
         }
 
-        // [OPTIMASI] Cache pertanyaan quiz selamanya (sampai quiz diupdate).
-        // Pertanyaan itu data statis, sayang kalau di-query terus setiap refresh halaman.
         $questions = \Illuminate\Support\Facades\Cache::remember("quiz_questions_{$quizId}", 3600, function () use ($quiz) {
             return $quiz->questions()->orderBy('order')->get();
         });
 
         $timeRemaining = $this->getTimeRemaining($submission, $quiz);
+
+        // [PENTING] Jika Instruktur, arahkan ke View DEMO
+        if ($isInstructorOwner) {
+            return view('instructor.quiz.demo', compact('course', 'quiz', 'submission', 'questions', 'timeRemaining'));
+        }
 
         return view('student.quiz.take', compact('course', 'quiz', 'submission', 'questions', 'timeRemaining'));
     }
@@ -569,14 +575,17 @@ class QuizController extends Controller
      */
     public function submit(Request $request, $courseId, $quizId, $submissionId)
     {
-        // [OPTIMASI] Eager Load 'questions' di sini!
-        // Tanpa ini, loop grading di bawah akan memicu N+1 Query (1 query per soal).
         $quiz = Quiz::with('questions')->where('course_id', $courseId)->findOrFail($quizId);
+        $user = Auth::user();
         
         $submission = QuizSubmission::where('quiz_id', $quizId)
-            ->where('user_id', Auth::id())
             ->where('id', $submissionId)
             ->firstOrFail();
+
+        // Validasi pemilik submission
+        if ($submission->user_id !== $user->id) {
+            abort(403, 'Unauthorized submission.');
+        }
 
         if ($submission->status === 'submitted') {
             return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId]);
@@ -588,23 +597,20 @@ class QuizController extends Controller
         $submission->status = 'submitted'; 
         $submission->save();
 
-        // Logic Grading
+        // --- Logic Grading (Hitung Nilai) ---
         $score = 0;
-        
-        // [OPTIMASI] Hitung total points via Collection (sudah diload di memori), bukan query DB lagi
         $totalPoints = $quiz->questions->sum('points'); 
         $earnedPoints = 0;
         $correctCount = 0;
 
         foreach ($quiz->questions as $question) {
             $userAns = $answers[$question->id] ?? null;
-            
             if ($userAns === null) continue;
 
             $isCorrect = false;
             
             if ($question->question_type === 'essay') {
-                continue; 
+                continue; // Essay dinilai manual
             }
 
             if ($question->question_type == 'multiple_choice' || $question->question_type == 'true_false') {
@@ -638,20 +644,24 @@ class QuizController extends Controller
         $submission->correct_answers_count = $correctCount;
         $submission->save();
 
-        // Update Progress Course
-        \App\Models\CourseProgress::updateOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'course_id' => $courseId,
-                'content_id' => $quizId,
-                'content_type' => 'quiz',
-            ],
-            [
-                'course_module_id' => $quiz->course_module_id,
-                'is_completed' => true,
-                'completed_at' => now(),
-            ]
-        );
+        // [UPDATE] Update Progress Course HANYA jika BUKAN instruktur
+        // Biar statistik kelas gak rusak karena instruktur iseng ngerjain quiz
+        $course = Course::find($courseId);
+        if ($user->id !== $course->instructor_id) {
+            \App\Models\CourseProgress::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'course_id' => $courseId,
+                    'content_id' => $quizId,
+                    'content_type' => 'quiz',
+                ],
+                [
+                    'course_module_id' => $quiz->course_module_id,
+                    'is_completed' => true,
+                    'completed_at' => now(),
+                ]
+            );
+        }
 
         return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId])
             ->with('success', 'Jawaban berhasil dikirim!');
@@ -664,13 +674,15 @@ class QuizController extends Controller
         $course = Course::findOrFail($courseId);
         $quiz = Quiz::findOrFail($quizId);
         $submission = QuizSubmission::findOrFail($submissionId);
+        $user = Auth::user();
 
-        // Check if student owns this submission
-        if ($submission->user_id !== Auth::id() || $submission->quiz_id !== $quiz->id) {
+        // [UPDATE] Bypass akses untuk Instruktur
+        $isInstructorOwner = ($user->id === $course->instructor_id);
+
+        if ($submission->user_id !== $user->id && !$isInstructorOwner) {
             abort(403, 'Unauthorized access.');
         }
 
-        // Check if submitted
         if (!$submission->submitted_at) {
             abort(403, 'Quiz belum disubmit.');
         }
