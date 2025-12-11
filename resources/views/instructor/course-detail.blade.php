@@ -178,9 +178,16 @@
                                         </span>
                                     </div>
                                     
-                                    <button disabled class="px-8 py-3 bg-purple-300 text-white font-bold rounded-full cursor-not-allowed">
-                                        Mode Preview (Tidak Bisa Mengerjakan)
-                                    </button>
+                                    {{-- [MODIFIKASI] Tombol Demo untuk Instruktur --}}
+                                    <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-6 max-w-md">
+                                        <p class="text-xs text-yellow-800 font-bold mb-2"><i class="fas fa-info-circle"></i> INFO INSTRUKTUR</p>
+                                        <p class="text-sm text-yellow-700">Anda dapat mencoba mengerjakan quiz ini sebagai simulasi (Demo Mode). Hasil tidak akan mempengaruhi nilai siswa lain.</p>
+                                    </div>
+
+                                    <a href="{{ route('student.quiz.start', [$course->id, $currentContent->id]) }}" 
+                                        class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-lg hover:shadow-indigo-200 transition transform hover:-translate-y-0.5 flex items-center gap-2 mx-auto w-fit">
+                                        <i class="fas fa-play"></i> Mulai Demo Quiz
+                                    </a>
                                 </div>
                             @endif
                         </div>
