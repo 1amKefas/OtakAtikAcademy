@@ -79,10 +79,31 @@ class AdminController extends Controller
     /**
      * Show users management page
      */
-    public function users()
+    public function users(Request $request) // [UPDATE] Tambah Request injection
     {
-        $users = User::withCount('courseRegistrations')->latest()->paginate(10);
+        // [UPDATE] Logic Search & Pagination
+        $query = User::withCount('courseRegistrations')->latest();
+
+        // Jika ada input search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                // Cari berdasarkan Nama atau Email (Text ketemu Text = Aman)
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+
+                // [FIX] Hanya cari ID kalau inputnya benar-benar ANGKA
+                // Ini biar Postgres gak ngamuk bandingin text sama bigint
+                if (is_numeric($search)) {
+                    $q->orWhere('id', $search);
+                }
+            });
+        }
+
+        // Paginate 10 dan append query string biar pas pindah page, search-nya gak ilang
+        $users = $query->paginate(10)->withQueryString();
         
+        // --- Sisa logic stats (tetap sama) ---
         $userStats = [
             'total_users' => User::count(),
             'admin_users' => User::where('is_admin', true)->count(),
@@ -91,6 +112,7 @@ class AdminController extends Controller
             'active_this_month' => User::where('created_at', '>=', now()->subDays(30))->count(),
         ];
 
+        // ... (Logic Distribution Charts biarkan sama) ...
         $ageDistribution = [
             ['range' => '18-24', 'count' => 15, 'color' => '#3B82F6'],
             ['range' => '25-34', 'count' => 25, 'color' => '#10B981'],

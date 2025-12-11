@@ -189,6 +189,13 @@
                     <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                         <h3 class="text-xl font-bold text-gray-800">All Users</h3>
                         <div class="flex gap-2">
+                            {{-- Search Form --}}
+                            <form action="{{ route('admin.users') }}" method="GET" class="relative w-full md:w-64">
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                       placeholder="Cari nama atau email..." 
+                                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                            </form>
                             <button onclick="addUser()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2">
                                 <i class="fas fa-plus"></i> Add User
                             </button>
