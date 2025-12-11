@@ -192,6 +192,12 @@
                 </div>
                 @endforeach
             </div>
+
+            {{-- [TAMBAHAN] Pagination Links --}}
+            <div class="mt-12 px-4 flex justify-center">
+                {{ $courses->links() }}
+            </div>
+
         @else
             <div class="text-center py-24">
                 <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
