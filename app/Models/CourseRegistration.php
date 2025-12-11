@@ -32,6 +32,7 @@ class CourseRegistration extends Model
         'payment_method',
         'status',
         'progress',
+        'total_learning_seconds',
         'paid_at',
         'enrolled_at'
     ];

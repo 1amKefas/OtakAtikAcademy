@@ -705,4 +705,26 @@ class StudentController extends Controller
 
         return back()->with('success', 'Terima kasih! Review Anda berhasil disimpan.');
     }
+
+    /**
+     * Update Time on Page (Heartbeat)
+     */
+    public function updateLearningTime(Request $request, $courseId)
+    {
+        $user = Auth::user();
+        
+        // Cari pendaftaran user di course ini
+        $registration = \App\Models\CourseRegistration::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->firstOrFail();
+
+        // Tambahkan waktu (misal dikirim per 30 detik)
+        // Kita validasi max penambahan biar gak dicurangin (misal max 60 detik per request)
+        $seconds = (int) $request->input('seconds', 30);
+        if ($seconds > 60) $seconds = 60; 
+
+        $registration->increment('total_learning_seconds', $seconds);
+
+        return response()->json(['status' => 'success']);
+    }
 }

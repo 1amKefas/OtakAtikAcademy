@@ -678,6 +678,7 @@ class AdminController extends Controller
             ['id' => 'el_3', 'type' => 'text', 'text' => 'Diberikan kepada:', 'x' => 50, 'y' => 35, 'font' => 'Helvetica', 'color' => '#555555', 'size' => 18, 'align' => 'center'],
             ['id' => 'el_4', 'type' => 'dynamic', 'content' => 'date', 'text' => '[Tanggal]', 'x' => 20, 'y' => 75, 'font' => 'Courier', 'color' => '#777777', 'size' => 14, 'align' => 'center'],
             ['id' => 'el_5', 'type' => 'dynamic', 'content' => 'code', 'text' => '[No. Sertifikat]', 'x' => 80, 'y' => 75, 'font' => 'Courier', 'color' => '#777777', 'size' => 14, 'align' => 'center'],
+            ['id' => 'el_6', 'type' => 'dynamic', 'content' => 'total_duration', 'text' => '[Total Durasi]', 'x' => 50, 'y' => 65, 'font' => 'Helvetica', 'color' => '#555555', 'size' => 20, 'align' => 'center'],
         ];
 
         // Ambil dari DB atau pakai default

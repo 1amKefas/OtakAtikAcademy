@@ -74,6 +74,9 @@
                                 <th class="px-6 py-4">Tanggal Daftar</th>
                                 <th class="px-6 py-4">Progress Belajar</th>
                                 <th class="px-6 py-4 text-right">Aksi</th>
+                                <th class="px-6 py-4 text-right">
+                                    Time Spent
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -125,6 +128,24 @@
                                         <i class="fas fa-user-graduate text-4xl text-gray-300 mb-3"></i>
                                         <p>Belum ada siswa yang mendaftar di kursus ini.</p>
                                     </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 font-bold">
+                                        @php
+                                            $seconds = $reg->total_learning_seconds;
+                                            $hours = floor($seconds / 3600);
+                                            $minutes = floor(($seconds % 3600) / 60);
+                                        @endphp
+                                        
+                                        @if($hours > 0)
+                                            {{ $hours }}j {{ $minutes }}m
+                                        @elseif($minutes > 0)
+                                            {{ $minutes }}m
+                                        @else
+                                            <span class="text-gray-400 text-xs">Baru mulai</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-xs text-gray-400">Total Belajar</div>
                                 </td>
                             </tr>
                             @endforelse

@@ -385,4 +385,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Mark materi as complete (untuk lanjut ke next step)
     Route::post('/learning/{courseId}/complete-material/{materialId}', [StudentController::class, 'completeMaterial'])->name('student.learning.complete-material');
+
+    // [BARU] Route Update Time Tracker
+    Route::post('/student/course/{id}/track-time', [StudentController::class, 'updateLearningTime'])->name('student.course.track-time');
 });

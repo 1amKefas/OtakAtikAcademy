@@ -42,7 +42,7 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
-// --- 3. DOM Logic (Scroll Progress & Video Tracking) ---
+// --- 3. DOM Logic (Scroll Progress, Video Tracking, & Time on Page) ---
 document.addEventListener('DOMContentLoaded', () => {
     const scrollContainer = document.getElementById('mainScrollContainer');
     const btnNext = document.getElementById('btnNext');
@@ -53,24 +53,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!contentData) return;
 
+    // Ambil Data dari Data Attributes
     const nextUrl = contentData.dataset.nextUrl;
     const completeUrl = contentData.dataset.completeUrl;
-    // [FIX] Pastikan boolean check benar
+    const trackTimeUrl = contentData.dataset.trackTimeUrl; // [BARU] URL buat update waktu
     const isAlreadyDone = contentData.dataset.alreadyDone === '1'; 
     const isVideo = contentData.dataset.isVideo === '1'; 
     const isVideoContent = contentData.dataset.isVideoContent === '1';
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    let isCompleted = isAlreadyDone; // Init status dari server
+    let isCompleted = isAlreadyDone; 
 
-    // Init Progress Circle
+    // --- A. PROGRESS CIRCLE ---
     let circumference = 0;
     if(progressCircle) {
         const radius = progressCircle.r.baseVal.value;
         circumference = radius * 2 * Math.PI;
         progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
         
-        // [FIX] Jika sudah selesai, langsung set circle penuh (0 offset), jika belum set kosong
         if(isAlreadyDone) {
             progressCircle.style.strokeDashoffset = 0;
         } else {
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fungsi Mark Complete via AJAX
+    // --- B. FUNGSI UTAMA (MARK COMPLETE) ---
     function markAsComplete() {
         if(!isAlreadyDone) {
             fetch(completeUrl, { 
@@ -90,62 +90,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({}) 
             }).then(() => {
                 console.log("Material Marked as Completed");
-                // Update local state biar gak kirim request berkali-kali
                 contentData.dataset.alreadyDone = '1';
             });
         }
     }
 
-    // Fungsi Buka Kunci Tombol Next & Update UI Header
     function unlockNextButton() {
-        isCompleted = true; // Flag JS update
-        
-        // 1. Update Tombol
+        isCompleted = true;
         if(btnNext) {
             btnNext.disabled = false;
             btnNext.classList.remove('bg-gray-300', 'dark:bg-slate-700', 'text-gray-500', 'dark:text-gray-400', 'cursor-not-allowed', 'shadow-none');
             btnNext.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'text-white', 'hover:shadow-lg', 'hover:shadow-blue-500/30', 'transform', 'hover:-translate-y-0.5');
             btnNext.innerHTML = `<span>Selesai & Lanjut</span> <i class="fas fa-check-circle animate-pulse"></i>`;
         }
-        
-        // 2. Update Circle Header
         if(progressCircle && progressIcon) {
-            progressCircle.style.strokeDashoffset = 0; // Penuh
+            progressCircle.style.strokeDashoffset = 0;
             progressIcon.innerHTML = '<i class="fas fa-check text-green-500 text-xl"></i>';
         }
-        
-        // 3. Trigger Backend
         markAsComplete();
     }
 
-    // [FIX] Priority Check: Kalau dari server dibilang sudah selesai, jalankan unlock SEKARANG.
     if (isAlreadyDone) {
         unlockNextButton();
     }
 
-    // A. LOGIC VIDEO TRACKING (Untuk Native Video Upload)
-    if (isVideo && videoPlayer && !isAlreadyDone) {
-        console.log("Tracking Video Progress...");
-        
-        let supposedCurrentTime = 0;
-        videoPlayer.addEventListener('timeupdate', function() {
-            if (!videoPlayer.seeking) {
-                supposedCurrentTime = videoPlayer.currentTime;
+    // --- C. TIME ON PAGE TRACKER (HEARTBEAT) ---
+    // Update waktu setiap 30 detik
+    const intervalSeconds = 30;
+    if (trackTimeUrl) {
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                fetch(trackTimeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ seconds: intervalSeconds })
+                }).catch(err => console.error('Time tracking error:', err));
             }
-        });
-        
-        // Unlock saat video selesai
+        }, intervalSeconds * 1000);
+    }
+
+    // --- D. VIDEO TRACKING ---
+    if (isVideo && videoPlayer && !isAlreadyDone) {
         videoPlayer.addEventListener('ended', function() {
-            console.log("Video Finished");
             unlockNextButton();
         });
     }
 
-    // B. LOGIC SCROLL TRACKING (Untuk Teks/Artikel)
+    // --- E. SCROLL TRACKING ---
     if(scrollContainer && progressCircle && !isVideoContent) {
         scrollContainer.addEventListener('scroll', () => {
-            // [FIX] KUNCI UTAMA: Kalau sudah selesai (dari server atau barusan), JANGAN hitung scroll lagi.
-            // Biarkan UI tetap 100% (Centang Hijau)
             if (isCompleted || isAlreadyDone) return; 
 
             const scrollTop = scrollContainer.scrollTop;
@@ -158,14 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
             progressCircle.style.strokeDashoffset = offset;
             progressIcon.innerText = Math.round(percent * 100) + '%';
 
-            // Trigger selesai jika sudah di bawah (toleransi 50px)
             if (scrollHeight - scrollTop <= 50) {
                 unlockNextButton();
             }
         });
     }
 
-    // C. Handle Tombol Next Click
+    // --- F. NAVIGATION CLICK ---
     if(btnNext) {
         btnNext.addEventListener('click', () => { 
             if(isCompleted || isAlreadyDone) {
@@ -178,8 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(isVideoContent && !isVideo && !isAlreadyDone) {
         if(scrollContainer) {
              scrollContainer.addEventListener('scroll', () => {
-                if (isCompleted || isAlreadyDone) return; // Fix scroll fallback juga
-
+                if (isCompleted || isAlreadyDone) return;
                 const scrollTop = scrollContainer.scrollTop;
                 const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight;
                 if (scrollHeight - scrollTop <= 20) {

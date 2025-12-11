@@ -309,8 +309,10 @@
 
                     {{-- Data Element untuk JavaScript --}}
                     <div id="content-data" 
+                         class="hidden"
                          data-next-url="{{ $nextUrl }}"
                          data-complete-url="{{ route('student.learning.complete-material', [$course->id, $currentContent->id ?? 0]) }}"
+                         data-track-time-url="{{ route('student.course.track-time', $course->id) }}"
                          data-already-done="{{ $alreadyDone ? '1' : '0' }}"
                          data-is-video="{{ $hasVideoUpload ? '1' : '0' }}" 
                          data-is-video-content="{{ $isVideoContent ? '1' : '0' }}">
