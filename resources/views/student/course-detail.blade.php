@@ -51,9 +51,8 @@
                     
                     <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
                         <i class="fas fa-star text-yellow-400 text-sm"></i>
-                        {{-- Gunakan data DB, default 0 jika belum ada --}}
-                        <span class="font-bold text-white">{{ number_format($course->average_rating ?? 0, 1) }}</span>
-                        <span class="text-slate-400 text-xs">({{ $course->rating_count ?? 0 }} reviews)</span>
+                        <span class="font-bold text-white">{{ number_format($course->average_rating, 1) }}</span>
+                        <span class="text-slate-400 text-xs">({{ $course->rating_count }} reviews)</span>
                     </div>
                 </div>
             </div>
