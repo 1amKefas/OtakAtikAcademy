@@ -38,7 +38,9 @@ class Course extends Model
         'is_rescheduled',
         'rescheduled_start_date',
         'reschedule_reason',
-        'quota_not_met'
+        'quota_not_met',
+        'average_rating', // <--- TAMBAHKAN INI
+        'rating_count'  // <--- TAMBAHKAN INI
     ];
 
     protected $casts = [
@@ -499,5 +501,5 @@ public function getCheckoutUrlAttribute()
     {
         return $this->reviews()->where('user_id', $userId)->exists();
     }
-    
+
 }

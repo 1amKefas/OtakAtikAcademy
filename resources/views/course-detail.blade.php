@@ -51,8 +51,9 @@
                     
                     <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
                         <i class="fas fa-star text-yellow-400 text-sm"></i>
-                        <span class="font-bold text-white">{{ number_format($course->average_rating ?? 4.8, 1) }}</span>
-                        <span class="text-slate-400 text-xs">({{ $course->rating_count ?? 12 }} reviews)</span>
+                        {{-- Gunakan data DB, default 0 jika belum ada --}}
+                        <span class="font-bold text-white">{{ number_format($course->average_rating ?? 0, 1) }}</span>
+                        <span class="text-slate-400 text-xs">({{ $course->rating_count ?? 0 }} reviews)</span>
                     </div>
                 </div>
             </div>
@@ -135,6 +136,47 @@
                             <p class="text-gray-500">Materi kursus sedang disusun.</p>
                         </div>
                         @endforelse
+                    </div>
+                </div>
+
+                {{-- SECTION REVIEWS --}}
+                <div class="bg-white py-12 border-t border-gray-100">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-2">
+                            <i class="fas fa-star text-yellow-400"></i> Ulasan Siswa
+                            <span class="text-gray-500 text-lg font-normal">({{ $course->rating_count }} ulasan)</span>
+                        </h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            @forelse($course->reviews->take(4) as $review)
+                            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                                <div class="flex items-start gap-4">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($review->user->name) }}&background=random" class="w-10 h-10 rounded-full">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 text-sm">{{ $review->user->name }}</h4>
+                                        <div class="flex text-yellow-400 text-xs my-1">
+                                            @for($i=1; $i<=5; $i++)
+                                                <i class="fas fa-star {{ $i <= $review->rating ? '' : 'text-gray-300' }}"></i>
+                                            @endfor
+                                        </div>
+                                        <p class="text-gray-600 text-sm italic">"{{ $review->review }}"</p>
+                                        <p class="text-gray-400 text-xs mt-2">{{ $review->created_at->diffForHumans() }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="col-span-full text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                                <p class="text-gray-500">Belum ada ulasan untuk kursus ini.</p>
+                            </div>
+                            @endforelse
+                        </div>
+                        
+                        {{-- Tombol Lihat Semua (Optional jika mau dibuat page sendiri) --}}
+                        @if($course->reviews->count() > 4)
+                        <div class="mt-8 text-center">
+                            <button class="text-indigo-600 font-bold hover:underline">Lihat Semua Ulasan</button>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

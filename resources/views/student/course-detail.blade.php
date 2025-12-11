@@ -51,8 +51,9 @@
                     
                     <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
                         <i class="fas fa-star text-yellow-400 text-sm"></i>
-                        <span class="font-bold text-white">{{ number_format($course->average_rating ?? 4.8, 1) }}</span>
-                        <span class="text-slate-400 text-xs">({{ $course->rating_count ?? 12 }} reviews)</span>
+                        {{-- Gunakan data DB, default 0 jika belum ada --}}
+                        <span class="font-bold text-white">{{ number_format($course->average_rating ?? 0, 1) }}</span>
+                        <span class="text-slate-400 text-xs">({{ $course->rating_count ?? 0 }} reviews)</span>
                     </div>
                 </div>
             </div>
@@ -155,6 +156,37 @@
                             <span>Buka Forum</span>
                             <i class="fas fa-external-link-alt text-xs"></i>
                         </a>
+                    </div>
+                </div>
+
+                {{-- Taruh Disini (Setelah Forum Diskusi) --}}
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mt-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-6">Apa Kata Teman Sekelas?</h3>
+                    {{-- Paste kode foreach reviews disini... --}}
+                     <div class="grid grid-cols-1 gap-6">
+                        @forelse($course->reviews as $review)
+                        <div class="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                            <div class="flex items-start gap-4">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode($review->user->name) }}&background=random" class="w-10 h-10 rounded-full">
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="font-bold text-gray-900 text-sm">{{ $review->user->name }}</h4>
+                                        <span class="text-xs text-gray-400">{{ $review->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    <div class="flex text-yellow-400 text-xs my-1">
+                                        @for($i=1; $i<=5; $i++)
+                                            <i class="fas fa-star {{ $i <= $review->rating ? '' : 'text-gray-300' }}"></i>
+                                        @endfor
+                                    </div>
+                                    <p class="text-gray-600 text-sm mt-2">"{{ $review->review }}"</p>
+                                </div>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="text-center py-6">
+                            <p class="text-gray-400 italic">Belum ada ulasan.</p>
+                        </div>
+                        @endforelse
                     </div>
                 </div>
 
