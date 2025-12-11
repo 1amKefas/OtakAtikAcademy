@@ -177,15 +177,16 @@
                         </div>
                     </div>
 
+                    {{-- LOCATION CHART CARD --}}
                     <div class="bg-white rounded-2xl shadow-lg p-6 relative">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-bold text-gray-800" id="locChartTitle">Top Provinces</h3>
-                            {{-- Tombol Back (Default Hidden) --}}
-                            <button id="btnResetLocation" class="hidden text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-gray-700 transition">
+                            {{-- Tombol Back --}}
+                            <button id="btnResetLocation" class="hidden text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition font-bold items-center shadow-sm">
                                 <i class="fas fa-arrow-left mr-1"></i> Back
                             </button>
                         </div>
-                        <div class="h-64">
+                        <div class="h-64 relative">
                             <canvas id="locationChart"></canvas>
                         </div>
                     </div>
@@ -445,10 +446,12 @@
                 data: {!! json_encode(array_column($educationDistribution, 'count')) !!},
                 colors: {!! json_encode(array_column($educationDistribution, 'color')) !!}
             },
-            location: {!! json_encode($locationDistribution) !!}
+            // [FIX] Kirim FULL Object (bukan array_column)
+            location: {!! json_encode($locationDistribution) !!} 
         };
     </script>
     
+    {{-- Load JS External --}}
     <script src="{{ asset('js/admin-users.js') }}"></script>
 
 </body>

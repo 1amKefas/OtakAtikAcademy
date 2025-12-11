@@ -81,7 +81,7 @@ class AdminController extends Controller
      */
     public function users(Request $request) 
     {
-        // 1. Logic Search & Pagination (Biarkan tetap sama)
+        // 1. Search & Pagination
         $query = User::withCount('courseRegistrations')->latest();
         if ($request->filled('search')) {
             $search = $request->search;
@@ -93,7 +93,7 @@ class AdminController extends Controller
         }
         $users = $query->paginate(10)->withQueryString();
         
-        // 2. User Stats (Biarkan tetap sama)
+        // 2. User Stats
         $userStats = [
             'total_users' => User::count(),
             'admin_users' => User::where('is_admin', true)->count(),
@@ -102,7 +102,7 @@ class AdminController extends Controller
             'active_this_month' => User::where('created_at', '>=', now()->subDays(30))->count(),
         ];
 
-        // 3. Age & Education (Biarkan tetap sama)
+        // 3. Age Distribution
         $rawAges = User::whereNotNull('date_of_birth')->get()->map->age;
         $ageDistribution = [
             ['range' => '18-24', 'count' => $rawAges->filter(fn($a)=>$a>=18&&$a<=24)->count(), 'color' => '#3B82F6'],
@@ -112,6 +112,7 @@ class AdminController extends Controller
             ['range' => '55+',   'count' => $rawAges->filter(fn($a)=>$a>=55)->count(),             'color' => '#8B5CF6'],
         ];
 
+        // 4. Education Distribution
         $eduColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
         $educationDistribution = User::whereNotNull('education_level')
             ->select('education_level', DB::raw('count(*) as total'))
@@ -124,38 +125,41 @@ class AdminController extends Controller
                 'color' => $eduColors[$k % 5]
             ])->toArray();
 
-        // 4. [LOGIC BARU] Location Drill-down (Provinsi -> Kota)
+        // 5. [FIXED] Location Drill-down
         $allLocations = User::whereNotNull('location')->pluck('location');
         $stats = []; 
 
         foreach ($allLocations as $loc) {
-            // Pecah string "Kota, Provinsi"
+            if (empty(trim($loc))) continue; 
+
             $parts = explode(',', $loc);
             if (count($parts) >= 2) {
-                $city = trim($parts[0]);     // Index 0: Kota
-                $province = trim($parts[1]); // Index 1: Provinsi
-                
-                if (!isset($stats[$province])) $stats[$province] = [];
-                if (!isset($stats[$province][$city])) $stats[$province][$city] = 0;
-                
-                $stats[$province][$city]++;
+                $city = trim($parts[0]);
+                $province = trim($parts[1]);
+            } else {
+                $city = 'Unspecified';
+                $province = trim($parts[0]); 
             }
+            
+            if (!isset($stats[$province])) $stats[$province] = [];
+            if (!isset($stats[$province][$city])) $stats[$province][$city] = 0;
+            
+            $stats[$province][$city]++;
         }
 
-        // Urutkan Provinsi berdasarkan total populasi terbanyak
-        uasort($stats, function($a, $b) {
-            return array_sum($b) - array_sum($a);
-        });
+        uasort($stats, function($a, $b) { return array_sum($b) - array_sum($a); });
         
         $topProvinces = array_slice($stats, 0, 5, true); 
+        
         $provinceLabels = array_keys($topProvinces);
-        $provinceData = array_map(fn($cities) => array_sum($cities), $topProvinces);
+        
+        // [FIX UTAMA] Pake array_values() biar format JSON-nya Array [] bukan Object {}
+        $provinceData = array_values(array_map(fn($cities) => array_sum($cities), $topProvinces));
 
-        // Struktur Data yang dikirim ke JS
         $locationDistribution = [
             'labels' => $provinceLabels,
             'data' => $provinceData,
-            'details' => $topProvinces // Ini kunci drill-down nya
+            'details' => $topProvinces
         ];
 
         return view('admin.users', compact('users', 'userStats', 'ageDistribution', 'educationDistribution', 'locationDistribution'));
