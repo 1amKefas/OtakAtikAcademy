@@ -77,33 +77,27 @@ class AdminController extends Controller
     }
 
     /**
-     * Show users management page
+     * Show users management page (FIXED TYPE ERROR)
      */
-    public function users(Request $request) // [UPDATE] Tambah Request injection
+    public function users(Request $request) 
     {
-        // [UPDATE] Logic Search & Pagination
+        // 1. Logic Search & Pagination
         $query = User::withCount('courseRegistrations')->latest();
 
-        // Jika ada input search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                // Cari berdasarkan Nama atau Email (Text ketemu Text = Aman)
                 $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('email', 'LIKE', "%{$search}%");
-
-                // [FIX] Hanya cari ID kalau inputnya benar-benar ANGKA
-                // Ini biar Postgres gak ngamuk bandingin text sama bigint
                 if (is_numeric($search)) {
                     $q->orWhere('id', $search);
                 }
             });
         }
 
-        // Paginate 10 dan append query string biar pas pindah page, search-nya gak ilang
         $users = $query->paginate(10)->withQueryString();
         
-        // --- Sisa logic stats (tetap sama) ---
+        // 2. User Stats
         $userStats = [
             'total_users' => User::count(),
             'admin_users' => User::where('is_admin', true)->count(),
@@ -112,30 +106,56 @@ class AdminController extends Controller
             'active_this_month' => User::where('created_at', '>=', now()->subDays(30))->count(),
         ];
 
-        // ... (Logic Distribution Charts biarkan sama) ...
+        // 3. Real Age Distribution
+        $rawAges = User::whereNotNull('date_of_birth')->get()
+            ->map(function ($user) {
+                return $user->date_of_birth->age;
+            });
+
+        // Ini ARRAY BIASA (Aman)
         $ageDistribution = [
-            ['range' => '18-24', 'count' => 15, 'color' => '#3B82F6'],
-            ['range' => '25-34', 'count' => 25, 'color' => '#10B981'],
-            ['range' => '35-44', 'count' => 18, 'color' => '#F59E0B'],
-            ['range' => '45-54', 'count' => 12, 'color' => '#EF4444'],
-            ['range' => '55+', 'count' => 8, 'color' => '#8B5CF6'],
+            ['range' => '18-24', 'count' => $rawAges->filter(fn($age) => $age >= 18 && $age <= 24)->count(), 'color' => '#3B82F6'],
+            ['range' => '25-34', 'count' => $rawAges->filter(fn($age) => $age >= 25 && $age <= 34)->count(), 'color' => '#10B981'],
+            ['range' => '35-44', 'count' => $rawAges->filter(fn($age) => $age >= 35 && $age <= 44)->count(), 'color' => '#F59E0B'],
+            ['range' => '45-54', 'count' => $rawAges->filter(fn($age) => $age >= 45 && $age <= 54)->count(), 'color' => '#EF4444'],
+            ['range' => '55+',   'count' => $rawAges->filter(fn($age) => $age >= 55)->count(),             'color' => '#8B5CF6'],
         ];
 
-        $educationDistribution = [
-            ['level' => 'High School', 'count' => 20, 'color' => '#3B82F6'],
-            ['level' => 'Bachelor', 'count' => 35, 'color' => '#10B981'],
-            ['level' => 'Master', 'count' => 15, 'color' => '#F59E0B'],
-            ['level' => 'Doctorate', 'count' => 5, 'color' => '#EF4444'],
-            ['level' => 'Other', 'count' => 3, 'color' => '#8B5CF6'],
-        ];
+        // 4. Real Education Distribution
+        $eduData = User::whereNotNull('education_level')
+            ->select('education_level', DB::raw('count(*) as total'))
+            ->groupBy('education_level')
+            ->orderByDesc('total')
+            ->take(5)
+            ->get();
 
-        $locationDistribution = [
-            ['location' => 'Jakarta', 'count' => 25, 'color' => '#3B82F6'],
-            ['location' => 'Bandung', 'count' => 15, 'color' => '#10B981'],
-            ['location' => 'Surabaya', 'count' => 12, 'color' => '#F59E0B'],
-            ['location' => 'Bali', 'count' => 8, 'color' => '#EF4444'],
-            ['location' => 'Lainnya', 'count' => 18, 'color' => '#8B5CF6'],
-        ];
+        $eduColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+        
+        // [FIX] Tambahkan ->toArray() di akhir
+        $educationDistribution = $eduData->map(function($item, $key) use ($eduColors) {
+            return [
+                'level' => ucfirst($item->education_level),
+                'count' => $item->total,
+                'color' => $eduColors[$key % count($eduColors)]
+            ];
+        })->toArray(); // <--- INI KUNCINYA
+
+        // 5. Real Location Distribution
+        $locData = User::whereNotNull('location')
+            ->select('location', DB::raw('count(*) as total'))
+            ->groupBy('location')
+            ->orderByDesc('total')
+            ->take(5)
+            ->get();
+            
+        // [FIX] Tambahkan ->toArray() di akhir
+        $locationDistribution = $locData->map(function($item, $key) use ($eduColors) {
+             return [
+                'location' => ucfirst($item->location),
+                'count' => $item->total,
+                'color' => $eduColors[$key % count($eduColors)]
+            ];
+        })->toArray(); // <--- INI KUNCINYA
 
         return view('admin.users', compact('users', 'userStats', 'ageDistribution', 'educationDistribution', 'locationDistribution'));
     }

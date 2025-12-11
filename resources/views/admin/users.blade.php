@@ -123,7 +123,7 @@
                     <div class="admin-card rounded-2xl p-6 text-white shadow-lg">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm opacity-90">Admin Users</p>
+                                <p class="text-sm opacity-90">Admin</p>
                                 <p class="text-3xl font-bold mt-2">{{ $userStats['admin_users'] }}</p>
                                 <p class="text-xs opacity-80 mt-2">Administrators</p>
                             </div>
