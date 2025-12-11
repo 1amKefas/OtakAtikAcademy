@@ -67,7 +67,7 @@
                 <button onclick="window.location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                     <i class="fas fa-check-circle"></i> Selesai & Simpan
                 </button>
-                @if($course->type !== 'online')
+                @if($course->type !== 'Full Online')
                 <a href="{{ route('instructor.courses.classes.index', $course->id) }}" 
                    class="flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition shadow-sm">
                    {{-- Icon Gedung Kelas --}}
