@@ -66,7 +66,7 @@ class CourseClassController extends Controller
     /**
      * Assign Student ke Kelas
      */
-    public function assignStudent(Request $request, $classId)
+    public function assignStudent(Request $request, $courseId, $classId)
     {
         $class = CourseClass::findOrFail($classId);
         
@@ -75,8 +75,13 @@ class CourseClassController extends Controller
             return back()->with('error', 'Kelas sudah penuh!');
         }
 
+        // Validasi tambahan: Pastikan kelas ini emang punya course tersebut
+        if ($class->course_id != $courseId) {
+            abort(404);
+        }
+
         $registration = CourseRegistration::where('id', $request->registration_id)
-            ->where('course_id', $class->course_id) // Pastikan student emang daftar di course ini
+            ->where('course_id', $courseId) // Pake $courseId dari parameter
             ->firstOrFail();
 
         $registration->update(['course_class_id' => $classId]);
@@ -87,9 +92,10 @@ class CourseClassController extends Controller
     /**
      * Keluarkan Student dari Kelas (Balikin ke Unassigned)
      */
-    public function removeStudent($registrationId)
+    public function removeStudent($courseId, $registrationId)
     {
-        $registration = CourseRegistration::findOrFail($registrationId);
+        $registration = CourseRegistration::where('course_id', $courseId)
+            ->findOrFail($registrationId);
         // Validasi owner course
         if($registration->course->instructor_id !== Auth::id()){
              abort(403);
@@ -103,9 +109,10 @@ class CourseClassController extends Controller
     /**
      * Hapus Kelas
      */
-    public function destroy($classId)
+    public function destroy($courseId, $classId)
     {
-        $class = CourseClass::findOrFail($classId);
+        $class = CourseClass::where('course_id', $courseId)
+            ->findOrFail($classId);
         
         // Kembalikan semua siswa di kelas ini jadi unassigned
         CourseRegistration::where('course_class_id', $classId)
