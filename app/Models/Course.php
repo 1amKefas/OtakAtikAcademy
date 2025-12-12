@@ -83,10 +83,16 @@ class Course extends Model
     {
         return $this->belongsToMany(
             User::class,
-            'course_instructor',
+            'course_instructors',
             'course_id',
-            'instructor_id'
-        )->withPivot('active_duration_days', 'zoom_link', 'zoom_start_time', 'notes');
+            'user_id'
+        )->withPivot('is_primary', 'sort_order')
+        ->withTimestamps();
+    }
+
+    public function courseClasses()
+    {
+        return $this->hasMany(CourseClass::class);
     }
 
     /**

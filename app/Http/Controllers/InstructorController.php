@@ -30,6 +30,26 @@ class InstructorController extends Controller
 
         $instructor = Auth::user();
 
+        // [FIX] QUERY DIPERLENGKAP: Cek Owner, Asisten, DAN Team Instructor
+        $baseQuery = Course::where(function($q) use ($instructor) {
+            $q->where('instructor_id', $instructor->id)
+            
+            // Cek jika sebagai Assistant
+            ->orWhereHas('assistants', function($sq) use ($instructor) {
+                $sq->where('users.id', $instructor->id);
+            })
+            
+            // [BARU] Cek jika di-assign sebagai Team Instructor (Pivot Table)
+            ->orWhereHas('instructors', function($sq) use ($instructor) {
+                $sq->where('users.id', $instructor->id);
+            })
+
+            // [OPSIONAL] Cek jika ditugaskan spesifik ke Kelas (Offline/Hybrid Batch)
+            ->orWhereHas('courseClasses', function($sq) use ($instructor) {
+                $sq->where('instructor_id', $instructor->id);
+            });
+        });
+
         // 1. Definisikan Base Query (Biar gak ngetik ulang)
         $baseQuery = Course::where(function($q) use ($instructor) {
             $q->where('instructor_id', $instructor->id)
@@ -217,21 +237,29 @@ class InstructorController extends Controller
         }
 
         $instructor = Auth::user();
+        // [FIX] Update Query disini juga
         $courses = Course::where(function($q) use ($instructor) {
                 $q->where('instructor_id', $instructor->id)
                   ->orWhereHas('assistants', function($sq) use ($instructor) {
                       $sq->where('users.id', $instructor->id);
+                  })
+                  // [TAMBAHAN] Cek Team Instructor
+                  ->orWhereHas('instructors', function($sq) use ($instructor) {
+                      $sq->where('users.id', $instructor->id);
+                  })
+                  // [TAMBAHAN] Cek Instruktur Kelas
+                  ->orWhereHas('courseClasses', function($sq) use ($instructor) {
+                      $sq->where('instructor_id', $instructor->id);
                   });
             })
-            // [FIX] Tambahkan withCount untuk menghitung total item secara otomatis
             ->withCount([
                 'registrations' => function($query) {
                     $query->where('status', 'paid');
                 },
-                'modules',      // Menghitung jumlah modul
-                'materials',    // Menghitung jumlah materi
-                'assignments',  // Menghitung jumlah tugas
-                'quizzes'       // Menghitung jumlah quiz
+                'modules',
+                'materials',
+                'assignments',
+                'quizzes'
             ])
             ->latest()
             ->paginate(10);
