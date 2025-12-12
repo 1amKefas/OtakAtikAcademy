@@ -388,4 +388,6 @@ Route::middleware(['auth'])->group(function () {
 
     // [BARU] Route Update Time Tracker
     Route::post('/student/course/{id}/track-time', [StudentController::class, 'updateLearningTime'])->name('student.course.track-time');
+    // Tambahkan ->name('student.course.renew') di akhir
+    Route::post('/student/course/renew', [CourseController::class, 'renew'])->name('student.course.renew');
 });

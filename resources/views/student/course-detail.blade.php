@@ -136,6 +136,7 @@
                         </div>
                         @endforelse
                     </div>
+                    
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mt-6 hover:shadow-md transition-shadow">
