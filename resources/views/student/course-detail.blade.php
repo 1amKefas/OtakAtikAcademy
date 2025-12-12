@@ -480,38 +480,34 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Ambil sisa detik dari backend
-        let remainingSeconds = {{ $registration->access_expires_at ? $registration->remaining_seconds : 0 }};
-        
-        const daysEl = document.getElementById('countdown-days');
-        const hoursEl = document.getElementById('countdown-hours');
-        const minutesEl = document.getElementById('countdown-minutes');
-        const secondsEl = document.getElementById('countdown-seconds');
+    // Ambil data dari Controller tadi
+    // Pastikan angka ini gak pake tanda kutip string
+    let timeLeft = {{ $secondsRemaining }}; 
 
-        function updateCountdown() {
-            if (remainingSeconds <= 0) {
-                // Jika waktu habis, reload halaman untuk update status jadi expired
-                window.location.reload();
-                return;
+    console.log("Sisa Waktu: " + timeLeft); // Cek di Console Browser (F12)
+
+    // JANGAN PAKE if (timeLeft <= 0) location.reload() DI SINI!!
+    // Itu yang bikin looping refresh.
+
+    if (timeLeft > 0) {
+        // Kalau waktu masih ada, baru jalanin countdown
+        let x = setInterval(function() {
+            timeLeft--;
+            
+            // Update Teks Timer di HTML kamu (sesuaikan ID-nya)
+            // document.getElementById("timer").innerHTML = timeLeft + "s"; 
+
+            if (timeLeft <= 0) {
+                clearInterval(x);
+                // Waktu habis realtime: Reload ATAU munculin tombol bayar
+                // location.reload(); 
+                alert("Waktu Habis! Silakan perpanjang.");
             }
-
-            const days = Math.floor(remainingSeconds / (3600 * 24));
-            const hours = Math.floor((remainingSeconds % (3600 * 24)) / 3600);
-            const minutes = Math.floor((remainingSeconds % 3600) / 60);
-            const seconds = Math.floor(remainingSeconds % 60);
-
-            if(daysEl) daysEl.innerText = String(days).padStart(2, '0');
-            if(hoursEl) hoursEl.innerText = String(hours).padStart(2, '0');
-            if(minutesEl) minutesEl.innerText = String(minutes).padStart(2, '0');
-            if(secondsEl) secondsEl.innerText = String(seconds).padStart(2, '0');
-
-            remainingSeconds--;
-        }
-
-        // Update setiap 1 detik
-        setInterval(updateCountdown, 1000);
-        updateCountdown(); // Run immediately
-    });
+        }, 1000);
+    } else {
+        // Kalau pas dibuka waktu emang udah habis (minus)
+        // Jangan reload, tapi langsung tampilkan status expired
+        // document.getElementById("timer").innerHTML = "EXPIRED";
+    }
 </script>
 @endsection

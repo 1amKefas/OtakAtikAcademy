@@ -96,7 +96,10 @@ class StudentController extends Controller
             $registration->update(['progress' => $realProgress]);
         }
 
-        return view('student.course-detail', compact('course', 'registration')); // Note: variable di view $userRegistration diganti jadi $registration biar konsisten
+        // Hitung selisih detik (bisa minus kalau udah lewat)
+        $secondsRemaining = now()->diffInSeconds($course->expired_at, false);
+
+        return view('student.course-detail', compact('course', 'registration', 'secondsRemaining')); // Note: variable di view $userRegistration diganti jadi $registration biar konsisten
     }
 
     public function profile()
