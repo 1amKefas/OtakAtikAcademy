@@ -21,6 +21,7 @@ class CourseRegistration extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'course_class_id',
         'order_id',
         'nama_lengkap',
         'ttl',
