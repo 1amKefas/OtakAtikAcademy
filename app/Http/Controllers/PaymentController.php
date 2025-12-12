@@ -269,6 +269,30 @@ class PaymentController extends Controller
      */
     private function handleSuccessfulPayment(Payment $payment, CourseRegistration $registration)
     {
+        $course = $registration->course;
+        $durationDays = $course->duration;
+
+        if ($registration->access_expires_at && $registration->access_expires_at->isFuture()) {
+        // Kalau belum expired tapi user mau nambah durasi (stacking)
+        $newExpiryDate = $registration->access_expires_at->addDays($durationDays);
+        } else {
+            // Kalau baru beli atau sudah expired, hitung dari SEKARANG
+            $newExpiryDate = now()->addDays($durationDays);
+            
+            // TAPI, tidak boleh melebihi Tanggal Selesai Course (Course End Date)
+            if ($course->end_date && $newExpiryDate->greaterThan($course->end_date)) {
+                $newExpiryDate = $course->end_date;
+            }
+        }
+
+        $registration->update([
+        'status' => 'paid',
+        'access_expires_at' => $newExpiryDate,
+        'expiry_notification_sent' => false, // Reset notifikasi biar nanti dikirim lagi pas mau habis
+        ]);
+
+        // Cek apakah ini perpanjangan atau baru
+        $newExpiryDate = null;
         // [FIX UTAMA] Double Check di dalam method ini
         // Jika status regis sudah PAID, return (berhenti) agar tidak menambah kuota 2x
         if ($registration->status === 'paid') {

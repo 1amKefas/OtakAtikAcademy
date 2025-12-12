@@ -34,7 +34,9 @@ class CourseRegistration extends Model
         'progress',
         'total_learning_seconds',
         'paid_at',
-        'enrolled_at'
+        'enrolled_at',
+        'access_expires_at',
+        'expiry_notification_sent'
     ];
 
     // pastikan Eloquent me-cast harga sebagai integer
@@ -43,7 +45,34 @@ class CourseRegistration extends Model
         'final_price' => 'integer',
         'paid_at' => 'datetime',
         'enrolled_at' => 'datetime',
+        'access_expires_at' => 'datetime',
+        'expiry_notification_sent' => 'boolean'
     ];
+
+    // Helper untuk cek apakah akses masih aktif
+    public function getHasActiveAccessAttribute(): bool
+    {
+        if ($this->status !== 'paid') {
+            return false;
+        }
+
+        // Jika access_expires_at null, anggap lifetime (opsional, tergantung logic)
+        if (is_null($this->access_expires_at)) {
+            return true; 
+        }
+
+        return now()->lessThanOrEqualTo($this->access_expires_at);
+    }
+
+    // Helper untuk sisa waktu dalam detik (untuk countdown JS)
+    public function getRemainingSecondsAttribute(): int
+    {
+        if (!$this->access_expires_at || $this->access_expires_at->isPast()) {
+            return 0;
+        }
+
+        return now()->diffInSeconds($this->access_expires_at);
+    }
 
     /**
      * Get the user that owns the course registration.

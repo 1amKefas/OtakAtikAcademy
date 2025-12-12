@@ -417,4 +417,100 @@
         </div>
     </div>
 </div>
+
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $course->name }}</h1>
+            <p class="text-gray-500 mt-1">Masa Aktif Course: {{ \Carbon\Carbon::parse($course->start_date)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($course->end_date)->format('d M Y') }}</p>
+        </div>
+        
+        <div class="text-right">
+            @if($registration->has_active_access)
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    Akses Aktif
+                </span>
+            @else
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                    Akses Kadaluarsa
+                </span>
+                <a href="{{ route('student.course.renew', $course->id) }}" class="block mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-bold underline">
+                    Perpanjang Sekarang
+                </a>
+            @endif
+        </div>
+    </div>
+
+    <hr class="my-4 border-gray-100">
+
+    @if($registration->has_active_access)
+        <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-100 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <h3 class="text-sm font-semibold text-indigo-900 uppercase tracking-wider">Sisa Waktu Akses Anda</h3>
+                <p class="text-xs text-indigo-600">
+                    @if($registration->access_expires_at)
+                        Berakhir pada: {{ $registration->access_expires_at->format('d M Y, H:i:s') }}
+                    @else
+                        <span class="font-bold text-green-600">Akses Seumur Hidup</span>
+                    @endif
+                </p>
+            </div>
+            
+            <div class="flex gap-4 text-center">
+                <div class="bg-white p-2 rounded shadow-sm min-w-[70px]">
+                    <span id="countdown-days" class="block text-2xl font-bold text-indigo-700">00</span>
+                    <span class="text-xs text-gray-500">Hari</span>
+                </div>
+                <div class="bg-white p-2 rounded shadow-sm min-w-[70px]">
+                    <span id="countdown-hours" class="block text-2xl font-bold text-indigo-700">00</span>
+                    <span class="text-xs text-gray-500">Jam</span>
+                </div>
+                <div class="bg-white p-2 rounded shadow-sm min-w-[70px]">
+                    <span id="countdown-minutes" class="block text-2xl font-bold text-indigo-700">00</span>
+                    <span class="text-xs text-gray-500">Menit</span>
+                </div>
+                <div class="bg-white p-2 rounded shadow-sm min-w-[70px]">
+                    <span id="countdown-seconds" class="block text-2xl font-bold text-red-600">00</span>
+                    <span class="text-xs text-gray-500">Detik</span>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ambil sisa detik dari backend
+        let remainingSeconds = {{ $registration->access_expires_at ? $registration->remaining_seconds : 0 }};
+        
+        const daysEl = document.getElementById('countdown-days');
+        const hoursEl = document.getElementById('countdown-hours');
+        const minutesEl = document.getElementById('countdown-minutes');
+        const secondsEl = document.getElementById('countdown-seconds');
+
+        function updateCountdown() {
+            if (remainingSeconds <= 0) {
+                // Jika waktu habis, reload halaman untuk update status jadi expired
+                window.location.reload();
+                return;
+            }
+
+            const days = Math.floor(remainingSeconds / (3600 * 24));
+            const hours = Math.floor((remainingSeconds % (3600 * 24)) / 3600);
+            const minutes = Math.floor((remainingSeconds % 3600) / 60);
+            const seconds = Math.floor(remainingSeconds % 60);
+
+            if(daysEl) daysEl.innerText = String(days).padStart(2, '0');
+            if(hoursEl) hoursEl.innerText = String(hours).padStart(2, '0');
+            if(minutesEl) minutesEl.innerText = String(minutes).padStart(2, '0');
+            if(secondsEl) secondsEl.innerText = String(seconds).padStart(2, '0');
+
+            remainingSeconds--;
+        }
+
+        // Update setiap 1 detik
+        setInterval(updateCountdown, 1000);
+        updateCountdown(); // Run immediately
+    });
+</script>
 @endsection
