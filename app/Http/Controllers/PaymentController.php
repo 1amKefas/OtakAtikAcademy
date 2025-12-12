@@ -270,11 +270,13 @@ class PaymentController extends Controller
     private function handleSuccessfulPayment(Payment $payment, CourseRegistration $registration)
     {
         $course = $registration->course;
-        $durationDays = $course->duration;
+        // [FIX] Pastikan durasi minimal 1 hari. 
+        // Kalau 0 atau null, anggap default 30 hari (atau ubah jadi null untuk lifetime)
+        $durationDays = $course->duration && $course->duration > 0 ? $course->duration : 30; 
 
         if ($registration->access_expires_at && $registration->access_expires_at->isFuture()) {
-        // Kalau belum expired tapi user mau nambah durasi (stacking)
-        $newExpiryDate = $registration->access_expires_at->addDays($durationDays);
+            // Kalau user perpanjang sebelum expired (Stacking)
+            $newExpiryDate = $registration->access_expires_at->addDays($durationDays);
         } else {
             // Kalau baru beli atau sudah expired, hitung dari SEKARANG
             $newExpiryDate = now()->addDays($durationDays);

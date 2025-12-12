@@ -121,6 +121,15 @@ class CourseController extends Controller
         }
 
         $course = Course::findOrFail($validated['course_id']);
+
+        // [FIX] Hitung expired date untuk pendaftaran manual
+        $durationDays = $course->duration && $course->duration > 0 ? $course->duration : 30;
+        $expiresAt = now()->addDays($durationDays);
+
+        // Cek batas end_date course
+        if ($course->end_date && $expiresAt->greaterThan($course->end_date)) {
+            $expiresAt = $course->end_date;
+        }
         
         // Check if course has available slots
         if (!$course->hasAvailableSlots()) {
@@ -176,6 +185,7 @@ class CourseController extends Controller
             'status' => $status,
             'progress' => 0,
             'enrolled_at' => $status === 'paid' ? now() : null,
+            'access_expires_at' => $status === 'paid' ? $expiresAt : null, // <--- TAMBAHKAN INI
         ]);
 
         // Update course enrollment jika auto-approved

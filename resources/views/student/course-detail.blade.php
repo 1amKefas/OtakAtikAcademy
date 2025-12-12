@@ -480,34 +480,64 @@
 </div>
 
 <script>
-    // Ambil data dari Controller tadi
-    // Pastikan angka ini gak pake tanda kutip string
-    let timeLeft = {{ $secondsRemaining }}; 
+    // Ambil sisa waktu personal siswa
+    let totalSeconds = {{ $secondsRemaining }};
+    
+    // Elemen-elemen HTML
+    const elDays = document.getElementById('countdown-days');
+    const elHours = document.getElementById('countdown-hours');
+    const elMinutes = document.getElementById('countdown-minutes');
+    const elSeconds = document.getElementById('countdown-seconds');
+    const renewButton = document.querySelector('a[href*="renew"]'); // Tombol perpanjang
 
-    console.log("Sisa Waktu: " + timeLeft); // Cek di Console Browser (F12)
+    function updateCountdown() {
+        if (totalSeconds > 0) {
+            totalSeconds--;
 
-    // JANGAN PAKE if (timeLeft <= 0) location.reload() DI SINI!!
-    // Itu yang bikin looping refresh.
+            // Konversi Detik ke Hari/Jam/Menit/Detik
+            const days = Math.floor(totalSeconds / (3600 * 24));
+            const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
 
-    if (timeLeft > 0) {
-        // Kalau waktu masih ada, baru jalanin countdown
-        let x = setInterval(function() {
-            timeLeft--;
-            
-            // Update Teks Timer di HTML kamu (sesuaikan ID-nya)
-            // document.getElementById("timer").innerHTML = timeLeft + "s"; 
+            // Update Tampilan HTML (Pake if biar gak error kalau elemen gak ada)
+            if(elDays) elDays.innerText = String(days).padStart(2, '0');
+            if(elHours) elHours.innerText = String(hours).padStart(2, '0');
+            if(elMinutes) elMinutes.innerText = String(minutes).padStart(2, '0');
+            if(elSeconds) elSeconds.innerText = String(seconds).padStart(2, '0');
 
-            if (timeLeft <= 0) {
-                clearInterval(x);
-                // Waktu habis realtime: Reload ATAU munculin tombol bayar
-                // location.reload(); 
-                alert("Waktu Habis! Silakan perpanjang.");
+            // --- FITUR H-1 NOTIFIKASI ---
+            // 1 Hari = 86400 detik. 
+            // Jika sisa waktu kurang dari 1 hari tapi masih lebih dari 0
+            if (totalSeconds < 86400 && totalSeconds > 0) {
+                // Munculkan alert kecil atau ubah warna timer jadi merah biar panik dikit
+                if(elDays) elDays.parentElement.style.backgroundColor = '#fee2e2'; // Merah muda
+                if(elSeconds) elSeconds.style.color = 'red';
+                
+                // Opsional: Tampilkan pesan warning H-1
+                // alert('Peringatan: Masa aktif kursus tinggal 1 hari lagi!'); 
             }
-        }, 1000);
-    } else {
-        // Kalau pas dibuka waktu emang udah habis (minus)
-        // Jangan reload, tapi langsung tampilkan status expired
-        // document.getElementById("timer").innerHTML = "EXPIRED";
+
+        } else {
+            // WAKTU HABIS
+            clearInterval(timerInterval);
+            
+            // Ubah semua jadi 00
+            if(elDays) elDays.innerText = "00";
+            if(elHours) elHours.innerText = "00";
+            if(elMinutes) elMinutes.innerText = "00";
+            if(elSeconds) elSeconds.innerText = "00";
+
+            // Munculin tombol perpanjang atau reload
+            alert("Masa aktif kursus 30 hari Anda telah habis. Silakan perpanjang.");
+            window.location.reload(); 
+        }
     }
+
+    // Jalankan timer setiap 1 detik
+    let timerInterval = setInterval(updateCountdown, 1000);
+
+    // Jalankan sekali di awal biar gak nunggu 1 detik buat muncul
+    updateCountdown();
 </script>
 @endsection
