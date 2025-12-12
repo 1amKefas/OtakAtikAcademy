@@ -10,7 +10,7 @@ Laravel-based authentication system with beautiful UI design featuring a cute ko
 - 🐨 **Cute Koala Mascot**
 - 🔔 **Success/Error Notifications**
 - 📱 **Responsive Design**
-- 🚀 **Modern Laravel 11**
+- 🚀 **Modern Laravel 12**
 
 ## 🛠️ Tech Stack
 
