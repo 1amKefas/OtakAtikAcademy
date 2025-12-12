@@ -21,6 +21,8 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\FinancialController;
 use App\Http\Controllers\HomeController;
 use App\Models\Category;
+use App\Models\CourseRegistration;
+
 
 // --- GOOGLE AUTH ROUTES ---
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
@@ -391,3 +393,5 @@ Route::middleware(['auth'])->group(function () {
     // Tambahkan ->name('student.course.renew') di akhir
     Route::post('/student/course/renew', [CourseController::class, 'renew'])->name('student.course.renew');
 });
+
+// --- SCRIPT PERBAIKAN DATA LAMA (VERSI FIX IMPORT) ---

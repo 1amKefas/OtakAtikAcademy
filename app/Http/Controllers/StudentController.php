@@ -103,7 +103,7 @@ class StudentController extends Controller
             // Kalau null (lifetime access), set angka besar atau 0
             $secondsRemaining = 999999999; 
         }
-        $secondsRemaining = now()->diffInSeconds($course->expired_at, false);
+        
 
         return view('student.course-detail', compact('course', 'registration', 'secondsRemaining')); // Note: variable di view $userRegistration diganti jadi $registration biar konsisten
     }
