@@ -394,4 +394,57 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/student/course/renew', [CourseController::class, 'renew'])->name('student.course.renew');
 });
 
-// --- SCRIPT PERBAIKAN DATA LAMA (VERSI FIX IMPORT) ---
+
+// --- ROUTE DEBUG & FIX KELAS (VERSI FULL PATH - ANTI ERROR) ---
+Route::get('/debug-classes', function() {
+    // Kita panggil model pake nama lengkapnya: \App\Models\CourseClass
+    $classes = \App\Models\CourseClass::with(['course', 'instructor'])->get();
+    
+    echo "<h1>Daftar Semua Kelas Hybrid/Offline</h1>";
+    echo "<table border='1' cellpadding='10' style='border-collapse:collapse;'>";
+    echo "<thead><tr><th>ID Kelas</th><th>Nama Course</th><th>Nama Kelas</th><th>Instruktur Saat Ini (ID)</th><th>Aksi</th></tr></thead>";
+    echo "<tbody>";
+
+    // Panggil Auth pake nama lengkap: \Illuminate\Support\Facades\Auth
+    $isLoggedIn = \Illuminate\Support\Facades\Auth::check();
+    $myId = \Illuminate\Support\Facades\Auth::id();
+
+    foreach($classes as $class) {
+        $instructorName = $class->instructor ? $class->instructor->name : '<span style="color:red">KOSONG (NULL)</span>';
+        $instructorId = $class->instructor_id ?? '-';
+        
+        echo "<tr>";
+        echo "<td>{$class->id}</td>";
+        echo "<td>{$class->course->title}</td>";
+        echo "<td>{$class->name}</td>";
+        echo "<td><strong>{$instructorName}</strong> (ID: {$instructorId})</td>";
+        
+        // Cek logika tombol
+        if($isLoggedIn && $myId && $instructorId != $myId) {
+            echo "<td><a href='/force-assign-class/{$class->id}' style='color:blue; font-weight:bold;'>Ambil Alih (Assign ke Saya)</a></td>";
+        } elseif (!$isLoggedIn) {
+            echo "<td><em>Login Dulu</em></td>";
+        } else {
+            echo "<td><span style='color:green'>Sudah Benar</span></td>";
+        }
+        echo "</tr>";
+    }
+    echo "</tbody></table>";
+    
+    echo "<br><p>Pastikan Anda sudah LOGIN sebagai Instruktur, lalu klik 'Ambil Alih'.</p>";
+});
+
+Route::get('/force-assign-class/{id}', function($id) {
+    // Cek login pake full path
+    if(!\Illuminate\Support\Facades\Auth::check()) {
+        return "Silakan login dulu sebagai instruktur!";
+    }
+    
+    // Cari kelas pake full path
+    $class = \App\Models\CourseClass::findOrFail($id);
+    
+    // Update instruktur pake ID user yang sedang login
+    $class->update(['instructor_id' => \Illuminate\Support\Facades\Auth::id()]);
+    
+    return redirect('/debug-classes')->with('success', 'Berhasil diambil alih!');
+});
