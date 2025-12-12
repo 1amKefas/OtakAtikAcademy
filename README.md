@@ -14,28 +14,25 @@ Laravel-based authentication system with beautiful UI design featuring a cute ko
 
 ## 🛠️ Tech Stack
 
-- **Framework:** Laravel 11
-- **Database:** Oracle 21c XE
+- **Framework:** Laravel 12.39.0
+- **Database:** PostgreSQL
 - **Frontend:** Tailwind CSS
-- **PHP Version:** 8.2.12
-- **Oracle Driver:** OCI8
+- **PHP Version:** 8.3.9
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- PHP 8.2+
+- PHP 8.3+
 - Composer
-- Oracle Database 21c XE
-- Oracle Instant Client
-- OCI8 PHP Extension
+- PostgreSQL
 
 ### Setup
 
 1. **Clone the repository:**
 ```bash
-   git clone https://github.com/USERNAME/otakatik-laravel.git
-   cd otakatik-laravel
+   git clone https://github.com/USERNAME/otakatik.git
+   cd otakatik
 ```
 
 2. **Install dependencies:**
@@ -48,33 +45,22 @@ Laravel-based authentication system with beautiful UI design featuring a cute ko
    cp .env.example .env
 ```
 
-4. **Configure database in `.env`:**
-```env
-   DB_CONNECTION=oracle
-   DB_HOST=127.0.0.1
-   DB_PORT=1521
-   DB_DATABASE=otakatik
-   DB_USERNAME=user
-   DB_PASSWORD=12345678
-   DB_SERVICE_NAME=XE
-```
-
-5. **Generate application key:**
+4. **Generate application key:**
 ```bash
    php artisan key:generate
 ```
 
-6. **Run migrations:**
+5. **Run migrations:**
 ```bash
    php artisan migrate
 ```
 
-7. **Start development server:**
+6. **Start development server:**
 ```bash
    php artisan serve
 ```
 
-8. **Open browser:**
+7. **Open browser:**
 ```
    http://127.0.0.1:8000
 ```

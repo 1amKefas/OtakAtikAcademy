@@ -97,6 +97,7 @@ $isCorrect = $service->checkAnswer($question, $userAnswer);
 
 **Supported question types:**
 - ✅ Multiple Choice (auto-grade)
+- ✅ Multiple Choice (Complex) (auto-grade)
 - ✅ True/False (auto-grade)
 - ⏳ Essay (manual grading)
 
