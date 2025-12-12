@@ -50,14 +50,6 @@ class InstructorController extends Controller
             });
         });
 
-        // 1. Definisikan Base Query (Biar gak ngetik ulang)
-        $baseQuery = Course::where(function($q) use ($instructor) {
-            $q->where('instructor_id', $instructor->id)
-            ->orWhereHas('assistants', function($sq) use ($instructor) {
-                $sq->where('users.id', $instructor->id);
-            });
-        });
-
         // 2. [OPTIMASI] Hitung Statistik LANGSUNG di Database (Tanpa Load Model)
         // Clone query biar gak tabrakan
         $totalCourses = (clone $baseQuery)->count();
