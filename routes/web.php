@@ -22,6 +22,10 @@ use App\Http\Controllers\FinancialController;
 use App\Http\Controllers\HomeController;
 use App\Models\Category;
 use App\Models\CourseRegistration;
+use App\Models\Course;
+use App\Models\CourseClass;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 
 // --- GOOGLE AUTH ROUTES ---
@@ -394,57 +398,72 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/student/course/renew', [CourseController::class, 'renew'])->name('student.course.renew');
 });
 
+Route::get('/debug-query', function() {
+    if(!Auth::check()) return "<h1>LOGIN DULU SEBAGAI INSTRUKTUR!</h1>";
 
-// --- ROUTE DEBUG & FIX KELAS (VERSI FULL PATH - ANTI ERROR) ---
-Route::get('/debug-classes', function() {
-    // Kita panggil model pake nama lengkapnya: \App\Models\CourseClass
-    $classes = \App\Models\CourseClass::with(['course', 'instructor'])->get();
+    $user = Auth::user();
+    $userId = $user->id;
+
+    echo "<h1>🔍 X-Ray Debugger: Mengapa Course Hilang?</h1>";
+    echo "<p>User Login: <strong>{$user->name}</strong> (ID: <strong>{$userId}</strong>)</p>";
+    echo "<hr>";
+
+    // 1. CEK DATA MENTAH DI DATABASE (Tanpa Relasi Course)
+    echo "<h3>1. Cek Data Mentah (Direct DB Check)</h3>";
     
-    echo "<h1>Daftar Semua Kelas Hybrid/Offline</h1>";
-    echo "<table border='1' cellpadding='10' style='border-collapse:collapse;'>";
-    echo "<thead><tr><th>ID Kelas</th><th>Nama Course</th><th>Nama Kelas</th><th>Instruktur Saat Ini (ID)</th><th>Aksi</th></tr></thead>";
-    echo "<tbody>";
+    $asTeam = DB::table('course_instructors')->where('user_id', $userId)->count();
+    $asClassPj = DB::table('course_classes')->where('instructor_id', $userId)->count();
+    
+    echo "<ul>";
+    echo "<li>Terdaftar di tim 'course_instructors'? : <strong>" . ($asTeam > 0 ? "YA ($asTeam data)" : "<span style='color:red'>TIDAK</span>") . "</strong></li>";
+    echo "<li>Terdaftar di 'course_classes' (PJ Kelas)? : <strong>" . ($asClassPj > 0 ? "YA ($asClassPj data)" : "<span style='color:red'>TIDAK</span>") . "</strong></li>";
+    echo "</ul>";
 
-    // Panggil Auth pake nama lengkap: \Illuminate\Support\Facades\Auth
-    $isLoggedIn = \Illuminate\Support\Facades\Auth::check();
-    $myId = \Illuminate\Support\Facades\Auth::id();
-
-    foreach($classes as $class) {
-        $instructorName = $class->instructor ? $class->instructor->name : '<span style="color:red">KOSONG (NULL)</span>';
-        $instructorId = $class->instructor_id ?? '-';
-        
-        echo "<tr>";
-        echo "<td>{$class->id}</td>";
-        echo "<td>{$class->course->title}</td>";
-        echo "<td>{$class->name}</td>";
-        echo "<td><strong>{$instructorName}</strong> (ID: {$instructorId})</td>";
-        
-        // Cek logika tombol
-        if($isLoggedIn && $myId && $instructorId != $myId) {
-            echo "<td><a href='/force-assign-class/{$class->id}' style='color:blue; font-weight:bold;'>Ambil Alih (Assign ke Saya)</a></td>";
-        } elseif (!$isLoggedIn) {
-            echo "<td><em>Login Dulu</em></td>";
-        } else {
-            echo "<td><span style='color:green'>Sudah Benar</span></td>";
+    if($asClassPj > 0) {
+        $kelas = DB::table('course_classes')->where('instructor_id', $userId)->get();
+        echo "<table border='1'><tr><th>ID Kelas</th><th>Nama Kelas</th><th>ID Course</th></tr>";
+        foreach($kelas as $k) {
+            echo "<tr><td>{$k->id}</td><td>{$k->name}</td><td>{$k->course_id}</td></tr>";
         }
-        echo "</tr>";
+        echo "</table>";
     }
-    echo "</tbody></table>";
-    
-    echo "<br><p>Pastikan Anda sudah LOGIN sebagai Instruktur, lalu klik 'Ambil Alih'.</p>";
-});
 
-Route::get('/force-assign-class/{id}', function($id) {
-    // Cek login pake full path
-    if(!\Illuminate\Support\Facades\Auth::check()) {
-        return "Silakan login dulu sebagai instruktur!";
+    echo "<hr>";
+
+    // 2. CEK QUERY ELOQUENT SATU PER SATU
+    echo "<h3>2. Cek Query Eloquent (Logic Controller)</h3>";
+
+    // Cek A: Sebagai OWNER
+    $countOwner = Course::where('instructor_id', $userId)->count();
+    echo "<p>A. Sebagai Owner Utama: <strong>$countOwner</strong> course</p>";
+
+    // Cek B: Sebagai TEAM INSTRUCTOR
+    $countTeam = Course::whereHas('instructors', function($q) use ($userId) {
+        $q->where('users.id', $userId);
+    })->count();
+    echo "<p>B. Sebagai Team Instructor: <strong>$countTeam</strong> course</p>";
+
+    // Cek C: Sebagai PJ KELAS (Ini yang dicurigai)
+    // Kita coba debug relasinya manual
+    try {
+        $countClass = Course::whereHas('courseClasses', function($q) use ($userId) {
+            $q->where('instructor_id', $userId);
+        })->count();
+        echo "<p>C. Sebagai PJ Kelas (Hybrid/Offline): <strong>$countClass</strong> course</p>";
+    } catch (\Exception $e) {
+        echo "<p style='color:red'>ERROR di Query C: " . $e->getMessage() . "</p>";
     }
+
+    echo "<hr>";
     
-    // Cari kelas pake full path
-    $class = \App\Models\CourseClass::findOrFail($id);
-    
-    // Update instruktur pake ID user yang sedang login
-    $class->update(['instructor_id' => \Illuminate\Support\Facades\Auth::id()]);
-    
-    return redirect('/debug-classes')->with('success', 'Berhasil diambil alih!');
+    // 3. FINAL VERDICT
+    $total = $countOwner + $countTeam + ($countClass ?? 0);
+    echo "<h3>Kesimpulan:</h3>";
+    if ($total == 0) {
+        echo "<h2 style='color:red'>Total Course Ditemukan: 0</h2>";
+        echo "<p>Masalahnya ada di DATA database. ID kamu tidak nyambung ke Course manapun.</p>";
+    } else {
+        echo "<h2 style='color:green'>Total Course Ditemukan: $total</h2>";
+        echo "<p>Query berjalan lancar! Kalau di dashboard masih kosong, berarti file <code>InstructorController.php</code> di server BELUM TERUPDATE atau salah edit.</p>";
+    }
 });

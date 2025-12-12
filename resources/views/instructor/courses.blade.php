@@ -81,7 +81,7 @@
                         <p class="text-gray-600">Kelola konten dan materi untuk kursus Anda</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm text-gray-600">Total: {{ $courses->count() }} courses</p>
+                        <p class="text-sm text-gray-600">Total: {{ $courses->total() }} courses</p>
                     </div>
                 </div>
             </header>
@@ -156,6 +156,13 @@
                     </div>
                     @endforelse
                 </div>
+
+                {{-- TAMBAHKAN KODE INI DI SINI --}}
+                <div class="mt-6">
+                    {{ $courses->links() }}
+                </div>
+                {{-- SAMPAI SINI --}}
+
             </main>
         </div>
     </div>
