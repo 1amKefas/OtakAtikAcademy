@@ -12,10 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('course_registrations', function (Blueprint $table) {
-            // Menyimpan tanggal kadaluarsa akses user
-            $table->timestamp('access_expires_at')->nullable()->after('status');
-            // Menyimpan status apakah user sudah diingatkan (untuk cron job)
-            $table->boolean('expiry_notification_sent')->default(false)->after('access_expires_at');
+            // Check if column exists before adding
+            if (!Schema::hasColumn('course_registrations', 'access_expires_at')) {
+                $table->timestamp('access_expires_at')->nullable()->after('status');
+            }
+            
+            if (!Schema::hasColumn('course_registrations', 'expiry_notification_sent')) {
+                $table->boolean('expiry_notification_sent')->default(false)->after('access_expires_at');
+            }
         });
     }
 
