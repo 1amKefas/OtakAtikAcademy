@@ -96,6 +96,11 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'dump' => [
+                'dump_binary_path' => 'C:\\Program Files\\PostgreSQL\\18\\bin', // Cek folder bin kamu versinya berapa!
+                'use_single_transaction' => true,
+                'timeout' => 60 * 5, 
+            ],
             'options' => [
                 \PDO::ATTR_TIMEOUT => 5, // Tambah timeout biar gak nunggu 30 detik kalau error
             ],
