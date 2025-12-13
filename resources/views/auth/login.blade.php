@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - OtakAtik Academy</title>
     
-    {{-- HAPUS CDN TAILWIND & STYLE INLINE --}}
-    {{-- GANTI DENGAN VITE --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    {{-- FontAwesome (Pastikan pakai crossorigin) --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 </head>
-<body class="bg-white font-sans"> {{-- Tambahkan font-sans --}}
+<body class="bg-white font-sans">
 
     <div class="min-h-screen flex">
         
@@ -72,9 +68,19 @@
                                 Forgot password?
                             </a>
                         </div>
-                        <input id="password" type="password" name="password" required
-                            class="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500 sm:text-sm transition-all"
-                            placeholder="••••••••">
+                        
+                        {{-- [MODIFIKASI] Wrapper Relative buat Icon Mata --}}
+                        <div class="relative">
+                            <input id="password" type="password" name="password" required
+                                class="block w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500 sm:text-sm transition-all"
+                                placeholder="••••••••">
+                            
+                            {{-- Tombol Toggle --}}
+                            <button type="button" onclick="togglePassword('password')" 
+                                    class="absolute inset-y-0 right-3 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <i class="fas fa-eye" id="password-icon"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="flex items-center">
@@ -119,5 +125,23 @@
             </div>
         </div>
     </div>
+
+    {{-- [MODIFIKASI] Script untuk Toggle Password --}}
+    <script>
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(inputId + '-icon');
+            
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>
