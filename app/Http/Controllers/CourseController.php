@@ -37,8 +37,13 @@ class CourseController extends Controller
         
         // [OPTIMASI] Gunakan PAGINATE (12 per halaman)
         $courses = $query->paginate(12)->withQueryString();
+
+        // Tambahin ini (Cache 1 jam biar cepet)
+        $categories = \Illuminate\Support\Facades\Cache::remember('categories_list', 3600, function () {
+            return \App\Models\Category::orderBy('sort_order')->get();
+        });
         
-        return view('course', compact('courses'));
+        return view('course', compact('courses', 'categories'));
     }
 
     /**

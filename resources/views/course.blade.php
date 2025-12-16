@@ -3,7 +3,6 @@
 @section('title', 'Katalog Course - OtakAtik Academy')
 
 @section('content')
-<script src="{{ asset('js/course-search.js') }}"></script>
 
 <section class="pt-32 pb-20 px-6 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto">
@@ -98,9 +97,6 @@
             <a href="{{ route('course.index', request()->except('category')) }}" class="px-6 py-2 rounded-full font-semibold {{ !request('category') ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} transition">
                 Semua Kategori
             </a>
-            @php
-                $categories = \App\Models\Category::orderBy('sort_order')->get();
-            @endphp
             @foreach($categories as $cat)
                 <a href="{{ route('course.index', array_merge(request()->except('category'), ['category' => $cat->slug])) }}" 
                    class="px-6 py-2 rounded-full font-semibold {{ request('category') === $cat->slug ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} transition">
@@ -222,3 +218,7 @@
     </div>
 </section>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/course-search.js') }}" defer></script>
+@endpush

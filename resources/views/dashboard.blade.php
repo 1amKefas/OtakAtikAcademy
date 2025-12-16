@@ -4,7 +4,6 @@
 
 @section('content')
 {{-- Load External JS for Slider Logic --}}
-<script src="{{ asset('js/user-dashboard.js') }}" defer></script>
 
 <div class="w-full bg-white">
     
@@ -15,10 +14,7 @@
                 TIPS: Simpan gambar background lo di: public/images/hero-bg.jpg
                 Kalau nama filenya beda, ganti 'hero-bg.jpg' di bawah ini.
             --}}
-            <img src="{{ asset('home_background.png') }}" 
-                 alt="Home Background" 
-                 class="w-full h-full object-cover"
-                 onerror="this.style.display='none'"> {{-- Kalau gambar gak ada, sembunyiin (pake warna backup) --}}
+            {{-- Kalau gambar gak ada, sembunyiin (pake warna backup) --}}
         </div>
 
         {{-- Ubah opacity (misal: /90 jadi /80) kalau mau lebih terang --}}
@@ -232,5 +228,9 @@
     </section>
 </div>
 
-@push('head') <link rel="stylesheet" href="{{ asset('css/landing.css') }}"> @endpush
+
 @endsection
+@push('head') <link rel="stylesheet" href="{{ asset('css/landing.css') }}"> @endpush
+@push('scripts')
+    <script src="{{ asset('js/user-dashboard.js') }}" defer></script>
+@endpush

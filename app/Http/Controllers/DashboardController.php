@@ -29,7 +29,7 @@ class DashboardController extends Controller
 
         $myCoursesCount = $stats->total ?? 0;
         $completedCoursesCount = $stats->completed ?? 0;
-        $certificatesCount = $user->certificates ? $user->certificates->count() : 0;
+        $certificatesCount = $user->certificates()->count();
 
         return view('dashboard', compact(
             'user', 
