@@ -40,7 +40,7 @@
                             <span>Kategori</span>
                         </a>
                     </li>
-                    <li><a href="/admin/courses/manage" class="flex items-center gap-3 px-4 py-3 bg-blue-600 rounded-lg text-white"><i class="fas fa-plus-circle w-5"></i><span>Tambah Course</span></a></li>
+                    <li><a href="/admin/courses/manage" class="flex items-center gap-3 px-4 py-3 bg-blue-600 rounded-lg text-white"><i class="fas fa-plus-circle w-5"></i><span>Course Management</span></a></li>
                     <li><a href="/admin/financial" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"><i class="fas fa-chart-bar w-5"></i><span>Financial Analytics</span></a></li>
                     <li><a href="/admin/refund" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"><i class="fas fa-exchange-alt w-5"></i><span>Refund Management</span></a></li>
                     </li>  <li class="pt-4 mt-4 border-t border-gray-700"></li>

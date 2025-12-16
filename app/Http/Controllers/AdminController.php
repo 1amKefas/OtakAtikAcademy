@@ -206,7 +206,14 @@ class AdminController extends Controller
 
     public function courses()
     {
-        $courses = CourseRegistration::with(['user', 'course.instructor'])
+        // [UBAH] Fetch Course dengan statistik, bukan CourseRegistration
+        $courses = Course::with('instructor')
+            ->withCount(['registrations' => function($q) {
+                // Hitung siswa yang statusnya sudah 'paid'
+                $q->where('status', 'paid');
+            }])
+            ->withCount('reviews') // Hitung jumlah ulasan
+            ->withAvg('reviews', 'rating') // Hitung rata-rata bintang
             ->latest()
             ->paginate(10);
 

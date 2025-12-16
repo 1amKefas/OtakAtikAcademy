@@ -39,13 +39,13 @@
                      <li>
                         <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors {{ request()->routeIs('categories.*') ? 'bg-blue-600 text-white' : '' }}">
                             <i class="fas fa-tags w-5"></i>
-                            <span>Kategori</span>
+                            <span>Categories</span>
                         </a>
                     </li>
                     <li>
                         <a href="/admin/courses/manage" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
                             <i class="fas fa-plus-circle w-5"></i>
-                            <span>Tambah Course</span>
+                            <span>Course Management</span>
                         </a>
                     </li>
                     <li>
