@@ -12,9 +12,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     @stack('head')
-
-    {{-- TinyMCE Tetap Pakai CDN (Aman karena sudah ada atribut security) --}}
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
 <body class="bg-gray-50 font-sans leading-normal tracking-normal">
 
@@ -30,6 +27,9 @@
     @endauth
 
     @include('components.footer')
+    
+    {{-- TinyMCE Tetap Pakai CDN (Aman karena sudah ada atribut security) --}}
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous" defer></script>
 
     @stack('scripts')
 </body>

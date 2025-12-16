@@ -113,7 +113,9 @@
                     <div class="relative h-48 overflow-hidden bg-gray-200">
                         @if($course->image_url)
                             <img src="{{ $course->image_url }}" alt="{{ $course->title }}" 
-                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                 loading="lazy"
+                                 decoding="async">
                         @else
                             <div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
                                 <i class="fas fa-graduation-cap text-white text-5xl opacity-20 transform -rotate-12"></i>
@@ -142,7 +144,12 @@
                                 }
                             @endphp
 
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($instructorName) }}&background=random&color=fff" class="w-6 h-6 rounded-full border border-white shadow-sm">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($instructorName) }}&background=random&color=fff" 
+                                class="w-6 h-6 rounded-full border border-white shadow-sm"
+                                loading="lazy"
+                                decoding="async"
+                                width="24" height="24"
+                                alt="{{ $instructorName }}">
                             <span class="text-xs font-semibold text-gray-500 truncate">{{ $instructorName }}</span>
                         </div>
 
