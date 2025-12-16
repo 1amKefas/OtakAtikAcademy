@@ -35,8 +35,11 @@ class CourseController extends Controller
             });
         }
         
-        // [OPTIMASI] Gunakan PAGINATE (12 per halaman)
-        $courses = $query->paginate(12)->withQueryString();
+        // [FIX UTAMA] Tambahkan with('instructor') disini!
+        // Ini bikin 13 query jadi cuma 2 query. JAUH LEBIH CEPAT.
+        $courses = $query->with(['instructor', 'assistants']) // <--- TAMBAH INI
+                        ->where('is_active', true)
+                        ->paginate(9);
 
         // Tambahin ini (Cache 1 jam biar cepet)
         $categories = \Illuminate\Support\Facades\Cache::remember('categories_list', 3600, function () {

@@ -9,3 +9,10 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@font-face {
+  font-family: 'Instrument Sans ExtraBold';
+    src: url('/fonts/your-font-extrabold.woff2') format('woff2'),
+         url('/fonts/your-font-extrabold.woff') format('woff');
+  font-display: swap; 
+}

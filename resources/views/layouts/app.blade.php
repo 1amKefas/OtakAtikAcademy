@@ -7,6 +7,7 @@
     <title>@yield('title', 'OtakAtik')</title>
 
     <link rel="icon" href="{{ asset('images/brain.png') }}" type="image/png">
+    <link rel="preload" href="{{ asset('build/assets/font-file-name.woff2') }}" as="font" type="font/woff2" crossorigin>
 
     {{-- SEMUA LIBRARY (Alpine, FontAwesome, Tailwind) SUDAH DISINI --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
