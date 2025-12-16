@@ -33,7 +33,7 @@
                     <li>
                         <a href="/admin/courses" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
                             <i class="fas fa-book w-5"></i>
-                            <span>Course Management</span>
+                            <span>Course Analytics</span>
                         </a>
                     </li>
                      <li>
