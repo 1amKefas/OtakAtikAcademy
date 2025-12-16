@@ -167,7 +167,6 @@
                                     <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Jumlah Siswa</th>
                                     <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Rating & Ulasan</th>
                                     <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -251,22 +250,7 @@
                                         @endif
                                     </td>
 
-                                    {{-- Kolom 6: Aksi --}}
-                                    <td class="px-6 py-4 text-right whitespace-nowrap text-sm font-medium">
-                                        <div class="flex justify-end gap-2">
-                                            <a href="{{ route('admin.courses.edit', $course->id) }}" class="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded-lg transition-colors" title="Edit Course">
-                                                <i class="fas fa-pen"></i>
-                                            </a>
-                                            
-                                            {{-- Tombol Hapus (Hanya contoh, biasanya di manage) --}}
-                                            <form action="{{ route('admin.courses.delete', $course->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus course ini?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-lg transition-colors" title="Hapus">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    
                                 </tr>
                                 @empty
                                 <tr>

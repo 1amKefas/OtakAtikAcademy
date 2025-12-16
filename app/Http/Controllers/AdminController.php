@@ -759,6 +759,10 @@ class AdminController extends Controller
     public function updateCourse(Request $request, $id)
     {
         $course = Course::findOrFail($id);
+
+        // [TAMBAHAN] Set batas waktu jadi 300 detik (5 menit) biar gak timeout pas upload
+        set_time_limit(300); 
+        ini_set('memory_limit', '512M'); // Opsional: Tambah memory juga biar aman
         
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -957,5 +961,32 @@ class AdminController extends Controller
         return Course::withCount('registrations')
             ->orderBy('registrations_count', 'desc')
             ->first();
+    }
+
+    /**
+     * [BARU] Halaman Lihat Review per Course
+     */
+    public function courseReviews($id)
+    {
+        $course = Course::findOrFail($id);
+        
+        // Ambil review dengan data user, urutkan terbaru
+        $reviews = \App\Models\CourseReview::with('user')
+            ->where('course_id', $id)
+            ->latest()
+            ->paginate(15);
+
+        return view('admin.course-reviews', compact('course', 'reviews'));
+    }
+
+    /**
+     * [BARU] Hapus Review (Moderasi Admin)
+     */
+    public function deleteReview($id)
+    {
+        $review = \App\Models\CourseReview::findOrFail($id);
+        $review->delete();
+
+        return back()->with('success', 'Review berhasil dihapus (moderasi).');
     }
 }

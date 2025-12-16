@@ -155,6 +155,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/courses/create', [AdminController::class, 'create'])->name('courses.create.form');
     Route::post('/courses/create', [AdminController::class, 'createCourse'])->name('courses.create');
     Route::get('/courses/export', [AdminController::class, 'exportCourses'])->name('courses.export');
+    // [BARU] Route Manajemen Review Course
+    Route::get('/courses/{id}/course', [AdminController::class, 'courseReviews'])->name('courses.reviews');
+    Route::delete('/reviews/{id}', [AdminController::class, 'deleteReview'])->name('reviews.delete');
     
     // [BARU] Route Admin Reorder Modul
     Route::post('/courses/{course}/modules/reorder', [ModuleController::class, 'reorder'])->name('modules.reorder');
