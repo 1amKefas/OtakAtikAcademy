@@ -60,14 +60,11 @@
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex items-center justify-end gap-2">
                             {{-- Tombol Edit via Modal (Pakai JS Listener) --}}
-                            <button type="button" 
-                                    class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition btn-edit-category"
-                                    data-id="{{ $category->id }}"
-                                    data-name="{{ $category->name }}"
-                                    {{-- Tambah data lain jika perlu --}}
-                                    title="Edit">
+                            <a href="{{ route('admin.categories.edit', $category->id) }}" 
+                            class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
+                            title="Edit Category">
                                 <i class="fas fa-edit"></i>
-                            </button>
+                            </a>
                             
                             {{-- Link Edit Halaman Terpisah (Opsional/Alternatif) --}}
                             {{-- <a href="{{ route('admin.categories.edit', $category->id) }}" class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-pen"></i></a> --}}
@@ -96,39 +93,6 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
-</div>
-
-{{-- Edit Modal --}}
-<div id="editCategoryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-    <div class="relative mx-auto p-5 border w-96 shadow-xl rounded-2xl bg-white transform transition-all">
-        <div class="mb-4">
-            <h3 class="text-lg font-bold text-gray-900">Edit Kategori</h3>
-        </div>
-        <form id="editCategoryForm" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kategori</label>
-                    <input type="text" name="name" id="edit_name" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Thumbnail (Opsional)</label>
-                    <input type="file" name="thumbnail" accept="image/*"
-                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition">
-                </div>
-            </div>
-            <div class="mt-6 flex justify-end gap-3">
-                <button type="button" class="btn-close-modal px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition">
-                    Batal
-                </button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition shadow-md">
-                    Simpan Perubahan
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 @endsection
