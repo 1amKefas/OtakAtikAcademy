@@ -1,0 +1,296 @@
+[33m78c12fd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m n
+[33mfdcaffc[m s
+[33m38df504[m n
+[33m4d78b3f[m N
+[33m8d1d3ea[m n
+[33me6185fd[m Nurunin Load Library di Course Catalog
+[33m596010a[m LCP di bagian course catalog butuh 11 detik, gw coba percepat
+[33m7281215[m Beberapa Hal di View ngebuat load lama, solusi (ditaruh di paling bawah)
+[33mc84632d[m Typo fix
+[33m827af8f[m N
+[33maa91144[m Minor Changes
+[33m3a95f13[m Fix Password Field
+[33m0325555[m Benerin Fitur Backup Mingguan
+[33m139a39f[m Fix Class Error
+[33mac5e724[m Fix Few Database Error
+[33m5367c02[m N
+[33m8bd96d4[m N
+[33m76b907b[m N
+[33m8e99fb9[m Few Error Fix
+[33m722af4e[m Countdown Error
+[33mb34456c[m Fix Error Countdown
+[33me133c82[m N
+[33m040ab25[m Course Class Error Fix
+[33m836b2ec[m Fix Class Error
+[33m12e5aaf[m N
+[33m4fa4118[m Merge branch 'main' of https://github.com/1amKefas/OtakAtikAcademy
+[33m4d185b0[m N
+[33m63a93d7[m Update Laravel version from 11 to 12
+[33m1f2c8d0[m Delete All Markdown Except Readme
+[33m281b0e5[m N
+[33m6183460[m Masa Aktif Kursus
+[33mdaf0048[m Time-On-Page
+[33mdf5e0fb[m Fix Location Error
+[33mfa032ad[m N
+[33m652fded[m Fix Location Error
+[33mfcd29b8[m Fix Profile Error
+[33m0d28e2b[m Admin Navbar Fixed
+[33ma4b87ee[m Sambungin Database ke financial
+[33m21c9ecb[m Nyambungin database ke Participant/Users
+[33mf048264[m N
+[33m59cd70d[m Benerin Fitur Review & Rating
+[33m7474a95[m Nyambungin Review dan Rating
+[33m1695f01[m Sambungin Data yang masih dummy di UI
+[33m2c11b0e[m Fix Atur Kelas Error
+[33mc1f7a70[m Pagination In Course Catalogue
+[33ma256c1f[m Search Bar di bagian Participant/Users
+[33m1b1f480[m Fix Few Error
+[33m28f2a84[m Demo blade buat demo quiz di instructor side
+[33m3de8ad6[m N
+[33mc9c936d[m Fix Few Error
+[33mbfdd2f6[m Insert Quiz Error Fixed
+[33m588000b[m Fix Few Errors
+[33m2334624[m Fix Few Errors
+[33m8edcf90[m Fix Few Errors
+[33m0dbfa4e[m Tracking Video
+[33m5c19385[m N
+[33m48f517c[m Improve beberapa crud function
+[33mbbc602e[m Naikin Performa CRUD Dashboard, Courses, dan Forum diskusi
+[33mb068a6f[m Naikin performa sistem ketika load data yang banyak
+[33mb1a8c74[m Fix a few bugs
+[33me6569d6[m Supaya gk ngelag ketika mengakses database pas internet lemot
+[33m173729f[m Upgrade Certificate Feature
+[33m3ed3a55[m Fitur Desain Sertifikat
+[33mbbf9208[m Certificate Download Error Fixed
+[33m806bb84[m Benerin Logika Download Sertifikat
+[33m62a0e8b[m Nambahin Tombol download sertifikat di course-detail.blade
+[33m7b7c780[m Fix Certificate Logic
+[33mdccaba8[m Fix Add module error
+[33m99934fb[m N
+[33mdfb15c4[m Fix Reorder Logic
+[33m3612306[m Reorder Module Content Fix
+[33m3169d51[m Few Error Fixed
+[33m5fa446c[m Fix Certificate Logic
+[33mfd31112[m Update Logic Fitur Sertifikat
+[33m87b1510[m Class From User side
+[33m4cee85b[m Fix Course Class Feature
+[33m9ad8d2c[m Fitur Kelas
+[33m40feb5f[m Improve QuizController Performance
+[33mf2c1ae2[m Improve Back End Performance
+[33maee1586[m Fix TinyMice API
+[33mc45545a[m M
+[33mbcfe885[m Balikin Unsafe Inline
+[33m843e99a[m N
+[33m0d1c6ee[m Add production assets
+[33mb20edca[m Update Vite di semua view
+[33maa8ae81[m Recover Auth Loss CSS
+[33m1245ade[m Update SecurityHeaders
+[33md29cb0e[m Download Bawaan CDN
+[33m7d40674[m Hapus Onclick di manage-courses admin dan nambahin file cors.php di config soalnya cdn gk bisa di hilangin * nya
+[33m278ad06[m Zap Getting Close to perfection
+[33m3c08012[m Update .htaccess
+[33mfefa6f9[m Fix a little error
+[33m6c5bfdb[m Fix Another Cross-Domain Misconfiguration
+[33m7a9e3b6[m Fix Cross-Domain Misconfiguration
+[33ma3bd7d3[m Update TinyMice
+[33m23e37d2[m Hapus Inline Style dari home page dan learning/index.blade
+[33m96b9946[m Hapus semua inline style di page instruktur
+[33mc2eab4c[m Benerin beberapa css di bagian admin
+[33m1b5f140[m Pisahin Inline Style dari seluruh page admin
+[33m076da37[m Hapus onclick dari refund.blade
+[33m5a92e75[m Fix SecurityHeaders and bootsrap/app.php
+[33me2b6795[m Update SecurityHeaders dan cdn layout admin
+[33m73eeba3[m Add CSP to sistem
+[33m7c3a5c2[m Pisahin Inline Script dari refund.blade admin
+[33m1f7c981[m Pisahin Inline Script dari edit-course.blade admin dan add-question.blade instruktur
+[33m1602a66[m Pisahin Inline Script dari manage-courses.blade admin
+[33mdb42866[m Pisahin Inline Script dari Instructor/courses.blade
+[33m83b29ae[m Pisahin Inline Script di Dashboard.blade
+[33m3438d85[m Pisahin Inline script di settings.blade dan navbar.blade
+[33m89b81bf[m Benerin Inline Script manage.blade instruktur dan learning/index.blade student
+[33m048b290[m Pisahin Inline Script dari dashboard admin dan dashboard instruktur
+[33m0757f18[m Pisahin Inline Script dari admin/users.blade.php
+[33m1a4f4f6[m Pisahin Inline Script dari course-detail.blade.php instruktur
+[33m3eac049[m Perbaikan Function yang bikin ngelag
+[33m486750a[m Pisahin Inline Script dari student/profile.blade.php dan benerin dashboard instruktur biar gk ngeleg pas load data
+[33me32c84d[m Pisahin Inline Script dari file course.blade.php dan checkout.blade.php
+[33m13b9186[m Hapus Inline Script dari file learning/index.blade.php
+[33m022f308[m Hapus Inline Script dari student/quiz/take.blade.php dan instructor/courses/manage.blade.php
+[33mdbad2fd[m Fix Typo on manage.blade
+[33mcdaa095[m Fix Add material and Video Logic, Update Preview in Instructor side
+[33me74b699[m Quiz Edit Bug FIx
+[33m42fbf36[m Case Sensitive di diskon
+[33mbdd7463[m Benerin Lag di CourseController dan Benerin Lampiran FIle di InstructorController
+[33mb82c6ba[m Fix Quiz Submissions
+[33m4700548[m Search Bar in Course
+[33md5b73df[m Fix Quiz Logic
+[33m0eec31e[m Quiz LOGIC Fixed
+[33m84ed1cc[m Fix Quiz Logic
+[33m9c227c8[m Fixed Quiz Error
+[33mf7e207f[m Edit Material and quiz in module
+[33m8c39bc9[m Fixed Few quiz error
+[33m640d2e7[m Add Multiple Choice Type of Quiz
+[33m1fd7e10[m Dark mode in learning index
+[33m616d318[m Course Progress Real time
+[33m0affa1e[m Module Reorder Appear Real time
+[33m88bc6a5[m Fix Some Error
+[33m1a07f73[m Bungkus reorder biar gk ngeleg
+[33m34c42ab[m Reorder Module Appear in real time
+[33mbc01d4a[m Drag Module in admin side
+[33m8dde66e[m Drag Module in Admin
+[33m6a8acc7[m Reorder all materials including quiz
+[33m0adf95a[m Reorder Quiz in modules
+[33m99842a1[m Reorder Materials Inside Modules
+[33mad92344[m Reorder Modules Instructor side
+[33m51c768a[m Perbaikan Bug Refund
+[33m6a00e95[m Sedikit bug dibenerin di course-detail
+[33m154eb0f[m Forum Discussion Fixxed
+[33m8ecc0d1[m Sedikit benerin course detail user
+[33m36dcff1[m Mempercantik UI course detail, yg belum dibeli
+[33m0873708[m Few Error in Instructor Page
+[33m708c7f7[m Some Error Fixed
+[33mbc0be32[m Few Error Fixed
+[33m5a07c21[m N
+[33m272ddd9[m Fix error purchase history
+[33m77c0718[m Error fungsi createCourse Solved
+[33mc8244e3[m Multiple Instructor has been added to the system
+[33m04a6464[m Nambahin logika multiple Intruktur
+[33m5260b69[m Fungsi untuk nambahin beberapa instruktur
+[33m124f8f6[m N
+[33mc406858[m Ada benerin bug sedikit
+[33mf2136b5[m Category done
+[33m2f39c9c[m Sedikit ubah controller category
+[33m91ebc06[m Fitur kategori 90 persen selesai
+[33mf063957[m N
+[33m7e172a0[m Kategori Masih dalam pengerjaan!
+[33mde74ddf[m Sedikit rombak fitur kategori
+[33m0bfea04[m My courses tadi juga error, udh gw benerin
+[33m31e3faf[m Tadi ini error, udh gw benerin
+[33md0c5ab7[m Update buat Blackbox
+[33m331a0e7[m feat: category filtering + course create with categories + navbar links
+[33m987444a[m N
+[33ma74387c[m Nambahin Kategori dan sertifikat di tambah course admin
+[33mc7ba9d1[m feat: add views for categories, financial dashboard, certificates, and modules
+[33m140f458[m feat: add category support to course creation and update
+[33m422b443[m fix: simplify email verification URL generation to use consistent signed routes
+[33mfe27430[m fix: email verification route without auth middleware to allow unauthenticated verification
+[33m4e27e92[m fix: email verification route with signed middleware and EmailVerificationRequest
+[33mc82a18e[m feat: add 4 controllers and 40+ routes for categories, modules, certificates, and financial management
+[33medc0263[m docs: add comprehensive documentation for new features - summary and implementation checklist
+[33m683cc98[m feat: add course categories, modules system, course types, instructors, ratings, refunds, certificates infrastructure
+[33m8b57a52[m N
+[33m0dfd120[m Memperbarui beberapa bug
+[33me6cc8cf[m Instruktur udah bisa nambahin quiz di modul!
+[33m4e56b91[m Sekarang Instruktur udh bisa nambahin materi, teks, video, gambar, gif, dll untuk di modul
+[33md6c68b2[m Instruktur udh bisa upload konten di modul
+[33m90878ee[m Update logika instruktur biar bisa manage isi konten setiap modul
+[33mc547778[m Management Konten Modul di page instruktur
+[33mae063e1[m Merge branch 'main' of https://github.com/1amKefas/OtakAtikAcademy
+[33mb8342fa[m Split refund feature implementation
+[33m2b8bf46[m Gw nambahin page buat ngeliat progress peserta di setiap course!!
+[33me88c0bd[m CRUD Buat Management Konten Isi Modul lagi proses yaaa bek, samm
+[33m249aa81[m Merge branch 'main' of https://github.com/1amKefas/OtakAtikAcademy into HEAD
+[33m8e4f693[m clean history: remove midtrans server key
+[33m5af7e0c[m N
+[33me8ba5e5[m Tombol Back to home supaya admin pas buat course bisa lgsg liat!! gk usah ubah ke user
+[33m01af7c7[m Dropdown Profile Terbaru supaya gk perlu ganti role setiap ngupdate sama buat course baru!!
+[33m934479b[m Dropdown Animation biar gk ngeleg
+[33m32a6c9d[m Nyambungin modul ke tampilan detail course user
+[33m52ba136[m Logo Di title atas browser
+[33m59d2b7c[m Dashboard instruktur udh bisa!
+[33md0b6cfb[m Tenang... Gw udh Buatin Tabel Course Module, sama crud sisi admin bek...
+[33m0f95f36[m Edit Fungsi Process Payment supaya bisa memproses kursus yg gratis, sebelumnya kagak bisa bek
+[33m72c5aea[m Update supaya 1 course cuma bisa dibeli sekali sama user, sebelumnya bisa berkali-kali
+[33m3091ef2[m feat: add help page with multi-language support (Indo/English)
+[33m8a43750[m fix: add quizSubmissions() method to User model
+[33m3fa3c45[m fix: add enrolledCourses() method and fix stats calculation
+[33m3281c39[m fix: change icon column from string to text for full SVG paths
+[33m1c92499[m fix: skip certificates table creation if already exists
+[33m6cfb78f[m fix: add migration setup endpoint and fix Achievement model accessor
+[33m8653cc5[m fix: add graceful fallback for achievements tables before migration
+[33me753aa7[m feat: add full achievements & badges system with EN/ID localization
+[33md33d116[m merge: resolve conflicts from remote changes
+[33mf627e91[m fix: localize 'Purchase History' in navbar to support EN/ID languages
+[33m0921e87[m Copyright ganti jadi Politeknik Negeri Jakarta
+[33m8007e56[m Copyright ganti jadi Politeknik Negeri Jakarta
+[33ma7fb742[m localize: dashboard view with all translation keys for EN/ID support
+[33m5c74737[m localize: complete all Settings page translations (notifications, privacy, account sections)
+[33mb220bba[m fix: add session fallback for locale before migration runs on Vercel
+[33mcd88abc[m fix: localize settings page headers and tabs
+[33mf31aba7[m fix: add error handling to updateLocale, localize navbar text
+[33m163a453[m feat: implement multi-language system (EN/ID) with user preferences, settings UI, and localization foundation
+[33m112b33d[m Add: Temporary debug endpoint for deleting users (dev only)
+[33md17dd78[m Simplify: Just remove email unique constraint for Google OAuth flexibility
+[33mccf5742[m Fix: Separate Google OAuth accounts from manual signups + adjust DB constraints
+[33me41ea67[m Fix: Improved Google OAuth flow with proper user lookup
+[33m9766109[m Fix: Use firstOrCreate for Google OAuth to handle duplicate emails safely
+[33m9b1d0a6[m Fix: Handle existing email for Google OAuth login
+[33mb001e72[m Fix: Add stateless() to Google OAuth dan improve error logging
+[33m2b0ee56[m Fix: Email verification route and signature validation
+[33m064f874[m Fix: Change SESSION_DRIVER to cookie for Vercel serverless compatibility
+[33mf1dac03[m Fix: Email verification flow and Vercel 500 error handling
+[33m9905b60[m Update mail config to use placeholders
+[33m27ba8fb[m Switch to Brevo SMTP for email sending
+[33maa6ebab[m Update APP_URL to custom domain otakatik.my.id
+[33m519ed21[m Fix APP_URL to production domain
+[33mac22624[m Update MAIL_FROM_ADDRESS to MailerSend test domain
+[33m1a2bc3c[m Add MailerSend integration service
+[33m067a2b7[m Benerin Fitur Financial Analytics
+[33mb8f32ed[m Perbaikan fitur refund
+[33m222d7d3[m Footer in instructor side
+[33m1a42db5[m Layout buat course detail
+[33m6581c6e[m N
+[33ma0868a0[m Layout Nav and Footer
+[33m2f1c3a4[m 1 Course cuma bisa di beli sekali sama 1 user
+[33m52f9d4a[m Edit Thumbnail course selesai
+[33m396390b[m Image Cropper buat thumbnail course
+[33m9149f33[m Tampilan Kartu Kursus yang baru
+[33m67f2114[m Sudah bisa upload thumbnail di edit course
+[33ma59a12f[m Update thumbnail course
+[33m8104908[m Tampilan Card Course Terbaru dan admin bisa ngedit thumbnailnya
+[33m416f40c[m N
+[33me288af0[m Edit View Card Course
+[33m2c339f9[m Fix trusted proxies for Vercel HTTPS
+[33m69311f0[m In Production
+[33m197d6d6[m new
+[33m7e9ad90[m Verifikasi Email
+[33m4e746cc[m Verif Email dan Regis/Login Google
+[33md2d8d9d[m Login dan Registrasi pake google
+[33m77c8167[m Routes untuk verifikasi email dan google acc
+[33m1236158[m Nambah buat bisa verifikasi email
+[33m8790507[m Sekarang bisa registrasi dan login pake akun google
+[33m612495b[m New Database For Google Account
+[33m8e3490a[m N
+[33m33e1954[m New
+[33mc0f01f1[m New
+[33m9b211d9[m Halo
+[33m683fbc0[m Hai
+[33m5e815ff[m a
+[33mbd3045c[m perbaikan payment
+[33ma31d5f3[m New Registration Page
+[33mfade36a[m New Login Page
+[33m3effb02[m Add koala image
+[33mb7c7783[m Newest Footer Design
+[33mc040a67[m New
+[33md594f46[m Update: Navbar logo with uploaded image
+[33mb03dc37[m Logo Otak Atik
+[33m96428fd[m Newest Footer Design
+[33m0fb5032[m Feat: Add Coursera-style footer component
+[33mad1d0e9[m Update: Use local PNJ & TIK logos in footer
+[33m226b584[m Add Images and footer components
+[33m6778400[m Fix: Add missing 'Tambah Course' menu to all admin pages
+[33mf996076[m Fix: Add build assets routing for Vite
+[33mfaaf9b4[m Fix: Move bootstrap cache to /tmp for Vercel read-only filesystem
+[33m72e26cb[m Debug: Add raw error catcher and fix db default
+[33meee5a00[m Debug: Add raw error catcher and fix db default
+[33m71656d6[m Fix: Add auto-cache cleaner to api entry point
+[33m875b4ee[m Fix: Revert vercel.json schema
+[33m605461c[m Fix: Add nuclear build command to clear Vercel cache
+[33m3e79405[m Force Update: Remove composer.lock and clean configs
+[33mdcff2cb[m Fix: Remove cached config files & Oracle providers
+[33m4d7ef3c[m Fix: Remove Oracle provider and update Vercel entry point
+[33m9910ae3[m Fix: Remove Oracle completely and update Vercel entry point
+[33mcf8f9f3[m Fix: Update api entry point for Laravel 12
+[33m66ac8be[m Fix: Remove hardcoded env from vercel.json
+[33m5ce0d58[m Fix: Upgrade vercel-php runtime to 0.7.2
+[33m10e9341[m Initial commit: My own OtakAtik with Supabase
