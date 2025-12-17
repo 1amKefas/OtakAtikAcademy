@@ -11,9 +11,10 @@ class MidtransService
     public function __construct()
     {
         // Setup Midtrans configuration
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        Config::$clientKey = env('MIDTRANS_CLIENT_KEY');
-        Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$clientKey = config('services.midtrans.client_key');
+        Config::$isProduction = config('services.midtrans.is_production');
+        
         Config::$isSanitized = true;
         Config::$is3ds = true;
     }
