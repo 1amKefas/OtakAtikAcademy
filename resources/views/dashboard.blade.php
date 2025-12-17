@@ -86,7 +86,7 @@
             <div class="flex justify-between items-end mb-10 px-2">
                 <div>
                     <h2 class="text-3xl font-bold text-gray-800">{{ __('messages.our_course_categories') }}</h2>
-                    <p class="text-gray-500 mt-2 text-lg">Temukannn topik menarik dan mulai perjalanan belajarmu</p>
+                    <p class="text-gray-500 mt-2 text-lg">Temukannnss topik menarik dan mulai perjalanan belajarmu</p>
                 </div>
                 <a href="{{ route('course.index') }}" class="group text-blue-600 font-bold hover:text-blue-800 flex items-center gap-2 transition bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100">
                     Lihat Semua <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
