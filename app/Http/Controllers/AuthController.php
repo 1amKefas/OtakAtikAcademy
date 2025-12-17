@@ -65,12 +65,12 @@ class AuthController extends Controller
             ]);
 
             // Kirim email verifikasi
-            event(new Registered($user));
+            event(new \Illuminate\Auth\Events\Registered($user));
 
-            Log::info('User created successfully, waiting for verification', ['user_id' => $user->id]);
+            
 
-            // Redirect ke halaman pemberitahuan cek email
-            return redirect()->route('verification.notice')->with('success', 'Registrasi berhasil! Silakan cek email Anda untuk memverifikasi akun.');
+            // Redirect langsung ke halaman Verify Email membawa session email
+            return redirect()->route('registration.success')->with('email_registered', $user->email);
             
         } catch (\Exception $e) {
             Log::error('Registration failed', ['error' => $e->getMessage()]);

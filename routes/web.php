@@ -46,6 +46,11 @@ Route::get('/email/verify', function () {
     return view('auth.verify-email');
 })->middleware('auth')->name('verification.notice');
 
+// Tambahkan ini di bagian yang tidak perlu login (Public Routes)
+Route::get('/registration-success', function () {
+    return view('auth.verify-email');
+})->name('registration.success');
+
 Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
     $user = \App\Models\User::findOrFail($id);
     

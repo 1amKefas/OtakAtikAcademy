@@ -126,7 +126,7 @@
                     <p class="text-gray-600 text-base mb-8">Mulai belajar dengan mendaftar ke salah satu course kami yang menarik dan berkembang bersama.</p>
                     
                     <!-- CTA Button -->
-                    <a href="{{ route('course.show') }}" class="inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg transition-all font-medium">
+                    <a href="{{ route('my.courses') }}" class="inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg transition-all font-medium">
                         <i class="fas fa-search mr-2"></i> Jelajahi Course
                     </a>
                 </div>
