@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\Events\Registered;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 /**
  * Class AuthController
@@ -48,14 +49,40 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
+            // 1. Validasi Super Ketat (Sesuai Request)
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8|confirmed',
+                // Cek format email DAN cek apakah domainnya beneran aktif (DNS check)
+                'email' => 'required|string|email:dns|max:255|unique:users',
+                'password' => [
+                    'required',
+                    'confirmed',
+                    // Standar Industri: Minimal 8, Huruf Besar+Kecil, Angka, Simbol, Uncompromised
+                    Password::min(8)
+                        ->letters()
+                        ->mixedCase()
+                        ->numbers()
+                        ->symbols()
+                        ->uncompromised() // Fitur keren: nolak password yang pernah bocor di internet
+                ],
+            ], [
+                // Custom Pesan Error (Bahasa Santai & Jelas)
+                'name.required' => 'Nama lengkap wajib diisi!',
+                'email.required' => 'Email wajib diisi!',
+                'email.email' => 'Format email tidak valid.',
+                'email.dns' => 'Domain email ini tidak ditemukan/tidak aktif.',
+                'email.unique' => 'Email ini sudah terdaftar.',
+                'password.confirmed' => 'Konfirmasi password tidak cocok.',
+                'password.min' => 'Password minimal 8 karakter',
+                'password.mixed' => 'Password wajib kombinasi Huruf Besar & kecil.',
+                'password.numbers' => 'Password wajib pakai Angka.',
+                'password.symbols' => 'Password wajib pakai Simbol (@, #, $, dll).',
+                'password.uncompromised' => 'Password ini terlalu pasaran dan tidak aman. Cari yang lebih unik!',
             ]);
 
             Log::info('Registration attempt', ['email' => $validated['email']]);
 
+            // 2. Buat User Baru
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -64,17 +91,25 @@ class AuthController extends Controller
                 'is_instructor' => false,
             ]);
 
-            // Kirim email verifikasi
-            event(new \Illuminate\Auth\Events\Registered($user));
+            // 3. Trigger Event Kirim Email Verifikasi
+            // (Pastikan queue di .env 'sync' biar langsung kirim, atau nyalain queue worker)
+            event(new Registered($user));
 
-            
+            // 4. Auto Login User (PENTING!)
+            // Biar sistem tahu siapa yang lagi nunggu verifikasi
+            Auth::login($user);
 
-            // Redirect langsung ke halaman Verify Email membawa session email
-            return redirect()->route('registration.success')->with('email_registered', $user->email);
-            
+            // 5. Redirect ke Halaman "Verify Email"
+            // Kita pakai route 'verification.notice' yang akan nampilin view verify-email.blade.php lo tadi
+            return redirect()->route('verification.notice')->with('message', 'Registrasi sukses! Link verifikasi sudah dikirim.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Kalau error validasi, biarkan Laravel handle return-nya (biar error field merah muncul)
+            throw $e;
         } catch (\Exception $e) {
+            // Kalau error server/database lain
             Log::error('Registration failed', ['error' => $e->getMessage()]);
-            return back()->withErrors(['error' => 'Registration failed: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Gagal registrasi: ' . $e->getMessage()])->withInput();
         }
     }
 

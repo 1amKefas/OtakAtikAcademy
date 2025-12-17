@@ -9,6 +9,15 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    {{-- [BARU] SweetAlert CDN --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- [BARU] Style untuk Checklist Password --}}
+    <style>
+        .req-item { color: #9ca3af; font-size: 0.75rem; transition: all 0.3s; }
+        .req-item.valid { color: #16a34a; font-weight: 600; }
+        .req-item i { width: 15px; }
+    </style>
 </head>
 <body class="bg-white font-sans">
 
@@ -28,6 +37,7 @@
                     <p class="text-sm text-gray-500">Bergabunglah dengan komunitas pembelajar kami</p>
                 </div>
 
+                {{-- Alert Error Bawaan Laravel (Tetap Ada) --}}
                 @if($errors->any())
                 <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
                     <div class="flex">
@@ -46,7 +56,7 @@
                 </div>
                 @endif
 
-                <form method="POST" action="{{ route('register') }}" class="space-y-5">
+                <form method="POST" action="{{ route('register') }}" class="space-y-5" id="registerForm">
                     @csrf
 
                     <div>
@@ -64,22 +74,33 @@
                     </div>
 
                     <div>
+                        {{-- [BARU] Live Password Requirement Check --}}
+                        <div class="mb-2 hidden" id="password-requirements-box">
+                            <p class="text-xs text-gray-500 font-semibold mb-1">Password harus memiliki:</p>
+                            <ul class="grid grid-cols-2 gap-1">
+                                <li id="req-length" class="req-item"><i class="far fa-circle"></i> 8+ Karakter</li>
+                                <li id="req-upper" class="req-item"><i class="far fa-circle"></i> Huruf Besar</li>
+                                <li id="req-lower" class="req-item"><i class="far fa-circle"></i> Huruf Kecil</li>
+                                <li id="req-number" class="req-item"><i class="far fa-circle"></i> Angka</li>
+                                <li id="req-symbol" class="req-item"><i class="far fa-circle"></i> Simbol (@#$)</li>
+                            </ul>
+                        </div>
+
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        {{-- [MODIFIKASI] Password Field --}}
                         <div class="relative">
-                            <input id="password" type="password" name="password" required
+                            {{-- Tambah ID 'passwordInput' buat script --}}
+                            <input id="passwordInput" type="password" name="password" required
                                 class="block w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500 sm:text-sm transition-all"
                                 placeholder="Min. 8 characters">
-                            <button type="button" onclick="togglePassword('password')" 
+                            <button type="button" onclick="togglePassword('passwordInput')" 
                                     class="absolute inset-y-0 right-3 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
-                                <i class="fas fa-eye" id="password-icon"></i>
+                                <i class="fas fa-eye" id="passwordInput-icon"></i>
                             </button>
                         </div>
                     </div>
 
                     <div>
                         <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                        {{-- [MODIFIKASI] Confirm Password Field --}}
                         <div class="relative">
                             <input id="password_confirmation" type="password" name="password_confirmation" required
                                 class="block w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500 sm:text-sm transition-all"
@@ -141,8 +162,9 @@
 
     </div>
 
-    {{-- [MODIFIKASI] Script untuk Toggle Password (Reusable) --}}
+    {{-- Script untuk Toggle Password & Validasi Real-time --}}
     <script>
+        // 1. Toggle Show/Hide Password
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(inputId + '-icon');
@@ -157,6 +179,56 @@
                 icon.classList.add('fa-eye');
             }
         }
+
+        // 2. Logic Validasi Password Real-time
+        const pwdInput = document.getElementById('passwordInput');
+        const requirementsBox = document.getElementById('password-requirements-box');
+        
+        const reqs = {
+            length: { regex: /.{8,}/, id: 'req-length' },
+            upper: { regex: /[A-Z]/, id: 'req-upper' },
+            lower: { regex: /[a-z]/, id: 'req-lower' },
+            number: { regex: /[0-9]/, id: 'req-number' },
+            symbol: { regex: /[!@#$%^&*(),.?":{}|<>]/, id: 'req-symbol' }
+        };
+
+        pwdInput.addEventListener('focus', () => {
+            requirementsBox.classList.remove('hidden');
+        });
+
+        pwdInput.addEventListener('input', function() {
+            const val = this.value;
+            
+            for (const key in reqs) {
+                const item = reqs[key];
+                const el = document.getElementById(item.id);
+                const icon = el.querySelector('i');
+                const isValid = item.regex.test(val);
+
+                if (isValid) {
+                    el.classList.add('valid');
+                    icon.classList.remove('far', 'fa-circle');
+                    icon.classList.add('fas', 'fa-check-circle');
+                } else {
+                    el.classList.remove('valid');
+                    icon.classList.remove('fas', 'fa-check-circle');
+                    icon.classList.add('far', 'fa-circle');
+                }
+            }
+        });
+
+        // 3. Logic Popup Kalau Email Salah (Dari Backend)
+        document.addEventListener('DOMContentLoaded', function() {
+            @if ($errors->has('email'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Email Bermasalah!',
+                    text: "{{ $errors->first('email') }}",
+                    confirmButtonColor: '#f97316', // Warna Orange Sesuai Tema
+                    confirmButtonText: 'Cek Lagi'
+                });
+            @endif
+        });
     </script>
 </body>
 </html>
