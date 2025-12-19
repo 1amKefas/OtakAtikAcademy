@@ -568,30 +568,33 @@ class AdminController extends Controller
      * Create new course (FIXED)
      */
     public function createCourse(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'type' => 'required|in:Full Online,Hybrid,Tatap Muka',
-            'instructor_id' => 'nullable|exists:users,id',
-            'assistants' => 'nullable|array', 
-            'assistants.*' => 'exists:users,id',
-            'price' => 'required|numeric|min:0',
-            'discount_percent' => 'required|numeric|min:0|max:100',
-            'discount_code' => 'nullable|string|max:50',
-            'min_quota' => 'required|integer|min:1',
-            'max_quota' => 'required|integer|min:1',
-            'duration_days' => 'required|integer|min:1|max:365',
-            'start_date' => 'nullable|date|after_or_equal:today',
-            'end_date' => 'nullable|date|after:start_date',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'category_id' => 'nullable|exists:categories,id', // Validate single category ID
-            'certificate_template_id' => 'nullable|exists:certificate_templates,id',
-            'modules' => 'nullable|array',
-            'modules.*.title' => 'required|string|max:255',
-        ]);
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'type' => 'required|in:Full Online,Hybrid,Tatap Muka',
+        'instructor_id' => 'nullable|exists:users,id',
+        'assistants' => 'nullable|array', 
+        'assistants.*' => 'exists:users,id',
+        'price' => 'required|numeric|min:0',
+        'discount_percent' => 'required|numeric|min:0|max:100',
+        'discount_code' => 'nullable|string|max:50',
+        'min_quota' => 'required|integer|min:1',
+        'max_quota' => 'required|integer|min:1',
+        'duration_days' => 'required|integer|min:1|max:365',
+        'start_date' => 'nullable|date|after_or_equal:today',
+        'end_date' => 'nullable|date|after:start_date',
+        'is_active' => 'boolean',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'category_id' => 'nullable|exists:categories,id',
+        'certificate_template_id' => 'nullable|exists:certificate_templates,id',
+        'modules' => 'nullable|array',
+        'modules.*.title' => 'required|string|max:255',
+    ]);
 
+    // Gunakan Transaction agar data Course & Modul tersimpan utuh
+    return DB::transaction(function () use ($request, $validated) {
+        
         $courseData = [
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -606,8 +609,8 @@ class AdminController extends Controller
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
             'current_enrollment' => 0,
-            'is_active' => $request->has('is_active') ? true : false,
-            'certificate_template_id' => $validated['certificate_template_id'] ?? null, // [FIX] Simpan Template ID
+            'is_active' => $request->has('is_active'),
+            'certificate_template_id' => $validated['certificate_template_id'] ?? null,
         ];
 
         if ($request->hasFile('image')) {
@@ -618,7 +621,7 @@ class AdminController extends Controller
         // 1. Simpan Course
         $course = Course::create($courseData);
 
-        // 2. Attach Kategori (Single Select from Form)
+        // 2. Attach Kategori
         if ($request->filled('category_id')) {
             $course->categories()->attach($request->category_id);
         }
@@ -629,47 +632,53 @@ class AdminController extends Controller
             $course->assistants()->sync($assistants);
         }
 
-        // 4. Auto-enroll Admin (hanya untuk testing/preview Hybrid/Tatap Muka)
+        // 4. Auto-enroll Admin (FIXED: Tambahkan data profil wajib)
         if (Auth::check() && in_array($validated['type'], ['Hybrid', 'Tatap Muka'])) {
-            $adminId = Auth::id();
-            $exists = CourseRegistration::where('user_id', $adminId)
+            $admin = Auth::user();
+            $exists = CourseRegistration::where('user_id', $admin->id)
                 ->where('course_id', $course->id)
                 ->exists();
+
             if (!$exists) {
                 CourseRegistration::create([
-                    'user_id' => $adminId,
-                    'course_id' => $course->id,
-                    'price' => (int)($course->price ?? 0),
-                    'final_price' => 0,
-                    'status' => 'paid',
-                    'progress' => 0,
-                    'enrolled_at' => now(),
-                    'paid_at' => now(),
+                    'user_id'        => $admin->id,
+                    'course_id'      => $course->id,
+                    'nama_lengkap'   => $admin->name, // Wajib diisi
+                    'ttl'            => $admin->date_of_birth ? $admin->date_of_birth->format('d F Y') : 'N/A', // Wajib diisi
+                    'tempat_tinggal' => $admin->location ?? 'N/A', // Wajib diisi
+                    'gender'         => $admin->gender ?? 'Laki-laki', // Wajib diisi
+                    'price'          => (int)($course->price ?? 0),
+                    'final_price'    => 0,
+                    'status'         => 'paid',
+                    'progress'       => 0,
+                    'enrolled_at'    => now(),
+                    'paid_at'        => now(),
                 ]);
             }
         }
 
-        // 5. Simpan Modul (Jika ada inputan)
+        // 5. Simpan Modul
         if (!empty($request->modules)) {
             foreach ($request->modules as $index => $moduleData) {
-                if (!empty($moduleData['title'])) { // Pastikan title tidak kosong
+                if (!empty($moduleData['title'])) {
                     CourseModule::create([
                         'course_id' => $course->id,
-                        'title' => $moduleData['title'],
-                        'order' => $index + 1,
+                        'title'     => $moduleData['title'],
+                        'order'     => $index + 1,
                     ]);
                 }
             }
         }
 
-        // 6. Logic Simpan Sertifikat
+        // 6. Logic Simpan Sertifikat (Perbaikan: Update record yang sudah dibuat)
         if ($request->hasFile('certificate_template')) {
             $certPath = $request->file('certificate_template')->store('certificates/templates', 'public');
-            $courseData['certificate_template'] = $certPath;
+            $course->update(['certificate_template' => $certPath]);
         }
 
         return redirect()->route('admin.courses.manage')->with('success', 'Course "'.$validated['title'].'" berhasil dibuat!');
-    }
+    });
+}
 
     /**
      * [FITUR BARU] Tampilkan Designer Sertifikat (Admin Side)
