@@ -9,6 +9,7 @@
     <link rel="icon" href="{{ asset('images/brain.png') }}" type="image/png">
     <link rel="preload" href="{{ asset('build/assets/font-file-name.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <script src="https://cdn.tiny.cloud/1/40wmpfbvzkycl0abvcvdpedgmg1a5pa6mu5yyv37jgk0thqo/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
     
 
     {{-- SEMUA LIBRARY (Alpine, FontAwesome, Tailwind) SUDAH DISINI --}}

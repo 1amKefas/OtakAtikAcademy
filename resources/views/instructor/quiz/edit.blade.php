@@ -239,7 +239,9 @@
                             {{-- Input Teks Soal --}}
                             <div class="mb-6">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Pertanyaan</label>
-                                <textarea id="questionEditor" name="question" class="w-full"></textarea>
+                                <textarea name="question" rows="4" 
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white"
+                                    placeholder="Tulis pertanyaan di sini..." required></textarea>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
