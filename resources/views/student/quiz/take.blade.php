@@ -124,7 +124,7 @@
 
                                 <div class="space-y-4 max-w-3xl">
                                     @if($q->question_type === 'multiple_choice')
-                                        @foreach(json_decode($q->options) as $key => $option)
+                                        @foreach($q->options as $key => $option)
                                         <label class="flex items-center group cursor-pointer">
                                             {{-- [FIX] Tambahkan class 'peer' --}}
                                             <input type="radio" name="answers[{{ $q->id }}]" value="{{ $key }}" 
@@ -179,7 +179,7 @@
 
                                     @elseif($q->question_type === 'multiple_select')
                                         <div class="space-y-3">
-                                            @foreach(json_decode($q->options) as $key => $option)
+                                            @foreach($q->options as $key => $option)
                                             <label class="flex items-center p-0 cursor-pointer transition group bg-white hover:shadow-sm">
                                                 {{-- [FIX] Logic Checked untuk Array + Style Peer --}}
                                                 @php 

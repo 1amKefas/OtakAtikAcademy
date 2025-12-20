@@ -142,7 +142,7 @@
                             $isCorrect = ($correctArr == $userArr);
                         }
                         
-                        $options = json_decode($question->options, true) ?? [];
+                        $options = $question->options ?? [];
                     @endphp
 
                     <div x-data="{ open: false }" class="group transition hover:bg-blue-50/30">
