@@ -9,7 +9,11 @@ class CourseModule extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['course_id', 'title', 'description', 'order'];
+    protected $fillable = [
+        'course_id', 'title', 'description', 'order',
+        'module_type', 'zoom_link', 'meeting_type', 'session_date',
+        'start_time', 'end_time', 'location', 'room_number', 'offline_notes'
+    ];
 
     /**
      * Relasi ke Course induk
@@ -41,5 +45,13 @@ class CourseModule extends Model
     public function quizzes()
     {
         return $this->hasMany(Quiz::class);
+    }
+
+    /**
+     * Relasi ke Pemberitahuan/Announcement
+     */
+    public function announcements()
+    {
+        return $this->hasMany(CourseAnnouncement::class, 'module_id');
     }
 }

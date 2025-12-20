@@ -77,6 +77,14 @@ class Course extends Model
     }
 
     /**
+     * Get announcements for the course
+     */
+    public function announcements()
+    {
+        return $this->hasMany(CourseAnnouncement::class);
+    }
+
+    /**
      * Many-to-Many: Course punya banyak instructors
      */
     public function instructors()
@@ -186,6 +194,22 @@ class Course extends Model
     public function pendingRegistrations()
     {
         return $this->hasMany(CourseRegistration::class)->where('status', 'pending');
+    }
+
+    /**
+     * Get class sessions for this course
+     */
+    public function classSessions()
+    {
+        return $this->hasMany(ClassSession::class);
+    }
+
+    /**
+     * Get attendances for this course
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 
     /**

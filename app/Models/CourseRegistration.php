@@ -232,4 +232,44 @@ class CourseRegistration extends Model
     {
         return $this->belongsTo(CourseClass::class, 'course_class_id');
     }
+
+    /**
+     * Check if student is eligible for certificate based on progress + attendance
+     * Returns true if:
+     * - Progress >= 100% OR
+     * - Progress + Attendance >= combined threshold (e.g., 60% progress + 80% attendance)
+     */
+    public function isEligibleForCertificate()
+    {
+        // If 100% progress, automatically eligible
+        if ($this->progress >= 100) {
+            return true;
+        }
+
+        // Get attendance percentage
+        $attendancePercentage = Attendance::getAttendancePercentage($this->user_id, $this->course_id);
+
+        // Combined scoring: 60% weight on progress + 40% weight on attendance
+        // Passing score: 70%
+        $combinedScore = ($this->progress * 0.6) + ($attendancePercentage * 0.4);
+        
+        return $combinedScore >= 70;
+    }
+
+    /**
+     * Get certificate eligibility details
+     */
+    public function getCertificateEligibilityDetails()
+    {
+        $attendancePercentage = Attendance::getAttendancePercentage($this->user_id, $this->course_id);
+        $combinedScore = ($this->progress * 0.6) + ($attendancePercentage * 0.4);
+
+        return [
+            'progress_percentage' => $this->progress,
+            'attendance_percentage' => $attendancePercentage,
+            'combined_score' => round($combinedScore, 2),
+            'is_eligible' => $this->isEligibleForCertificate(),
+            'passing_score' => 70,
+        ];
+    }
 }

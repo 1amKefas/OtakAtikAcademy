@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\CourseRegistration;
 use App\Models\Refund;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage; 
 
@@ -165,6 +166,51 @@ class AdminController extends Controller
         return view('admin.users', compact('users', 'userStats', 'ageDistribution', 'educationDistribution', 'locationDistribution'));
     }
 
+    /**
+     * Create new user from admin panel
+     */
+    public function createUser(Request $request)
+    {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'role' => 'nullable|in:student,instructor,admin',
+            'phone' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date|before:today',
+            'location' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        $userData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => bcrypt($validated['password']),
+            'phone' => $validated['phone'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'location' => $validated['location'] ?? null,
+            'address' => $validated['address'] ?? null,
+        ];
+
+        // Set role
+        if ($validated['role'] === 'instructor') {
+            $userData['is_instructor'] = true;
+        } elseif ($validated['role'] === 'admin') {
+            $userData['is_admin'] = true;
+        }
+
+        $user = User::create($userData);
+        
+        // Auto-verify email for admin-created users
+        $user->markEmailAsVerified();
+
+        return back()->with('success', "User '{$user->name}' created successfully! Email verified.");
+    }
+
     public function updateUserRole(Request $request, $id)
     {
         if (!Auth::check() || !Auth::user()->is_admin) {
@@ -185,7 +231,10 @@ class AdminController extends Controller
         return back()->with('success', 'User role updated successfully!');
     }
 
-    public function deleteUser($id)
+    /**
+     * Show edit user form (return JSON for AJAX)
+     */
+    public function editUserShow($id)
     {
         if (!Auth::check() || !Auth::user()->is_admin) {
             abort(403, 'Unauthorized access.');
@@ -193,15 +242,100 @@ class AdminController extends Controller
 
         $user = User::findOrFail($id);
         
-        if ($user->id === Auth::id()) {
-            return back()->with('error', 'You cannot delete your own account!');
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'date_of_birth' => $user->date_of_birth,
+            'location' => $user->location,
+            'address' => $user->address,
+            'education_level' => $user->education_level,
+        ]);
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateUser(Request $request, $id)
+    {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
         }
 
+        $user = User::findOrFail($id);
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'phone' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date|before:today',
+            'location' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'education_level' => 'nullable|string|max:100',
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'location' => $validated['location'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'education_level' => $validated['education_level'] ?? null,
+        ]);
+
+        return back()->with('success', 'User updated successfully!');
+    }
+
+    /**
+     * Change user password (Admin)
+     */
+    public function changeUserPassword(Request $request, $id)
+    {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully!'
+        ]);
+    }
+
+    public function deleteUser($id)
+    {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $user = User::withTrashed()->find($id);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        
+        if ($user->id === Auth::id()) {
+            return response()->json(['message' => 'You cannot delete your own account!'], 422);
+        }
+
+        // Delete all course registrations first
         CourseRegistration::where('user_id', $id)->delete();
 
-        $user->delete();
+        // Hard delete (permanent)
+        $user->forceDelete();
 
-        return back()->with('success', 'User deleted successfully!');
+        return response()->json(['message' => 'User deleted successfully!'], 200);
     }
 
     public function courses()
@@ -565,6 +699,19 @@ class AdminController extends Controller
     }
 
     /**
+     * Show create course form
+     */
+    public function create()
+    {
+        $courses = Course::with('instructor')->latest()->paginate(20);
+        $instructors = User::where('is_instructor', true)->get();
+        $categories = \App\Models\Category::withCount('courses')->get();
+        $certificates = \App\Models\CertificateTemplate::all();
+        
+        return view('admin.manage-courses', compact('courses', 'instructors', 'categories', 'certificates'));
+    }
+
+    /**
      * Create new course (FIXED)
      */
     public function createCourse(Request $request)
@@ -746,6 +893,11 @@ class AdminController extends Controller
             $q->orderBy('order', 'asc');
         }])->findOrFail($id);
         
+        // Return JSON for AJAX requests
+        if (request()->expectsJson()) {
+            return response()->json($course);
+        }
+        
         $instructors = User::where('is_instructor', true)->get();
         $categories = \App\Models\Category::all();
         $certificates = \App\Models\CertificateTemplate::all();
@@ -759,6 +911,28 @@ class AdminController extends Controller
     public function updateCourse(Request $request, $id)
     {
         $course = Course::findOrFail($id);
+
+        // For AJAX requests, use simpler validation
+        if ($request->expectsJson()) {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'type' => 'required|string|max:50',
+                'price' => 'required|numeric|min:0',
+                'discount_percent' => 'required|numeric|min:0|max:100',
+                'discount_code' => 'nullable|string|max:50',
+                'min_quota' => 'nullable|integer|min:0',
+                'max_quota' => 'nullable|integer|min:0',
+                'is_active' => 'boolean',
+            ]);
+
+            $course->update($validated);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Course berhasil diupdate!'
+            ]);
+        }
 
         // [TAMBAHAN] Set batas waktu jadi 300 detik (5 menit) biar gak timeout pas upload
         set_time_limit(300); 
@@ -865,19 +1039,31 @@ class AdminController extends Controller
         $course->save(); // Save course changes
 
         return redirect()->route('admin.courses.manage')->with('success', 'Course berhasil diupdate!');
-    }
-
-    public function deleteCourse($id)
+    }    public function deleteCourse($id)
     {
         $course = Course::findOrFail($id);
         
         if ($course->registrations()->count() > 0) {
-            return redirect()->route('admin.courses.manage')->with('error', 'Tidak bisa menghapus course yang sudah memiliki pendaftaran!');
+            $message = 'Tidak bisa menghapus course yang sudah memiliki pendaftaran!';
+            
+            // Return JSON for AJAX requests
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 400);
+            }
+            
+            return redirect()->route('admin.courses.manage')->with('error', $message);
         }
 
-        $course->delete();
+        $course->forceDelete(); // Hard delete
 
-        return redirect()->route('admin.courses.manage')->with('success', 'Course berhasil dihapus!');
+        $successMsg = 'Course berhasil dihapus!';
+        
+        // Return JSON for AJAX requests
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $successMsg]);
+        }
+
+        return redirect()->route('admin.courses.manage')->with('success', $successMsg);
     }
 
     public function toggleCourse($id)

@@ -42,7 +42,7 @@
                     <li>
                         <a href="/admin/courses" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
                             <i class="fas fa-book w-5"></i>
-                            <span>Course Analytics</span>
+                            <span>List Courses</span>
                         </a>
                     </li>
                      <li>
@@ -257,13 +257,13 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6">Revenue by Course</h3>
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Top 5 Revenue by Course</h3>
                         <div class="space-y-4">
-                            @foreach($revenueByCourse as $course)
+                            @foreach($revenueByCourse->take(5) as $index => $course)
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-book text-white text-sm"></i>
+                                        <span class="text-white font-bold text-sm">{{ $index + 1 }}</span>
                                     </div>
                                     <span class="text-sm font-medium text-gray-800">{{ $course->course }}</span>
                                 </div>

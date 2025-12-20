@@ -127,6 +127,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');
     Route::get('/user/{user}/achievements', [AchievementController::class, 'showUserProfile'])->name('achievements.user');
     Route::get('/course/{courseId}/certificate-download', [App\Http\Controllers\CertificateController::class, 'downloadFromCourse'])->name('student.certificate.download');
+    Route::get('/certificate/verify/{verificationCode}', [App\Http\Controllers\CertificateController::class, 'verify'])->name('certificate.verify');
 });
 
 // Payment Routes
@@ -150,9 +151,15 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
 // Admin Routes - FIXED: Route tanpa parameter di atas, dengan parameter di bawah
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    
+    // User Routes - specific routes FIRST, then parameterized
     Route::get('/users', [AdminController::class, 'users'])->name('users');
-    Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole'])->name('users.role');
+    Route::post('/users/create', [AdminController::class, 'createUser'])->name('users.create');
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
+    Route::get('/users/{id}/edit', [AdminController::class, 'editUserShow'])->name('users.edit');
+    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
+    Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole'])->name('users.role');
+    Route::post('/users/{id}/password', [AdminController::class, 'changeUserPassword'])->name('users.password');
     
     // COURSES: Route tanpa parameter HARUS di ATAS
     Route::get('/courses', [AdminController::class, 'courses'])->name('courses');
@@ -186,6 +193,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/refunds', [RefundController::class, 'adminIndex'])->name('refunds.index');
     Route::get('/refunds/{id}', [RefundController::class, 'adminShow'])->name('refunds.show');
     Route::post('/refunds/{id}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
+    Route::post('/refunds/{id}/complete', [RefundController::class, 'complete'])->name('refunds.complete');
     Route::post('/refunds/{id}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
     
     // CATEGORY ROUTES - Admin Categories
@@ -244,9 +252,12 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::get('/courses/{id}/manage', [InstructorController::class, 'manageCourse'])->name('courses.manage');
     
     // CRUD Modul
-    Route::post('/courses/{id}/modules', [InstructorController::class, 'storeModule'])->name('course.module.store');
+    Route::post('/courses/{courseId}/modules', [InstructorController::class, 'storeModule'])->name('course.module.store');
     Route::put('/modules/{id}', [InstructorController::class, 'updateModule'])->name('course.module.update');
     Route::delete('/modules/{id}', [InstructorController::class, 'deleteModule'])->name('course.module.delete');
+
+    // CRUD Announcement
+    Route::delete('/announcements/{id}', [InstructorController::class, 'deleteAnnouncement'])->name('course.announcement.delete');
 
     // Content: Connect Quiz to Module
     Route::post('/courses/{courseId}/modules/{moduleId}/quiz', [InstructorController::class, 'storeModuleQuiz'])->name('course.module.quiz.store');
@@ -325,6 +336,12 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
     Route::post('/courses/{course}/modules/{module}/contents/reorder', [ModuleController::class, 'reorderContents'])->name('modules.contents.reorder');
     // Reorder Materi & Quiz dalam satu modul
     Route::post('/courses/{course}/modules/{module}/reorder', [App\Http\Controllers\ModuleController::class, 'reorderContents'])->name('instructor.modules.contents.reorder');
+    
+    // --- ZOOM PERTEMUAN MODULES ---
+    Route::post('/courses/{courseId}/zoom-module', [InstructorController::class, 'storeZoomModule'])->name('zoom-module.store');
+    Route::put('/zoom-modules/{moduleId}', [InstructorController::class, 'updateZoomModule'])->name('zoom-module.update');
+    Route::delete('/zoom-modules/{moduleId}', [InstructorController::class, 'deleteZoomModule'])->name('zoom-module.delete');
+    
     // --- COURSE CLASS MANAGEMENT ---
     Route::prefix('courses/{id}/classes')->name('courses.classes.')->group(function () {
         Route::get('/', [App\Http\Controllers\CourseClassController::class, 'index'])->name('index');
@@ -332,6 +349,18 @@ Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructo
         Route::post('/{classId}/assign', [App\Http\Controllers\CourseClassController::class, 'assignStudent'])->name('assign');
         Route::delete('/student/{registrationId}', [App\Http\Controllers\CourseClassController::class, 'removeStudent'])->name('remove-student');
         Route::delete('/{classId}', [App\Http\Controllers\CourseClassController::class, 'destroy'])->name('destroy');
+    });
+
+    // --- CLASS SESSIONS & ATTENDANCE (NEW) ---
+    Route::prefix('courses/{courseId}/class-sessions')->name('class-sessions.')->group(function () {
+        Route::get('/', [App\Http\Controllers\ClassSessionController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\ClassSessionController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\ClassSessionController::class, 'store'])->name('store');
+        Route::get('/{classSession}/edit', [App\Http\Controllers\ClassSessionController::class, 'edit'])->name('edit');
+        Route::put('/{classSession}', [App\Http\Controllers\ClassSessionController::class, 'update'])->name('update');
+        Route::delete('/{classSession}', [App\Http\Controllers\ClassSessionController::class, 'destroy'])->name('destroy');
+        Route::get('/{classSession}', [App\Http\Controllers\ClassSessionController::class, 'show'])->name('show');
+        Route::post('/{classSession}/mark-attendance', [App\Http\Controllers\AttendanceController::class, 'mark'])->name('mark-attendance');
     });
 });
 
@@ -353,6 +382,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/student/certificates', [CertificateController::class, 'myCertificates'])->name('student.certificates');
     Route::get('/student/certificates/{certificate}', [CertificateController::class, 'view'])->name('student.certificates.view');
     Route::get('/student/certificates/{certificate}/download', [CertificateController::class, 'download'])->name('student.certificates.download');
+    
+    // Student Attendance Summary (NEW)
+    Route::get('/student/course/{courseId}/attendance', [App\Http\Controllers\AttendanceController::class, 'summary'])->name('student.attendance.summary');
     
     // Forum Routes (Student)
     Route::prefix('student/course/{courseId}/forum')->name('student.forum.')->group(function () {
@@ -385,7 +417,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create/{registrationId}', [RefundController::class, 'create'])->name('create');
         Route::post('/store/{registrationId}', [RefundController::class, 'store'])->name('store');
         Route::get('/view/{id}', [RefundController::class, 'view'])->name('view');
+        Route::get('/detail/{id}', [RefundController::class, 'detail'])->name('detail');
     });
+
+    // Create alias for notification
+    Route::get('/student/refund/{id}', [RefundController::class, 'detail'])->name('student.refund.detail');
 
     // [TAMBAHAN BARU] Review Course
     Route::post('/student/course/{id}/review', [StudentController::class, 'storeReview'])->name('student.course.review');

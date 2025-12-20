@@ -116,36 +116,33 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <button class="text-gray-400 hover:text-blue-600 transition" title="Lihat Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <!-- Detail Button -->
+                                        <button class="text-gray-400 hover:text-blue-600 transition" title="Lihat Detail">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        
+                                        <!-- Attendance Button -->
+                                        <button class="text-gray-400 hover:text-purple-600 transition" title="Absensi" onclick="alert('Fitur absensi - coming soon')">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </button>
+                                        
+                                        <!-- Refund Request Button (hanya jika progress < 100%) -->
+                                        @if($registration->progress < 100)
+                                            <button class="text-gray-400 hover:text-red-600 transition" title="Ajukan Refund" onclick="alert('Fitur refund dari instructor - coming soon')">
+                                                <i class="fas fa-undo"></i>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <i class="fas fa-user-graduate text-4xl text-gray-300 mb-3"></i>
                                         <p>Belum ada siswa yang mendaftar di kursus ini.</p>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 font-bold">
-                                        @php
-                                            $seconds = $reg->total_learning_seconds;
-                                            $hours = floor($seconds / 3600);
-                                            $minutes = floor(($seconds % 3600) / 60);
-                                        @endphp
-                                        
-                                        @if($hours > 0)
-                                            {{ $hours }}j {{ $minutes }}m
-                                        @elseif($minutes > 0)
-                                            {{ $minutes }}m
-                                        @else
-                                            <span class="text-gray-400 text-xs">Baru mulai</span>
-                                        @endif
-                                    </div>
-                                    <div class="text-xs text-gray-400">Total Belajar</div>
                                 </td>
                             </tr>
                             @endforelse

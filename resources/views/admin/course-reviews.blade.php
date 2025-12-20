@@ -17,7 +17,7 @@
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
                     <li><a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition"><i class="fas fa-arrow-left"></i><span>Back to Dashboard</span></a></li>
-                    <li><a href="/admin/courses" class="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg transition"><i class="fas fa-book"></i><span>Course Analytics</span></a></li>
+                    <li><a href="/admin/courses" class="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg transition"><i class="fas fa-book"></i><span>List Courses</span></a></li>
                 </ul>
             </nav>
         </div>

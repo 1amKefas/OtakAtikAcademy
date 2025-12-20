@@ -15,13 +15,16 @@ class SecurityHeaders
         // --- CONTENT SECURITY POLICY (PERMISSIVE MODE) ---
         // Kita izinkan 'https:' secara umum dulu untuk mengatasi masalah hosting/CDN/subdomain.
         // 'data:' kita izinkan di font dan img karena sering dipakai library modern.
+        // Untuk development, allow localhost Vite dev server + websocket untuk HMR
         
-        $csp = "default-src 'self' https: data: blob:; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " . 
-               "style-src 'self' 'unsafe-inline' https:; " . 
+        $viteDevServer = config('app.env') === 'local' ? 'http://127.0.0.1:5174 http://127.0.0.1:5173 ws://127.0.0.1:5174 ws://127.0.0.1:5173' : '';
+        
+        $csp = "default-src 'self' https: data: blob: $viteDevServer; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: $viteDevServer; " . 
+               "style-src 'self' 'unsafe-inline' https: $viteDevServer; " . 
                "font-src 'self' data: https:; " .
                "img-src 'self' data: https: blob:; " .
-               "connect-src 'self' https:; " . 
+               "connect-src 'self' https: ws: wss: $viteDevServer; " . 
                "frame-src 'self' https:; " .
                "object-src 'none'; " .
                "base-uri 'self'; " .

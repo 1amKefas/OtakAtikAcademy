@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Users Management - OtakAtik Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
@@ -34,7 +35,7 @@
                     <li>
                         <a href="/admin/courses" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
                             <i class="fas fa-book w-5"></i>
-                            <span>Course Analytics</span>
+                            <span>List Courses</span>
                         </a>
                     </li>
                      <li>
@@ -253,6 +254,14 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm text-gray-900 space-y-1">
+                                            @if($user->age)
+                                            <div class="flex items-center gap-2">
+                                                <i class="fas fa-birthday-cake text-blue-500 text-xs"></i>
+                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                                                    {{ $user->age }} tahun
+                                                </span>
+                                            </div>
+                                            @endif
                                             @if($user->age_range)
                                             <div class="flex items-center gap-2">
                                                 <i class="fas fa-birthday-cake text-blue-500 text-xs"></i>
@@ -323,14 +332,12 @@
                                             <button onclick="editUser({{ $user->id }})" class="text-blue-600 hover:text-blue-900">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <form action="{{ route('admin.users.delete', $user->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" 
-                                                        onclick="return confirm('Delete user {{ $user->name }}?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button onclick="changePassword({{ $user->id }}, '{{ $user->name }}')" class="text-orange-600 hover:text-orange-900">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                            <button onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')" class="text-red-600 hover:text-red-900">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                             @else
                                             <span class="text-gray-400 text-xs">Current User</span>
                                             @endif
@@ -450,6 +457,510 @@
             location: {!! json_encode($locationDistribution) !!} 
         };
     </script>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
+                <h2 class="text-2xl font-bold">Add New User</h2>
+                <button onclick="closeAddUserModal()" class="text-white hover:bg-blue-800 p-2 rounded-lg transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="addUserForm" method="POST" action="/admin/users/create" class="p-6 space-y-4">
+                @csrf
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-user"></i> Full Name *
+                    </label>
+                    <input type="text" name="name" placeholder="John Doe" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-envelope"></i> Email *
+                    </label>
+                    <input type="email" name="email" placeholder="john@example.com" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-lock"></i> Password *
+                    </label>
+                    <input type="password" name="password" id="addUserPassword" placeholder="Enter password" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Min 8 characters recommended</p>
+                </div>
+
+                <!-- Role -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-user-tag"></i> Role
+                    </label>
+                    <select name="role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="student">Student</option>
+                        <option value="instructor">Instructor</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <!-- Phone (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-phone"></i> Phone Number
+                    </label>
+                    <input type="tel" name="phone" placeholder="+62 812 3456 7890"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Date of Birth (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-birthday-cake"></i> Date of Birth
+                    </label>
+                    <input type="date" name="date_of_birth" id="addUserDateOfBirth"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle"></i> Used for age distribution chart - needed to see data
+                    </p>
+                    <p id="ageDisplay" class="text-xs text-blue-600 mt-1"></p>
+                </div>
+
+                <!-- Province (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-map"></i> Province
+                    </label>
+                    <input type="text" name="location" placeholder="e.g., Jakarta, West Java" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Will appear in location chart</p>
+                </div>
+
+                <!-- Address (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt"></i> Full Address
+                    </label>
+                    <textarea name="address" placeholder="Street address" rows="2"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-3 justify-end pt-4 border-t">
+                    <button type="button" onclick="closeAddUserModal()" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i> Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 flex items-center justify-between">
+                <h2 class="text-2xl font-bold">Edit User</h2>
+                <button onclick="closeEditUserModal()" class="text-white hover:bg-purple-800 p-2 rounded-lg transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="editUserForm" method="POST" action="" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-user"></i> Full Name *
+                    </label>
+                    <input type="text" id="editUserName" name="name" placeholder="John Doe" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-envelope"></i> Email *
+                    </label>
+                    <input type="email" id="editUserEmail" name="email" placeholder="john@example.com" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Phone (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-phone"></i> Phone Number
+                    </label>
+                    <input type="tel" id="editUserPhone" name="phone" placeholder="+62 812 3456 7890"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Date of Birth (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-birthday-cake"></i> Date of Birth
+                    </label>
+                    <input type="date" id="editUserDateOfBirth" name="date_of_birth"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Province (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-map"></i> Province/Location
+                    </label>
+                    <input type="text" id="editUserLocation" name="location" placeholder="e.g., Jakarta, West Java" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <p class="text-xs text-gray-500 mt-1">Will appear in location chart</p>
+                </div>
+
+                <!-- Address (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt"></i> Full Address
+                    </label>
+                    <textarea id="editUserAddress" name="address" placeholder="Street address" rows="2"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+
+                <!-- Education Level (Optional) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-graduation-cap"></i> Education Level
+                    </label>
+                    <select id="editUserEducationLevel" name="education_level" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Select Education Level</option>
+                        <option value="high_school">High School</option>
+                        <option value="bachelor">Bachelor's Degree</option>
+                        <option value="master">Master's Degree</option>
+                        <option value="phd">PhD</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-3 justify-end pt-4 border-t">
+                    <button type="button" onclick="closeEditUserModal()" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i> Update User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Calculate age when user enters date of birth
+        document.getElementById('addUserDateOfBirth').addEventListener('change', function() {
+            const dob = new Date(this.value);
+            if (!isNaN(dob)) {
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+                document.getElementById('ageDisplay').textContent = '✓ Age: ' + age + ' years';
+            }
+        });
+
+        // Same for edit form
+        if (document.getElementById('editUserDateOfBirth')) {
+            document.getElementById('editUserDateOfBirth').addEventListener('change', function() {
+                const dob = new Date(this.value);
+                if (!isNaN(dob)) {
+                    const today = new Date();
+                    let age = today.getFullYear() - dob.getFullYear();
+                    const monthDiff = today.getMonth() - dob.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                        age--;
+                    }
+                    if (!document.getElementById('ageDisplayEdit')) {
+                        const span = document.createElement('p');
+                        span.id = 'ageDisplayEdit';
+                        span.className = 'text-xs text-blue-600 mt-1';
+                        document.getElementById('editUserDateOfBirth').parentElement.appendChild(span);
+                    }
+                    document.getElementById('ageDisplayEdit').textContent = '✓ Age: ' + age + ' years';
+                }
+            });
+        }
+
+        function addUser() {
+            document.getElementById('addUserModal').classList.remove('hidden');
+            document.getElementById('addUserForm').reset();
+            document.getElementById('ageDisplay').textContent = '';
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('addUserModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddUserModal();
+            }
+        });
+
+        // Edit User Functions
+        async function editUser(userId) {
+            try {
+                // Fetch user data
+                const response = await fetch(`/admin/users/${userId}/edit`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user data');
+                }
+
+                const userData = await response.json();
+
+                // Fill form with user data
+                document.getElementById('editUserName').value = userData.name || '';
+                document.getElementById('editUserEmail').value = userData.email || '';
+                document.getElementById('editUserPhone').value = userData.phone || '';
+                document.getElementById('editUserDateOfBirth').value = userData.date_of_birth || '';
+                document.getElementById('editUserLocation').value = userData.location || '';
+                document.getElementById('editUserAddress').value = userData.address || '';
+                document.getElementById('editUserEducationLevel').value = userData.education_level || '';
+
+                // Set form action to update route
+                document.getElementById('editUserForm').action = `/admin/users/${userId}`;
+
+                // Open modal
+                document.getElementById('editUserModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load user data. Please try again.');
+            }
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').classList.add('hidden');
+            document.getElementById('editUserForm').reset();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editUserModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditUserModal();
+            }
+        });
+
+        // Handle edit form submission
+        document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const userId = this.action.split('/').pop();
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    // Show success notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3';
+                    notification.innerHTML = '<i class="fas fa-check-circle"></i><span class="font-medium">User updated successfully! Refreshing data...</span>';
+                    document.body.appendChild(notification);
+                    
+                    // Close modal
+                    closeEditUserModal();
+                    
+                    // Force full reload to update charts
+                    setTimeout(() => {
+                        window.location.href = window.location.href;
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to update user'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update user. Please try again.');
+            }
+        });
+
+        // Delete User Function
+        async function deleteUser(userId, userName) {
+            if (!confirm(`Delete user ${userName}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show success notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-6 right-6 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3';
+                    notification.innerHTML = '<i class="fas fa-check-circle"></i><span class="font-medium">User deleted successfully!</span>';
+                    document.body.appendChild(notification);
+
+                    // Remove row from table with fade effect
+                    const row = document.querySelector(`button[onclick*="deleteUser(${userId}"]`).closest('tr');
+                    if (row) {
+                        row.style.opacity = '0.5';
+                        setTimeout(() => {
+                            row.remove();
+                            // Reload page after 1 second to update stats
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        }, 500);
+                    }
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to delete user'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to delete user. Please try again.');
+            }
+        }
+
+        // Change Password Function
+        let currentUserId = null;
+        
+        function changePassword(userId, userName) {
+            currentUserId = userId;
+            document.getElementById('changePasswordUserName').textContent = userName;
+            document.getElementById('changePasswordModal').classList.remove('hidden');
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('confirmPasswordInput').value = '';
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.add('hidden');
+            currentUserId = null;
+        }
+
+        async function saveNewPassword() {
+            if (!currentUserId) return;
+
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+
+            if (!newPassword || !confirmPassword) {
+                alert('Please fill in both password fields');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/users/${currentUserId}/password`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: newPassword,
+                        password_confirmation: confirmPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Show success notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-3';
+                    notification.innerHTML = '<i class="fas fa-check-circle"></i><span class="font-medium">Password changed successfully!</span>';
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => notification.remove(), 3000);
+                    closeChangePasswordModal();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to change password'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to change password. Please try again.');
+            }
+        }
+    </script>
+    
+    {{-- Change Password Modal --}}
+    <div id="changePasswordModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-96">
+            <div class="bg-blue-600 text-white p-6 rounded-t-lg flex items-center justify-between">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fas fa-key"></i> Change Password
+                </h2>
+                <button onclick="closeChangePasswordModal()" class="text-white hover:bg-blue-700 p-2 rounded-lg transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User: <span id="changePasswordUserName" class="font-bold"></span></label>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                    <input type="password" id="newPasswordInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter new password">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <input type="password" id="confirmPasswordInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Confirm new password">
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t border-gray-200">
+                    <button onclick="closeChangePasswordModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="saveNewPassword()" class="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> Save Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     {{-- Load JS External --}}
     <script src="{{ asset('js/admin-users.js') }}"></script>

@@ -6,6 +6,7 @@ use App\Models\Refund;
 use App\Models\CourseRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RefundController extends Controller
 {
@@ -61,10 +62,9 @@ class RefundController extends Controller
         Refund::create([
             'user_id' => Auth::id(),
             'course_registration_id' => $registration->id,
-            'course_id' => $registration->course_id,
-            'amount' => $registration->total_paid ?? $registration->course->price, // Fallback jika total_paid null
+            'amount' => $registration->final_price ?? $registration->course->price,
             'reason' => $request->reason,
-            'status' => 'pending', // Status awal
+            'status' => 'pending',
         ]);
 
         return redirect()->route('student.course-detail', $registration->id)
@@ -79,13 +79,34 @@ class RefundController extends Controller
     /**
      * List semua request refund
      */
-    public function adminIndex()
+    public function adminIndex(Request $request)
     {
-        $refunds = Refund::with(['user', 'courseRegistration.course'])
-            ->latest()
-            ->paginate(15);
+        $query = Refund::with(['user', 'registration.course']);
 
-        return view('admin.refunds.index', compact('refunds'));
+        // Filter by status
+        if ($request->has('status') && $request->status) {
+            $status = $request->status;
+            
+            // Support old filter 'approved' yang means processing + completed
+            if ($status === 'approved') {
+                $query->whereIn('status', ['processing', 'completed']);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        $refunds = $query->latest()->paginate(15);
+
+        // Calculate stats
+        $stats = [
+            'total' => Refund::count(),
+            'pending' => Refund::where('status', 'pending')->count(),
+            'approved' => Refund::whereIn('status', ['processing', 'completed'])->count(),
+            'rejected' => Refund::where('status', 'rejected')->count(),
+            'total_refunded' => Refund::where('status', 'completed')->sum('amount'),
+        ];
+
+        return view('admin.refunds.index', compact('refunds', 'stats'));
     }
 
     /**
@@ -93,12 +114,12 @@ class RefundController extends Controller
      */
     public function adminShow($id)
     {
-        $refund = Refund::with(['user', 'courseRegistration.course', 'courseRegistration.payment'])->findOrFail($id);
+        $refund = Refund::with(['user', 'registration.course'])->findOrFail($id);
         return view('admin.refunds.show', compact('refund'));
     }
 
     /**
-     * Approve Refund (Setujui & Cabut Akses)
+     * Approve Refund (Start Processing - Sedang Diproses)
      */
     public function approve($id)
     {
@@ -108,22 +129,62 @@ class RefundController extends Controller
             return back()->with('error', 'Refund ini sudah diproses sebelumnya.');
         }
 
-        // 1. Update Status Refund
+        // 1. Update Status ke Processing
         $refund->update([
-            'status' => 'approved',
-            'admin_notes' => 'Permintaan disetujui oleh Admin.', // Default note
-            'processed_at' => now()
+            'status' => 'processing',
+            'processing_started_at' => now(),
+            'admin_notes' => 'Refund sedang diproses.'
         ]);
 
-        // 2. Update Status Registrasi User jadi 'Refunded' (Otomatis cabut akses materi)
-        if ($refund->courseRegistration) {
-            $refund->courseRegistration->update(['status' => 'refunded']);
+        // 2. Send notification ke user
+        try {
+            $refund->user->notify(new \App\Notifications\RefundStatusNotification($refund, 'processing'));
+        } catch (\Exception $notifError) {
+            \Log::error('Refund notification error: ' . $notifError->getMessage());
         }
 
-        // 3. (Opsional) Trigger notifikasi email ke user di sini
-        // Mail::to($refund->user->email)->send(new RefundApprovedMail($refund));
+        return back()->with('success', 'Refund berhasil dimulai pemrosesan. Notifikasi telah dikirim ke user.');
+    }
 
-        return back()->with('success', 'Refund berhasil disetujui. Akses siswa ke kursus telah dicabut.');
+    /**
+     * Complete Refund (Refund Berhasil)
+     */
+    public function complete($id)
+    {
+        $refund = Refund::with('registration', 'user')->findOrFail($id);
+        
+        if ($refund->status !== 'processing') {
+            return back()->with('error', 'Refund harus dalam status processing untuk diselesaikan.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Update Status ke Completed
+            $refund->update([
+                'status' => 'completed',
+                'processed_at' => now(),
+                'admin_notes' => 'Refund berhasil diselesaikan.'
+            ]);
+
+            // 2. Update Status Registrasi User jadi 'Cancelled' (refunded)
+            if ($refund->registration) {
+                $refund->registration->update(['status' => 'cancelled']);
+            }
+
+            // 3. Send notification ke user - Refund Berhasil (dispatch via queue)
+            try {
+                $refund->user->notify(new \App\Notifications\RefundStatusNotification($refund, 'completed'));
+            } catch (\Exception $notifError) {
+                // Log notification error tapi jangan hentikan proses
+                \Log::error('Refund notification error: ' . $notifError->getMessage());
+            }
+
+            DB::commit();
+            return back()->with('success', 'Refund berhasil diselesaikan. User telah diberitahu.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menyelesaikan refund: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -132,13 +193,13 @@ class RefundController extends Controller
     public function reject(Request $request, $id)
     {
         $request->validate([
-            'reason' => 'required|string|max:500'
+            'reason' => 'required|string|min:10|max:500'
         ]);
 
         $refund = Refund::findOrFail($id);
 
-        if ($refund->status !== 'pending') {
-            return back()->with('error', 'Refund ini sudah diproses sebelumnya.');
+        if (!in_array($refund->status, ['pending', 'processing'])) {
+            return back()->with('error', 'Refund ini sudah diselesaikan atau ditolak sebelumnya.');
         }
 
         // Update Status jadi Rejected
@@ -148,6 +209,13 @@ class RefundController extends Controller
             'processed_at' => now()
         ]);
 
-        return back()->with('success', 'Permintaan refund ditolak.');
+        // Send rejection notification to user
+        try {
+            $refund->user->notify(new \App\Notifications\RefundRejectedNotification($refund));
+        } catch (\Exception $notifError) {
+            \Log::error('Refund rejection notification error: ' . $notifError->getMessage());
+        }
+
+        return back()->with('success', 'Permintaan refund telah ditolak. Notifikasi telah dikirim ke user.');
     }
 }
