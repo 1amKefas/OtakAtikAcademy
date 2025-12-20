@@ -33,3 +33,6 @@ console_command = 'php /var/www/html/artisan tinker'
   cpu_kind = 'performance'
   cpus = 16
   memory_mb = 32768
+
+[deploy]
+  release_command = "php artisan migrate --force"
