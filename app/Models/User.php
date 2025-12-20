@@ -16,6 +16,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'email_verified_at',
         'google_id', // Google OAuth ID
         'locale',
         'is_admin',
@@ -289,5 +290,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function certificates()
     {
         return $this->hasMany(Certificate::class);
+    }
+
+    /**
+     * Get user's attendances
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Get class sessions taught by this user (instructor)
+     */
+    public function taughtSessions()
+    {
+        return $this->hasMany(ClassSession::class, 'instructor_id');
     }
 }

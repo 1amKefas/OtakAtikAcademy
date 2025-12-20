@@ -62,24 +62,21 @@ class AdminRefundController extends Controller
 
         DB::beginTransaction();
         try {
-            // Update refund status
+            // Step 1: Move to processing status
             $refund->update([
-                'status' => 'approved',
-                'approved_at' => now(),
+                'status' => 'processing',
+                'processing_started_at' => now(),
                 'approved_by' => Auth::id(),
             ]);
 
-            // Update registration status
-            $refund->registration->update([
-                'payment_status' => 'refunded',
-                'refunded_at' => now(),
-            ]);
+            // Send notification to user - Sedang Diproses
+            $refund->user->notify(new \App\Notifications\RefundStatusNotification($refund, 'processing'));
 
             DB::commit();
             
             return redirect()
                 ->route('admin.refunds.index')
-                ->with('success', 'Refund berhasil disetujui');
+                ->with('success', 'Refund berhasil dimulai pemrosesan. User telah diberitahu.');
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -88,7 +85,52 @@ class AdminRefundController extends Controller
                 'error' => $e->getMessage()
             ]);
             
-            return back()->with('error', 'Gagal menyetujui refund: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses refund: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Complete refund processing (Refund berhasil)
+     */
+    public function complete($id)
+    {
+        $refund = Refund::findOrFail($id);
+        
+        if ($refund->status !== 'processing') {
+            return back()->with('error', 'Refund harus dalam status processing');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Step 2: Complete the refund
+            $refund->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+
+            // Update registration status
+            $refund->registration->update([
+                'payment_status' => 'refunded',
+                'refunded_at' => now(),
+            ]);
+
+            // Send notification to user - Refund Berhasil
+            $refund->user->notify(new \App\Notifications\RefundStatusNotification($refund, 'completed'));
+
+            DB::commit();
+            
+            return redirect()
+                ->route('admin.refunds.index')
+                ->with('success', 'Refund berhasil diselesaikan. User telah diberitahu.');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Refund Completion Error', [
+                'refund_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return back()->with('error', 'Gagal menyelesaikan refund: ' . $e->getMessage());
         }
     }
 

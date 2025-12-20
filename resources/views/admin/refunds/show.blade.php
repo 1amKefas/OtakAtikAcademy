@@ -28,10 +28,21 @@
             <div class="p-6 border-b">
                 <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full
                     @if($refund->status === 'pending') bg-yellow-100 text-yellow-800
-                    @elseif($refund->status === 'approved') bg-green-100 text-green-800
-                    @else bg-red-100 text-red-800
+                    @elseif($refund->status === 'processing') bg-blue-100 text-blue-800
+                    @elseif($refund->status === 'completed') bg-green-100 text-green-800
+                    @elseif($refund->status === 'rejected') bg-red-100 text-red-800
                     @endif">
-                    {{ ucfirst($refund->status) }}
+                    @if($refund->status === 'pending')
+                        Menunggu Konfirmasi
+                    @elseif($refund->status === 'processing')
+                        Sedang Diproses
+                    @elseif($refund->status === 'completed')
+                        Selesai
+                    @elseif($refund->status === 'rejected')
+                        Ditolak
+                    @else
+                        {{ ucfirst($refund->status) }}
+                    @endif
                 </span>
             </div>
 
@@ -124,10 +135,27 @@
             <div class="p-6 bg-gray-50">
                 <div class="flex space-x-4">
                     <form action="{{ route('admin.refunds.approve', $refund) }}" method="POST" class="flex-1"
-                          onsubmit="return confirm('Apakah Anda yakin ingin menyetujui refund ini?')">
+                          onsubmit="return confirm('Apakah Anda yakin ingin mulai memproses refund ini?')">
+                        @csrf
+                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                            Mulai Proses
+                        </button>
+                    </form>
+
+                    <button onclick="document.getElementById('rejectModal').classList.remove('hidden')" 
+                            class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                        Tolak Refund
+                    </button>
+                </div>
+            </div>
+            @elseif($refund->status === 'processing')
+            <div class="p-6 bg-gray-50">
+                <div class="flex space-x-4">
+                    <form action="{{ route('admin.refunds.complete', $refund) }}" method="POST" class="flex-1"
+                          onsubmit="return confirm('Apakah Anda yakin refund ini sudah selesai diproses?')">
                         @csrf
                         <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
-                            Setujui Refund
+                            Tandai Selesai
                         </button>
                     </form>
 
@@ -147,15 +175,16 @@
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Tolak Refund</h3>
-            <form action="{{ route('admin.refunds.reject', $refund) }}" method="POST">
+            <form action="@if($refund->status === 'pending'){{ route('admin.refunds.reject', $refund) }}@else{{ route('admin.refunds.reject', $refund) }}@endif" method="POST">
                 @csrf
                 <div class="mb-4">
                     <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-2">
                         Alasan Penolakan *
                     </label>
-                    <textarea name="rejection_reason" id="rejection_reason" rows="4" 
+                    <textarea name="reason" id="rejection_reason" rows="4" 
                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                              placeholder="Jelaskan alasan penolakan..." required></textarea>
+                              placeholder="Jelaskan alasan penolakan..." required minlength="10" maxlength="500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Minimal 10 karakter</p>
                 </div>
                 <div class="flex space-x-3">
                     <button type="button" 

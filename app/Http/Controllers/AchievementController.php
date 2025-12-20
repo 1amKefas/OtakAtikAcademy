@@ -85,7 +85,31 @@ class AchievementController extends Controller
             return \Storage::download($certificate->pdf_path);
         }
 
-        // TODO: Generate PDF certificate
-        return back()->with('error', 'Certificate PDF not available');
+        // Generate PDF certificate on-the-fly if not cached
+        try {
+            $course = $certificate->course;
+            
+            // Validate course has certificate template
+            if (!$course->certificate_template) {
+                return back()->with('error', 'Template sertifikat tidak tersedia');
+            }
+
+            // Prepare data for PDF
+            $data = [
+                'student_name' => $certificate->user->name,
+                'course_title' => $course->title,
+                'date' => $certificate->issued_date ? $certificate->issued_date->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
+                'code' => $certificate->certificate_number ?? $certificate->certificate_code,
+                'background_image' => storage_path('app/public/' . $course->certificate_template)
+            ];
+
+            // Generate PDF
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.template', $data)
+                  ->setPaper('a4', 'landscape');
+
+            return $pdf->download('Sertifikat-' . \Illuminate\Support\Str::slug($course->title) . '.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal membuat sertifikat: ' . $e->getMessage());
+        }
     }
 }

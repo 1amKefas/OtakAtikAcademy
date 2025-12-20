@@ -71,6 +71,104 @@
                     </div>
                 </div>
 
+                <!-- 🔴 ANNOUNCEMENTS SECTION -->
+                @php
+                    $announcements = [];
+                    foreach($course->modules as $module) {
+                        if ($module->title === 'Pemberitahuan & Event') {
+                            $announcements = $module->announcements;
+                            break;
+                        }
+                    }
+                @endphp
+
+                @if(count($announcements) > 0)
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-bell text-red-600"></i> Jadwal Zoom Kelas
+                        </h3>
+                        <span class="text-sm text-gray-500">{{ count($announcements) }} Event</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        @foreach($announcements as $announcement)
+                        <div class="border-l-4 border-red-500 pl-4 py-3 bg-red-50 rounded-lg hover:bg-red-100 transition">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-900 text-base flex items-center gap-2">
+                                        <i class="fas fa-video text-red-600 text-sm"></i>
+                                        {{ $announcement->title }}
+                                    </h4>
+                                    
+                                    <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-700">
+                                        <span class="flex items-center gap-1">
+                                            <i class="fas fa-calendar text-red-600"></i>
+                                            <strong>{{ $announcement->day_of_week }}</strong>, {{ date('d M Y', strtotime($announcement->announcement_date)) }}
+                                        </span>
+                                        <span class="flex items-center gap-1">
+                                            <i class="fas fa-clock text-red-600"></i>
+                                            <strong>{{ date('H:i', strtotime($announcement->announcement_time)) }}</strong> WIB
+                                        </span>
+                                    </div>
+
+                                    @if($announcement->description)
+                                    <p class="text-sm text-gray-600 mt-2 italic">📝 {{ $announcement->description }}</p>
+                                    @endif
+
+                                    <!-- Status: Upcoming or Past -->
+                                    @php
+                                        $dateStr = $announcement->announcement_date instanceof \Carbon\Carbon 
+                                            ? $announcement->announcement_date->format('Y-m-d') 
+                                            : $announcement->announcement_date;
+                                        $announcementDateTime = \Carbon\Carbon::parse($dateStr . ' ' . $announcement->announcement_time);
+                                        $isPast = $announcementDateTime < now();
+                                        $isUpcoming = !$isPast;
+                                    @endphp
+
+                                    <div class="mt-3">
+                                        @if($isUpcoming)
+                                            <span class="inline-block px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                                <i class="fas fa-check-circle mr-1"></i> Akan Datang
+                                            </span>
+                                        @else
+                                            <span class="inline-block px-3 py-1 bg-gray-200 text-gray-600 text-xs font-bold rounded-full">
+                                                <i class="fas fa-history mr-1"></i> Sudah Berakhir
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col items-center gap-2">
+                                    @if($isUpcoming && $announcement->zoom_link)
+                                    <a href="{{ $announcement->zoom_link }}" target="_blank" 
+                                       class="w-full px-4 py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-2 shadow-md">
+                                        <i class="fas fa-video"></i> Buka Zoom
+                                    </a>
+                                    @elseif($isUpcoming)
+                                    <div class="w-full px-4 py-2.5 bg-gray-300 text-gray-600 text-sm font-bold rounded-lg flex items-center justify-center gap-2">
+                                        <i class="fas fa-clock"></i> Segera Dimulai
+                                    </div>
+                                    @else
+                                    <div class="w-full px-4 py-2.5 bg-gray-300 text-gray-600 text-sm font-bold rounded-lg flex items-center justify-center gap-2">
+                                        <i class="fas fa-check"></i> Selesai
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
+                        <i class="fas fa-info-circle text-blue-600 mt-0.5 flex-shrink-0"></i>
+                        <p class="text-sm text-blue-800">
+                            <strong>💡 Tips:</strong> Pastikan Anda hadir tepat waktu. Link Zoom akan diberikan melalui notifikasi atau email sebelum sesi dimulai.
+                        </p>
+                    </div>
+                </div>
+                @endif
+
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -81,6 +179,7 @@
 
                     <div class="space-y-3" x-data="{ activeModule: 0 }">
                         @forelse($course->modules as $index => $module)
+                        @if($module->title !== 'Pemberitahuan & Event')
                         <div class="border border-gray-200 rounded-xl overflow-hidden transition-all duration-200 hover:border-blue-300 bg-white">
                             <button 
                                 @click="activeModule === {{ $index }} ? activeModule = null : activeModule = {{ $index }}"
@@ -129,6 +228,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                         @empty
                         <div class="text-center py-12 bg-white border-2 border-dashed border-gray-200 rounded-xl">
                             <i class="fas fa-box-open text-gray-300 text-4xl mb-3"></i>
@@ -218,9 +318,27 @@
                         @else
                             <div class="flex items-end gap-3 flex-wrap">
                                 <h2 class="text-3xl font-bold text-gray-900">
-                                    {{ 'Rp ' . number_format($course->price - ($course->price * ($course->discount_percent/100)), 0, ',', '.') }}
+                                    @if($registration)
+                                        {{-- Show actual price student paid from purchase history --}}
+                                        {{ 'Rp ' . number_format($registration->final_price, 0, ',', '.') }}
+                                    @else
+                                        {{-- Show price with course discount for non-registered users --}}
+                                        {{ 'Rp ' . number_format($course->price - ($course->price * ($course->discount_percent/100)), 0, ',', '.') }}
+                                    @endif
                                 </h2>
-                                @if($course->discount_percent > 0)
+                                @if($registration && $registration->price > $registration->final_price)
+                                    {{-- Show original price and discount only if student got a discount --}}
+                                    <span class="text-gray-400 line-through mb-1.5 text-base">
+                                        {{ 'Rp ' . number_format($registration->price, 0, ',', '.') }}
+                                    </span>
+                                    @php
+                                        $discountPercent = round((($registration->price - $registration->final_price) / $registration->price) * 100);
+                                    @endphp
+                                    <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full mb-2">
+                                        {{ $discountPercent }}% OFF
+                                    </span>
+                                @elseif(!$registration && $course->discount_percent > 0)
+                                    {{-- Show course default discount for non-registered users --}}
                                     <span class="text-gray-400 line-through mb-1.5 text-base">
                                         {{ 'Rp ' . number_format($course->price, 0, ',', '.') }}
                                     </span>
@@ -232,17 +350,7 @@
                         @endif
                     </div>
 
-                    @php
-                        $userRegistration = null;
-                        if(Auth::check()) {
-                            $userRegistration = \App\Models\CourseRegistration::where('user_id', Auth::id())
-                                ->where('course_id', $course->id)
-                                ->where('status', 'paid')
-                                ->first();
-                        }
-                    @endphp
-
-                    @if($userRegistration)
+                    @if($registration)
                         <div class="bg-green-50 border border-green-200 rounded-xl p-5 mb-6 text-center">
                             <div class="flex items-center justify-center gap-2 text-green-700 font-bold mb-3">
                                 <i class="fas fa-check-circle text-xl"></i>
@@ -250,9 +358,9 @@
                             </div>
                             
                             <div class="w-full bg-green-200 rounded-full h-2.5 mb-1">
-                                <div class="bg-green-600 h-2.5 rounded-full transition-all duration-1000" style="width: {{ $userRegistration->progress }}%"></div>
+                                <div class="bg-green-600 h-2.5 rounded-full transition-all duration-1000" style="width: {{ $registration->progress }}%"></div>
                             </div>
-                            <p class="text-xs text-green-600 text-right">{{ $userRegistration->progress }}% Selesai</p>
+                            <p class="text-xs text-green-600 text-right">{{ $registration->progress }}% Selesai</p>
                         </div>
 
                         {{-- FITUR REVIEW & RATING --}}
@@ -305,17 +413,17 @@
                 @endif
             </div>
 
-                        @if($userRegistration->course_class_id && in_array(strtolower($course->type), ['hybrid', 'offline', 'tatap muka']))
+                        @if($registration && $registration->course_class_id && in_array(strtolower($course->type), ['hybrid', 'offline', 'tatap muka']))
                             <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-4 flex items-start gap-3 animate-fade-in">
                                 <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
                                     <i class="fas fa-users text-lg"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Kelas Terdaftar</p>
-                                    <h4 class="font-bold text-gray-900 text-base truncate">{{ $userRegistration->courseClass->name ?? 'Nama Kelas' }}</h4>
-                                    @if($userRegistration->courseClass->instructor)
+                                    <h4 class="font-bold text-gray-900 text-base truncate">{{ $registration->courseClass->name ?? 'Nama Kelas' }}</h4>
+                                    @if($registration->courseClass->instructor)
                                         <p class="text-xs text-gray-500 mt-1 truncate">
-                                            <span class="font-medium text-gray-400">PJ:</span> {{ $userRegistration->courseClass->instructor->name }}
+                                            <span class="font-medium text-gray-400">PJ:</span> {{ $registration->courseClass->instructor->name }}
                                         </p>
                                     @endif
                                 </div>
@@ -328,7 +436,7 @@
                             <i class="fas fa-arrow-right"></i>
                         </a>
 
-                        @if($userRegistration->progress == 100)
+                        @if($registration && $registration->progress == 100)
                         <div class="mt-6 mb-6 animate-fade-in-up">
                             <a href="{{ route('student.certificate.download', $course->id) }}" 
                                class="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-yellow-500/30 transition transform hover:-translate-y-1 group">
@@ -397,16 +505,20 @@
                                     Ajukan Pengembalian Dana (Refund)
                                 </a>
                             @else
-                                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 inline-block w-full">
-                                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Status Refund</p>
-                                    
-                                    @if($existingRefund->status == 'pending')
-                                        <span class="text-sm font-bold text-yellow-600"><i class="fas fa-clock mr-1"></i> Menunggu Konfirmasi</span>
-                                    @elseif($existingRefund->status == 'approved')
-                                        <span class="text-sm font-bold text-green-600"><i class="fas fa-check-circle mr-1"></i> Disetujui</span>
-                                    @elseif($existingRefund->status == 'rejected')
-                                        <span class="text-sm font-bold text-red-600"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>
-                                    @endif
+                                <div class="mt-6 pt-4 border-t border-gray-100">
+                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                                        <p class="text-xs text-gray-600 font-semibold uppercase tracking-wide mb-2">Status Refund</p>
+                                        
+                                        @if($existingRefund->status == 'pending')
+                                            <span class="text-sm font-bold text-yellow-600"><i class="fas fa-clock mr-2"></i>Menunggu Konfirmasi</span>
+                                        @elseif($existingRefund->status == 'processing')
+                                            <span class="text-sm font-bold text-blue-600"><i class="fas fa-spinner mr-2 animate-spin"></i>Sedang Diproses</span>
+                                        @elseif($existingRefund->status == 'completed')
+                                            <span class="text-sm font-bold text-green-600"><i class="fas fa-check-circle mr-2"></i>Selesai - Dana Segera Masuk ke Rekening Anda</span>
+                                        @elseif($existingRefund->status == 'rejected')
+                                            <span class="text-sm font-bold text-red-600"><i class="fas fa-times-circle mr-2"></i>Ditolak - {{ $existingRefund->admin_notes }}</span>
+                                        @endif
+                                    </div>
                                 </div>
                             @endif
                         </div>

@@ -205,19 +205,9 @@
                         @if($course->price == 0)
                             <h2 class="text-4xl font-bold text-gray-900 mb-2">GRATIS</h2>
                         @else
-                            <div class="flex items-end gap-3 flex-wrap">
-                                <h2 class="text-3xl font-bold text-gray-900">
-                                    {{ 'Rp ' . number_format($course->price - ($course->price * ($course->discount_percent/100)), 0, ',', '.') }}
-                                </h2>
-                                @if($course->discount_percent > 0)
-                                    <span class="text-gray-400 line-through mb-1.5 text-base">
-                                        {{ 'Rp ' . number_format($course->price, 0, ',', '.') }}
-                                    </span>
-                                    <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full mb-2">
-                                        {{ $course->discount_percent }}% OFF
-                                    </span>
-                                @endif
-                            </div>
+                            <h2 class="text-3xl font-bold text-gray-900">
+                                {{ 'Rp ' . number_format($course->price, 0, ',', '.') }}
+                            </h2>
                         @endif
                     </div>
 

@@ -12,19 +12,16 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" crossorigin="anonymous"></script>
-    
-    <script src="https://cdn.tiny.cloud/1/40wmpfbvzkycl0abvcvdpedgmg1a5pa6mu5yyv37jgk0thqo/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
-    
+    <!-- TinyMCE Configuration -->
+    <x-head.tinymce-config />
     
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" crossorigin="anonymous"></script>
     
-    <script src="{{ asset('js/instructor-manage.js') }}"></script>
+    <script defer src="{{ asset('js/instructor-manage-simple.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-50 flex h-screen overflow-hidden" x-data="contentManager">
+<body class="bg-gray-50 flex h-screen overflow-hidden">
 
     <aside class="sidebar w-64 text-white hidden md:flex flex-col flex-shrink-0">
         <div class="p-6 border-b border-gray-700">
@@ -93,7 +90,7 @@
                     <h3 class="text-2xl font-bold text-gray-900">Kurikulum & Konten</h3>
                     <p class="text-gray-500 text-sm mt-1">Drag icon untuk mengubah urutan Modul atau Materi.</p>
                 </div>
-                <button @click="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" 
+                <button onclick="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" 
                         class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2 font-medium">
                     <i class="fas fa-plus-circle"></i> Tambah Modul Baru
                 </button>
@@ -101,38 +98,111 @@
 
             <div id="modules-list" class="space-y-6 pb-20" data-course-id="{{ $course->id }}">
                 @forelse($course->modules->sortBy('order') as $module)
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden module-item transition hover:shadow-md" data-id="{{ $module->id }}" x-data="{ open: true }">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden module-item transition hover:shadow-md" data-id="{{ $module->id }}">
                     
                     <div class="p-4 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between group">
                         <div class="flex items-center gap-4 flex-1">
                             <div class="text-gray-400 cursor-move hover:text-gray-600 handle p-2">
                                 <i class="fas fa-grip-vertical text-lg"></i>
                             </div>
-                            <div>
+                            <div class="flex items-center gap-3">
                                 <h4 class="font-bold text-gray-800 text-lg">{{ $module->title }}</h4>
-                                <p class="text-xs text-gray-500 mt-0.5">
-                                    {{ $module->materials->count() + $module->quizzes->count() }} Item Konten
-                                </p>
+                                @if($module->title === 'Pemberitahuan & Event')
+                                    <span class="px-2.5 py-1 bg-red-100 text-red-700 text-xs rounded-full font-bold">
+                                        <i class="fas fa-bell mr-1"></i> ANNOUNCEMENT
+                                    </span>
+                                @endif
                             </div>
+                            <p class="text-xs text-gray-500 ml-2">
+                                @if($module->title === 'Pemberitahuan & Event')
+                                    {{ $module->announcements->count() }} Pemberitahuan
+                                @else
+                                    {{ $module->materials->count() + $module->quizzes->count() }} Item Konten
+                                @endif
+                            </p>
                         </div>
                         
                         <div class="flex items-center gap-2">
-                            <button @click="openUpdateModuleModal({{ $module->id }}, '{{ addslashes($module->title) }}')" class="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">
+                            @if($module->title !== 'Pemberitahuan & Event')
+                            <button onclick="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" class="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
+                            @endif
                             <form action="{{ route('instructor.course.module.delete', $module->id) }}" method="POST" onsubmit="return confirm('Hapus modul ini?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
-                            <button @click="open = !open" class="ml-2 p-2 rounded-full text-gray-500 hover:bg-gray-200 transition" :class="{'rotate-180': !open}">
+                            <button onclick="toggleModuleExpand({{ $module->id }})" class="ml-2 p-2 rounded-full text-gray-500 hover:bg-gray-200 transition">
                                 <i class="fas fa-chevron-down text-lg"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div x-show="open" x-collapse class="bg-white p-2">
+                    <div style="display: block;" x-collapse class="bg-white p-2">
+                        {{-- Tampilkan Announcements untuk Module "Pemberitahuan & Event" --}}
+                        @if($module->title === 'Pemberitahuan & Event')
+                            <div class="space-y-3">
+                                @forelse($module->announcements as $announcement)
+                                    <div class="flex items-start justify-between p-4 rounded-lg border border-red-200 bg-gradient-to-r from-red-50 to-orange-50 hover:shadow-md group transition">
+                                        <div class="flex items-start gap-4 flex-1">
+                                            <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-red-600 to-orange-600 text-white shadow-md">
+                                                <i class="fas fa-video text-lg"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="font-bold text-gray-900 text-base">{{ $announcement->title }}</p>
+                                                <div class="flex flex-wrap items-center gap-3 text-sm text-gray-700 mt-2">
+                                                    <span class="flex items-center gap-1">
+                                                        <i class="fas fa-calendar text-red-600"></i>
+                                                        {{ $announcement->day_of_week }}, {{ date('d M Y', strtotime($announcement->announcement_date)) }}
+                                                    </span>
+                                                    <span class="flex items-center gap-1">
+                                                        <i class="fas fa-clock text-red-600"></i>
+                                                        {{ date('H:i', strtotime($announcement->announcement_time)) }} WIB
+                                                    </span>
+                                                </div>
+                                                @if($announcement->description)
+                                                    <p class="text-sm text-gray-600 mt-2">{{ $announcement->description }}</p>
+                                                @endif
+                                                @if($announcement->zoom_link)
+                                                    <div class="mt-3 flex gap-2">
+                                                        <a href="{{ $announcement->zoom_link }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition shadow-md">
+                                                            <i class="fas fa-link"></i>
+                                                            Buka Zoom
+                                                        </a>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition ml-4 flex-shrink-0">
+                                            <button class="p-2 text-gray-400 hover:text-blue-600 hover:bg-white rounded" title="Edit">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <form action="{{ route('instructor.course.announcement.delete', $announcement->id) }}" method="POST" onsubmit="return confirm('Hapus pemberitahuan ini?');" style="display: inline;">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-white rounded">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                                        <i class="fas fa-calendar-times text-3xl mb-2 block"></i>
+                                        <p class="font-medium">Belum ada sesi zoom</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                <button onclick="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" 
+                                        class="w-full py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-2 shadow-md">
+                                    <i class="fas fa-plus-circle"></i> Tambah Sesi Zoom
+                                </button>
+                            </div>
+                        @else
+                            {{-- Tampilkan Materi dan Quiz untuk Module Pembelajaran --}}
                         @php
                             $mergedContents = collect();
                             
@@ -214,13 +284,14 @@
                         </div>
 
                         <div class="mt-3 pt-3 border-t border-gray-100 flex gap-3 px-2">
-                            <button @click="openCreateMaterialModal('{{ route('instructor.course.material.store', [$course->id, $module->id]) }}')" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2">
+                            <button onclick="openCreateMaterialModal('{{ route('instructor.course.material.store', [$course->id, $module->id]) }}')" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2">
                                 <i class="fas fa-plus-circle"></i> Tambah Materi
                             </button>
-                            <button @click="openCreateQuizModal('{{ route('instructor.course.module.quiz.store', [$course->id, $module->id]) }}')" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
+                            <button onclick="openCreateQuizModal('{{ route('instructor.course.module.quiz.store', [$course->id, $module->id]) }}')" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-medium rounded-lg border border-purple-200 transition flex items-center gap-2">
                                 <i class="fas fa-question-circle"></i> Quiz
                             </button>
                         </div>
+                        @endif
                     </div>
                 </div>
                 @empty
@@ -229,7 +300,7 @@
                         <i class="fas fa-layer-group text-3xl"></i>
                     </div>
                     <h3 class="text-xl font-bold text-gray-800">Mulai Menyusun Kursus</h3>
-                    <button @click="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" 
+                    <button onclick="openCreateModuleModal('{{ route('instructor.course.module.store', $course->id) }}')" 
                             class="mt-6 text-blue-600 font-medium hover:text-blue-800 hover:underline">
                         + Buat Modul 
                     </button>
@@ -239,60 +310,122 @@
         </main>
     </div>
 
-    <div x-show="showModuleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="moduleEditMode ? 'Edit Modul' : 'Buat Modul Baru'"></h3>
-            <form :action="moduleEditMode ? moduleFormAction : '{{ route('instructor.course.module.store', $course->id) }}'" method="POST">
+    <div id="moduleModal" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">Tambah Modul/Announcement</h3>
+            
+            <form id="moduleForm" method="POST">
                 @csrf
-                <input type="hidden" name="_method" :value="moduleEditMode ? 'PUT' : 'POST'">
-                <div class="mb-5">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Judul Modul</label>
-                    <input type="text" name="title" x-model="moduleTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                
+                <!-- Pilihan Tipe -->
+                <div class="mb-6 pb-6 border-b border-gray-200">
+                    <label class="block text-sm font-bold text-gray-700 mb-3">Tipe Konten</label>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-blue-50">
+                            <input type="radio" name="module_category" value="module" onchange="updateModuleType('module')" class="w-4 h-4 accent-blue-600" checked>
+                            <div>
+                                <span class="text-gray-700 font-medium block">📚 Modul Pembelajaran</span>
+                                <span class="text-xs text-gray-500">Materi, Quiz, dan Tugas</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-red-50">
+                            <input type="radio" name="module_category" value="announcement" onchange="updateModuleType('announcement')" class="w-4 h-4 accent-red-600">
+                            <div>
+                                <span class="text-gray-700 font-medium block">🎥 Announcement Zoom</span>
+                                <span class="text-xs text-gray-500">Info Sesi Zoom/Pertemuan Hybrid</span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
-                <div class="flex justify-end gap-3">
-                    <button type="button" @click="showModuleModal = false" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Simpan</button>
+
+                <!-- Form Modul Biasa -->
+                <div id="moduleLearningForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul Modul</label>
+                        <input type="text" name="title" id="moduleTitle" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Form Announcement Zoom -->
+                <div id="moduleAnnouncementForm" class="space-y-4" style="display: none;">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Sesi/Event <span class="text-red-500">*</span></label>
+                        <input type="text" name="announcement_title" id="announcementTitle" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500" placeholder="Contoh: Sesi Tanya Jawab AI & ML">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal <span class="text-red-500">*</span></label>
+                            <input type="date" name="announcement_date" id="announcementDate" onchange="updateAnnouncementDay()" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Jam <span class="text-red-500">*</span></label>
+                            <input type="time" name="announcement_time" id="announcementTime" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Hari (Auto-Generate)</label>
+                        <div class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 font-medium" id="announcementDay">
+                            Pilih tanggal terlebih dahulu
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Link Zoom <span class="text-red-500">*</span></label>
+                        <input type="url" name="zoom_link" id="zoomLink" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500" placeholder="https://zoom.us/j/...">
+                        <p class="text-xs text-gray-500 mt-1">Paste link Zoom meeting di sini</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi (Opsional)</label>
+                        <textarea name="announcement_description" id="announcementDesc" rows="2" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500" placeholder="Topik diskusi, catatan penting, dst..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
+                    <button type="button" onclick="closeModuleModal()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div x-show="showContentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
+    <div id="contentModal" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="text-xl font-bold text-gray-800" x-text="contentEditMode ? 'Edit Materi' : 'Buat Materi Baru'"></h3>
-                <button @click="showContentModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+                <h3 class="text-xl font-bold text-gray-800">Buat Materi Baru</h3>
+                <button onclick="closeContentModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto custom-scrollbar bg-white">
-                <form :action="contentFormAction" method="POST" enctype="multipart/form-data" id="contentForm">
+                <form id="contentForm" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="_method" :value="contentEditMode ? 'PUT' : 'POST'">
+                    <input type="hidden" name="_method" value="POST">
                     
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Judul Materi</label>
-                        <input type="text" name="title" x-model="contentTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <input type="text" name="title" id="contentTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Konten Materi (Teks/Gambar/Video Embed)</label>
-                        <textarea id="richEditor" name="content"></textarea>
+                        <x-forms.tinymce-editor name="content" id="richEditor" />
                     </div>
                     
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">URL Video / Eksternal (YouTube/Vimeo Link)</label>
-                        <input type="text" name="external_url" x-model="contentUrl" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: https://youtube.com/watch?v=...">
+                        <input type="text" name="external_url" id="contentUrl" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: https://youtube.com/watch?v=...">
                         <p class="text-xs text-gray-500 mt-1">Masukkan link video jika ingin materi full-screen video player.</p>
                     </div>
 
                     <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                         <label class="block text-sm font-bold text-blue-800 mb-2"><i class="fas fa-paperclip"></i> Lampiran File (Dokumen / Video MP4)</label>
                         <input type="file" name="attachment" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white cursor-pointer">
-                        <p x-show="contentEditMode" class="text-xs text-gray-500 mt-2">*Biarkan kosong jika tidak ingin mengubah file.</p>
                         <p class="text-xs text-gray-500 mt-1">Format: PDF, Word, PPT, TXT, JPG, PNG, MP4. Max: 50MB.</p>
                     </div>
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                        <button type="button" @click="showContentModal = false" class="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Batal</button>
+                        <button type="button" onclick="closeContentModal()" class="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Batal</button>
                         <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg">Simpan Materi</button>
                     </div>
                 </form>
@@ -300,41 +433,41 @@
         </div>
     </div>
 
-    <div x-show="showQuizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
+    <div id="quizModal" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 class="text-xl font-bold text-gray-800" x-text="quizEditMode ? 'Edit Pengaturan Quiz' : 'Buat Quiz Baru'"></h3>
-                <button @click="showQuizModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                <h3 class="text-xl font-bold text-gray-800">Buat Quiz Baru</h3>
+                <button onclick="closeQuizModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
             
-            <form :action="quizFormAction" method="POST">
+            <form id="quizForm" method="POST">
                 @csrf
-                <input type="hidden" name="_method" :value="quizEditMode ? 'PUT' : 'POST'">
+                <input type="hidden" name="_method" value="POST">
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Judul Quiz</label>
-                    <input type="text" name="title" x-model="quizTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <input type="text" name="title" id="quizTitle" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
                 </div>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi</label>
-                    <textarea name="description" x-model="quizDesc" rows="2" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
+                    <textarea name="description" id="quizDesc" rows="2" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Durasi (Menit)</label>
-                        <input type="number" name="duration_minutes" x-model="quizDuration" min="1" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
+                        <input type="number" name="duration_minutes" id="quizDuration" value="30" min="1" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">KKM (0-100)</label>
-                        <input type="number" name="passing_score" x-model="quizScore" min="0" max="100" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
+                        <input type="number" name="passing_score" id="quizScore" value="70" min="0" max="100" class="w-full px-3 py-2 border rounded-lg text-center font-bold">
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                    <button type="button" @click="showQuizModal = false" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg" x-text="quizEditMode ? 'Update Pengaturan' : 'Buat Quiz'"></button>
+                    <button type="button" onclick="closeQuizModal()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg">Buat Quiz</button>
                 </div>
             </form>
         </div>

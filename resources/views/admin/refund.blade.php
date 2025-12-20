@@ -38,7 +38,7 @@
                     <li>
                         <a href="/admin/courses" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors">
                             <i class="fas fa-book w-5"></i>
-                            <span>Course Anaylitics</span>
+                            <span>List Courses</span>
                         </a>
                     </li>
                       <li>
@@ -226,38 +226,22 @@
                                         <small>{{ $refund->created_at->format('H:i') }}</small>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex gap-2">
-                                            @if($refund->status == 'pending')
-                                            <form action="{{ route('admin.refunds.approve', $refund->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" 
-                                                        onclick="return confirm('Approve refund ini?')"
-                                                        class="text-green-600 hover:text-green-900"
-                                                        title="Approve">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
-                                            
-                                            <button type="button" 
-                                                    class="text-red-600 hover:text-red-900 btn-reject"
-                                                    data-id="{{ $refund->id }}"
-                                                    title="Reject">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                            
-                                            @elseif($refund->status == 'approved')
-                                            <span class="text-green-600 text-xs">
-                                                <i class="fas fa-check-circle"></i> Approved
-                                            </span>
-                                            @else
-                                            <span class="text-red-600 text-xs">
-                                                <i class="fas fa-times-circle"></i> Rejected
-                                            </span>
-                                            @endif
+                                        <div class="flex gap-2 items-center">
+                                            <select onchange="handleRefundAction(this, {{ $refund->id }})" 
+                                                    class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    @if($refund->status != 'pending' && $refund->status != 'processing') disabled @endif>
+                                                <option value="">-- Pilih Action --</option>
+                                                @if($refund->status == 'pending')
+                                                    <option value="process">⏳ Mulai Proses</option>
+                                                    <option value="reject">❌ Tolak</option>
+                                                @elseif($refund->status == 'processing')
+                                                    <option value="complete">✓ Selesaikan</option>
+                                                @endif
+                                            </select>
                                             
                                             <a href="{{ route('admin.refunds.show', $refund->id) }}" 
-                                               class="text-blue-600 hover:text-blue-900"
-                                               title="View Details">
+                                               class="text-blue-600 hover:text-blue-900 text-sm"
+                                               title="Lihat Detail">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         </div>
@@ -386,6 +370,72 @@
         <span class="font-medium">{{ session('error') }}</span>
     </div>
     @endif
+
+    <script>
+    function handleRefundAction(selectElement, refundId) {
+        const action = selectElement.value;
+        
+        if (!action) return;
+
+        let formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+        let url = '';
+        let confirmMsg = '';
+
+        switch(action) {
+            case 'process':
+                url = `/admin/refunds/${refundId}/approve`;
+                confirmMsg = 'Mulai pemrosesan refund ini?';
+                break;
+            case 'complete':
+                url = `/admin/refunds/${refundId}/complete`;
+                confirmMsg = 'Tandai refund ini sebagai selesai?';
+                break;
+            case 'reject':
+                // Show modal for reject reason
+                showRejectModal(refundId);
+                selectElement.value = '';
+                return;
+        }
+
+        if (confirm(confirmMsg)) {
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Gagal memproses refund'));
+                    selectElement.value = '';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+                selectElement.value = '';
+            });
+        } else {
+            selectElement.value = '';
+        }
+    }
+
+    function showRejectModal(refundId) {
+        // Implementation untuk show modal reject
+        const modal = document.getElementById('rejectModal');
+        const form = document.getElementById('rejectForm');
+        if (modal && form) {
+            form.action = `/admin/refunds/${refundId}/reject`;
+            modal.classList.remove('hidden');
+        }
+    }
+    </script>
 
 </body>
 </html>

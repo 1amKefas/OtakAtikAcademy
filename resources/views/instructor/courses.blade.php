@@ -133,7 +133,7 @@
                                 </div>
                             </div>
                             
-                            <div class="flex gap-3">
+                            <div class="flex gap-3 mb-4">
                                 <a href="{{ route('instructor.courses.manage', $course->id) }}" 
                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2.5 px-4 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow">
                                     <i class="fas fa-edit mr-2"></i> Edit Konten
@@ -143,7 +143,52 @@
                                    class="bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 py-2.5 px-4 rounded-lg transition-all border border-gray-200" title="Lihat Siswa">
                                     <i class="fas fa-users"></i>
                                 </a>
+
+                                <!-- Zoom Pertemuan Button -->
+                                <button onclick="openZoomModuleModal({{ $course->id }}, '{{ $course->title }}')" 
+                                   class="bg-purple-100 hover:bg-purple-200 text-purple-700 hover:text-purple-800 py-2.5 px-4 rounded-lg transition-all border border-purple-200" title="Add Zoom Pertemuan">
+                                    <i class="fas fa-video"></i>
+                                </button>
                             </div>
+
+                            <!-- Expandable Modules -->
+                            <details class="group cursor-pointer">
+                                <summary class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <span class="font-medium text-gray-700 text-sm">
+                                        <i class="fas fa-list mr-2"></i> Modules ({{ $course->modules_count ?? 0 }})
+                                    </span>
+                                    <i class="fas fa-chevron-down text-gray-500 group-open:rotate-180 transition-transform"></i>
+                                </summary>
+                                
+                                <div class="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100 space-y-2">
+                                    @forelse($course->modules as $module)
+                                        <div class="flex items-center justify-between p-2 bg-white rounded border border-gray-200">
+                                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                                @if($module->module_type === 'zoom_pertemuan')
+                                                    <i class="fas fa-video text-purple-600 flex-shrink-0"></i>
+                                                    <div class="min-w-0">
+                                                        <p class="text-sm font-medium text-gray-800 truncate">{{ $module->title }}</p>
+                                                        <p class="text-xs text-gray-500">
+                                                            {{ $module->session_date ? $module->session_date->format('d M Y') : '' }}
+                                                            @if($module->start_time)
+                                                                • {{ date('H:i', strtotime($module->start_time)) }}
+                                                            @endif
+                                                        </p>
+                                                    </div>
+                                                @else
+                                                    <i class="fas fa-book text-blue-600 flex-shrink-0"></i>
+                                                    <p class="text-sm font-medium text-gray-800 truncate">{{ $module->title }}</p>
+                                                @endif
+                                            </div>
+                                            <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full flex-shrink-0 ml-2">
+                                                {{ $module->module_type === 'zoom_pertemuan' ? 'Zoom' : 'Regular' }}
+                                            </span>
+                                        </div>
+                                    @empty
+                                        <p class="text-xs text-gray-600 text-center py-2">No modules yet</p>
+                                    @endforelse
+                                </div>
+                            </details>
                         </div>
                     </div>
                     @empty
@@ -173,6 +218,145 @@
         <span class="font-medium">{{ session('success') }}</span>
     </div>
     @endif
+
+    <!-- Zoom Pertemuan Modal -->
+    <div id="zoomModuleModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold">Add Zoom Pertemuan</h2>
+                    <p id="courseTitle" class="text-sm text-purple-100 mt-1"></p>
+                </div>
+                <button onclick="closeZoomModuleModal()" class="text-white hover:bg-purple-800 p-2 rounded-lg transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="zoomModuleForm" method="POST" class="p-6 space-y-4">
+                @csrf
+                <input type="hidden" id="courseIdInput" name="course_id">
+
+                <!-- Title -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Session Title *</label>
+                    <input type="text" name="title" placeholder="e.g., Introduction to Laravel" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea name="description" rows="2" placeholder="What will be covered?"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+
+                <!-- Session Date & Time -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date *</label>
+                        <input type="date" name="session_date" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Start Time *</label>
+                        <input type="time" name="start_time" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">End Time *</label>
+                        <input type="time" name="end_time" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+
+                <!-- Meeting Type -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Meeting Type *</label>
+                    <select name="meeting_type" onchange="updateZoomFields()" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">-- Select Type --</option>
+                        <option value="zoom">Zoom Meeting</option>
+                        <option value="tatap_muka">Tatap Muka (In-Person)</option>
+                        <option value="hybrid">Hybrid (Online + In-Person)</option>
+                    </select>
+                </div>
+
+                <!-- Zoom Link (Conditional) -->
+                <div id="zoomLinkField" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Zoom Link *</label>
+                    <input type="url" name="zoom_link" placeholder="https://zoom.us/j/..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Location (Conditional) -->
+                <div id="locationField" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Location *</label>
+                    <input type="text" name="location" placeholder="e.g., Room 101, Building A"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Room Number (Conditional) -->
+                <div id="roomNumberField" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Room Number</label>
+                    <input type="text" name="room_number" placeholder="e.g., 101"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <!-- Agenda -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Agenda</label>
+                    <textarea name="agenda" rows="2" placeholder="What topics will be discussed?"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-3 justify-end pt-4 border-t">
+                    <button type="button" onclick="closeZoomModuleModal()" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i> Create Zoom Module
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openZoomModuleModal(courseId, courseTitle) {
+            document.getElementById('zoomModuleModal').classList.remove('hidden');
+            document.getElementById('courseIdInput').value = courseId;
+            document.getElementById('courseTitle').textContent = courseTitle;
+            document.getElementById('zoomModuleForm').action = `/instructor/courses/${courseId}/zoom-module`;
+        }
+
+        function closeZoomModuleModal() {
+            document.getElementById('zoomModuleModal').classList.add('hidden');
+        }
+
+        function updateZoomFields() {
+            const meetingType = document.querySelector('select[name="meeting_type"]').value;
+            document.getElementById('zoomLinkField').classList.add('hidden');
+            document.getElementById('locationField').classList.add('hidden');
+            document.getElementById('roomNumberField').classList.add('hidden');
+
+            if (meetingType === 'zoom') {
+                document.getElementById('zoomLinkField').classList.remove('hidden');
+            } else if (meetingType === 'tatap_muka' || meetingType === 'hybrid') {
+                document.getElementById('locationField').classList.remove('hidden');
+                document.getElementById('roomNumberField').classList.remove('hidden');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('zoomModuleModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeZoomModuleModal();
+            }
+        });
+    </script>
 
 </body>
 </html>

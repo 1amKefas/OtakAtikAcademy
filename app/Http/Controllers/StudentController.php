@@ -69,8 +69,22 @@ class StudentController extends Controller
         
         $registration = CourseRegistration::where('user_id', $user->id)
             ->where('id', $registrationId)
-            ->with(['course.modules.materials', 'course.modules.quizzes', 'course.instructor', 'courseClass.instructor'])
+            ->with([
+                'course.modules.materials', 
+                'course.modules.quizzes',
+                'course.modules.announcements' => function($q) {
+                    $q->orderBy('announcement_date', 'asc');
+                },
+                'course.instructor', 
+                'courseClass.instructor'
+            ])
             ->firstOrFail();
+
+        // Check if course registration is cancelled/refunded
+        if ($registration->status === 'cancelled') {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Akses ke kursus ini telah dibatalkan karena refund Anda telah diproses.');
+        }
 
         $course = $registration->course;
 

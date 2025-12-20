@@ -101,13 +101,17 @@
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                     Pending
                                 </span>
-                            @elseif($refund->status === 'approved')
-                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Approved
+                            @elseif($refund->status === 'processing')
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Sedang Diproses
                                 </span>
-                            @else
+                            @elseif($refund->status === 'completed')
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Selesai
+                                </span>
+                            @elseif($refund->status === 'rejected')
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    Rejected
+                                    Ditolak
                                 </span>
                             @endif
                         </td>
@@ -121,17 +125,32 @@
                                 @if($refund->status === 'pending')
                                     <form action="{{ route('admin.refunds.approve', $refund->id) }}" 
                                           method="POST" 
-                                          onsubmit="return confirm('Are you sure you want to approve this refund?')"
+                                          onsubmit="return confirm('Are you sure you want to start processing this refund?')"
                                           class="inline">
                                         @csrf
-                                        <button type="submit" class="text-green-600 hover:text-green-900">
-                                            Approve
+                                        <button type="submit" class="text-blue-600 hover:text-blue-900">
+                                            Proses
                                         </button>
                                     </form>
                                     
                                     <button onclick="showRejectModal({{ $refund->id }})" 
                                             class="text-red-600 hover:text-red-900">
-                                        Reject
+                                        Tolak
+                                    </button>
+                                @elseif($refund->status === 'processing')
+                                    <form action="{{ route('admin.refunds.complete', $refund->id) }}" 
+                                          method="POST" 
+                                          onsubmit="return confirm('Are you sure this refund is completed?')"
+                                          class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-green-600 hover:text-green-900">
+                                            Selesai
+                                        </button>
+                                    </form>
+                                    
+                                    <button onclick="showRejectModal({{ $refund->id }})" 
+                                            class="text-red-600 hover:text-red-900">
+                                        Tolak
                                     </button>
                                 @endif
                             </div>
@@ -153,31 +172,31 @@
 <div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Reject Refund Request</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Tolak Permintaan Refund</h3>
             <form id="rejectForm" method="POST">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Rejection Reason <span class="text-red-500">*</span>
+                        Alasan Penolakan <span class="text-red-500">*</span>
                     </label>
-                    <textarea name="rejection_reason" 
+                    <textarea name="reason" 
                               rows="4" 
                               required
                               minlength="10"
                               maxlength="500"
                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Explain why this refund is being rejected..."></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Minimum 10 characters</p>
+                              placeholder="Jelaskan mengapa refund ini ditolak..."></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Minimal 10 karakter</p>
                 </div>
                 <div class="flex gap-2 justify-end">
                     <button type="button" 
                             onclick="closeRejectModal()"
                             class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
-                        Cancel
+                        Batal
                     </button>
                     <button type="submit"
                             class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                        Reject Refund
+                        Tolak Refund
                     </button>
                 </div>
             </form>

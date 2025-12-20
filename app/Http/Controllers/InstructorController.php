@@ -106,6 +106,9 @@ class InstructorController extends Controller
                 'modules.assignments',
                 'modules.quizzes' => function($q) {
                     $q->orderBy('sort_order', 'asc'); // [UPDATE] Quiz pakai sort_order
+                },
+                'modules.announcements' => function($q) {
+                    $q->orderBy('announcement_date', 'asc');
                 }
             ])
             ->findOrFail($id);
@@ -114,26 +117,70 @@ class InstructorController extends Controller
     }
 
     /**
-     * Tambah Modul Baru
+     * Tambah Modul Baru atau Pemberitahuan
      */
     public function storeModule(Request $request, $courseId)
     {
         $course = Course::where('instructor_id', Auth::id())->findOrFail($courseId);
         
-        $request->validate([
-            'title' => 'required|string|max:255',
-        ]);
+        $moduleCategory = $request->input('module_category', 'module');
 
-        // Auto increment order
-        $lastOrder = CourseModule::where('course_id', $courseId)->max('order');
+        if ($moduleCategory === 'announcement') {
+            // Validasi untuk pemberitahuan
+            $request->validate([
+                'announcement_title' => 'required|string|max:255',
+                'announcement_date' => 'required|date',
+                'announcement_time' => 'required|date_format:H:i',
+                'announcement_description' => 'nullable|string',
+                'zoom_link' => 'required|url',
+            ]);
 
-        CourseModule::create([
-            'course_id' => $courseId,
-            'title' => $request->title,
-            'order' => $lastOrder + 1
-        ]);
+            // Hitung day of week
+            $date = \Carbon\Carbon::createFromFormat('Y-m-d', $request->announcement_date);
+            $dayOfWeek = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][$date->dayOfWeek];
 
-        return back()->with('success', 'Modul berhasil ditambahkan!');
+            // Buat atau dapatkan module "Pemberitahuan" sebagai container
+            $announcementModule = CourseModule::firstOrCreate(
+                [
+                    'course_id' => $courseId,
+                    'title' => 'Pemberitahuan & Event',
+                ],
+                [
+                    'order' => CourseModule::where('course_id', $courseId)->max('order') + 1
+                ]
+            );
+
+            // Buat announcement
+            \App\Models\CourseAnnouncement::create([
+                'course_id' => $courseId,
+                'module_id' => $announcementModule->id,
+                'title' => $request->announcement_title,
+                'announcement_date' => $request->announcement_date,
+                'announcement_time' => $request->announcement_time,
+                'day_of_week' => $dayOfWeek,
+                'type' => 'zoom',
+                'description' => $request->announcement_description,
+                'zoom_link' => $request->zoom_link,
+            ]);
+
+            return back()->with('success', 'Sesi Zoom berhasil ditambahkan!');
+        } else {
+            // Validasi untuk modul pembelajaran
+            $request->validate([
+                'title' => 'required|string|max:255',
+            ]);
+
+            // Auto increment order
+            $lastOrder = CourseModule::where('course_id', $courseId)->max('order');
+
+            CourseModule::create([
+                'course_id' => $courseId,
+                'title' => $request->title,
+                'order' => $lastOrder + 1
+            ]);
+
+            return back()->with('success', 'Modul berhasil ditambahkan!');
+        }
     }
 
     /**
@@ -174,6 +221,23 @@ class InstructorController extends Controller
 
     return back()->with('success', 'Modul berhasil dihapus.');
 }
+
+    /**
+     * Hapus Pemberitahuan/Announcement
+     */
+    public function deleteAnnouncement($id)
+    {
+        $announcement = \App\Models\CourseAnnouncement::findOrFail($id);
+
+        // Security check: pastikan user adalah instructor dari course ini
+        if ($announcement->course->instructor_id !== auth()->id()) {
+            abort(403, 'Anda tidak berhak menghapus pemberitahuan ini.');
+        }
+
+        $announcement->delete();
+
+        return back()->with('success', 'Pemberitahuan berhasil dihapus.');
+    }
 
     /**
      * Simpan Quiz Baru ke dalam Modul
@@ -809,6 +873,86 @@ class InstructorController extends Controller
         $reply->delete();
 
         return back()->with('success', 'Balasan berhasil dihapus!');
+    }
+
+    /**
+     * Store Zoom Pertemuan as special module type
+     */
+    public function storeZoomModule(Request $request, $courseId)
+    {
+        $course = Course::findOrFail($courseId);
+        
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'session_date' => 'required|date',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'meeting_type' => 'required|in:zoom,tatap_muka,hybrid',
+            'zoom_link' => 'nullable|required_if:meeting_type,zoom|url',
+            'location' => 'nullable|required_if:meeting_type,tatap_muka,hybrid|string',
+            'room_number' => 'nullable|string',
+            'agenda' => 'nullable|string',
+        ]);
+
+        $validated['course_id'] = $courseId;
+        $validated['module_type'] = 'zoom_pertemuan';
+        $validated['order'] = $course->modules()->max('order') + 1;
+
+        $module = CourseModule::create($validated);
+
+        return redirect()->back()->with('success', 'Zoom Pertemuan berhasil ditambahkan!');
+    }
+
+    /**
+     * Update Zoom Pertemuan module
+     */
+    public function updateZoomModule(Request $request, $moduleId)
+    {
+        $module = CourseModule::findOrFail($moduleId);
+        $course = $module->course;
+        
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'session_date' => 'required|date',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'meeting_type' => 'required|in:zoom,tatap_muka,hybrid',
+            'zoom_link' => 'nullable|required_if:meeting_type,zoom|url',
+            'location' => 'nullable|required_if:meeting_type,tatap_muka,hybrid|string',
+            'room_number' => 'nullable|string',
+            'agenda' => 'nullable|string',
+        ]);
+
+        $module->update($validated);
+
+        return redirect()->back()->with('success', 'Zoom Pertemuan berhasil diupdate!');
+    }
+
+    /**
+     * Delete Zoom Pertemuan module
+     */
+    public function deleteZoomModule($moduleId)
+    {
+        $module = CourseModule::findOrFail($moduleId);
+        $course = $module->course;
+        
+        if ($course->instructor_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $module->delete();
+
+        return redirect()->back()->with('success', 'Zoom Pertemuan berhasil dihapus!');
     }
     
 }

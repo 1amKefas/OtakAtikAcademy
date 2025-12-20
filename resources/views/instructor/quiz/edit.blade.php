@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
 
 {{-- CDN TinyMCE --}}
-<script src="https://cdn.tiny.cloud/1/40wmpfbvzkycl0abvcvdpedgmg1a5pa6mu5yyv37jgk0thqo/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+<script src="https://cdn.tiny.cloud/1/q691pe10pjlsx83ru9f2peuwxlth53vcdkvt4zgc0kcmlprq/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 
 <script src="{{ asset('js/instructor-quiz-editor.js') }}"></script>
 
