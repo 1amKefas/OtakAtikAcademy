@@ -11,8 +11,10 @@
         <div class="max-w-5xl mx-auto px-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
+                    {{-- Cari bagian link Kembali ke Materi --}}
                     <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                        <a href="{{ route('student.course-detail', $course->id) }}" class="hover:text-blue-600 transition">
+                        {{-- UBAH: dari $course->id menjadi $registration->id --}}
+                        <a href="{{ route('student.course-detail', $registration->id) }}" class="hover:text-blue-600 transition">
                             <i class="fas fa-arrow-left mr-1"></i> Kembali ke Materi
                         </a>
                         <span>/</span>

@@ -6,14 +6,15 @@
 <div class="bg-white">
     <!-- Header -->
     <div class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-8">
-        <div class="max-w-4xl mx-auto">
-            <div class="mb-4">
-                <a href="{{ route('student.forum.index', $courseId) }}" class="hover:opacity-80">
-                    ← Kembali
-                </a>
-            </div>
-            <h1 class="text-3xl font-bold mb-2">{{ $forum->subject }}</h1>
-            <p class="text-green-100">by {{ $forum->user->name }} • {{ $forum->created_at->format('d M Y H:i') }}</p>
+        {{-- Contoh jika ingin menambahkan link ke materi di header detail forum --}}
+        <div class="mb-4 flex gap-4">
+            <a href="{{ route('student.forum.index', $courseId) }}" class="hover:opacity-80">
+                ← Kembali ke Daftar Forum
+            </a>
+            <span class="text-white/30">|</span>
+            <a href="{{ route('student.course-detail', $registration->id) }}" class="hover:underline font-bold">
+                Kembali ke Materi
+            </a>
         </div>
     </div>
 

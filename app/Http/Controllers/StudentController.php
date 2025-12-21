@@ -264,6 +264,7 @@ class StudentController extends Controller
     /**
      * View forum discussions for a course
      */
+    // Cari method forumIndex
     public function forumIndex(Request $request, $courseId)
     {
         $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
@@ -273,12 +274,11 @@ class StudentController extends Controller
 
         $course = $registration->course;
         
-        // Logic Sorting (Terbaru / Terlama)
         $sort = $request->get('sort', 'latest');
         
         $forums = \App\Models\CourseForum::where('course_id', $courseId)
-            ->with('user') // Load user pembuat topik (perlu)
-            ->withCount('replies') // [OPTIMASI] Cuma hitung jumlah balasan, JANGAN load isinya
+            ->with('user')
+            ->withCount('replies')
             ->when($sort == 'oldest', function($q) {
                 return $q->orderBy('created_at', 'asc');
             }, function($q) {
@@ -286,17 +286,26 @@ class StudentController extends Controller
             })
             ->paginate(10);
 
-        return view('student.forum-index', compact('course', 'forums', 'sort'));
+        // [TAMBAHKAN] Kirim variabel $registration ke view
+        return view('student.forum-index', compact('course', 'forums', 'sort', 'registration'));
     }
 
+// Cari method forumDetail
     public function forumDetail($courseId, $forumId)
     {
+        // [TAMBAHKAN] Cari registration untuk mendapatkan ID pendaftaran user ini
+        $registration = \App\Models\CourseRegistration::where('user_id', Auth::id())
+            ->where('course_id', $courseId)
+            ->where('status', 'paid')
+            ->firstOrFail();
+
         $forum = \App\Models\CourseForum::where('id', $forumId)
             ->where('course_id', $courseId)
             ->with(['user', 'replies.user'])
             ->firstOrFail();
         
-        return view('student.forum.detail', compact('forum', 'courseId'));
+        // [TAMBAHKAN] Kirim variabel $registration ke view
+        return view('student.forum.detail', compact('forum', 'courseId', 'registration'));
     }
 
     /**
