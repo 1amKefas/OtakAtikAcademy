@@ -50,8 +50,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('moduleForm');
         
         if (url && form) {
+            form.reset();
             form.action = url;
-            console.log('Form action set to:', url);
+            console.log('Module form action set to:', url);
         }
         
         if (modal) {
@@ -73,11 +74,47 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('contentForm');
         
         if (url && form) {
+            form.reset();
             form.action = url;
+            // Clear TinyMCE
+            if (tinymce.get('richEditor')) {
+                tinymce.get('richEditor').setContent('');
+            }
             console.log('Content form action set to:', url);
         }
         
         if (modal) {
+            modal.style.display = 'flex';
+        }
+    };
+    
+    // Open Edit Material Modal
+    window.openEditMaterialModal = function(materialId, title, externalUrl, element) {
+        const courseId = document.querySelector('meta[name="course-id"]')?.content;
+        const modal = document.getElementById('contentModal');
+        const form = document.getElementById('contentForm');
+        
+        if (form && modal) {
+            form.action = `/instructor/materials/${materialId}`;
+            
+            // Set to PUT for edit mode
+            let methodInput = form.querySelector('input[name="_method"]');
+            if (methodInput) {
+                methodInput.value = 'PUT';
+            }
+            
+            // Fill in form fields
+            document.getElementById('contentTitle').value = title;
+            document.getElementById('contentUrl').value = externalUrl || '';
+            
+            // Get the encoded content from data attribute
+            let encodedContent = element.getAttribute('data-content');
+            if (tinymce.get('richEditor') && encodedContent) {
+                // Decode base64 and set content
+                tinymce.get('richEditor').setContent(atob(encodedContent));
+            }
+            
+            console.log('Material edit form action set to:', form.action);
             modal.style.display = 'flex';
         }
     };
@@ -92,7 +129,55 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Open Quiz Modal
     window.openCreateQuizModal = function(url) {
+        const modal = document.getElementById('quizModal');
+        const form = document.getElementById('quizForm');
+        
+        console.log('openCreateQuizModal called with URL:', url);
+        
+        // Reset form for create mode
+        if (form) {
+            form.reset();
+            form.action = url;
+            form.method = 'POST';
+            
+            // Ensure method is POST
+            const methodInput = form.querySelector('input[name="_method"]');
+            if (methodInput) {
+                methodInput.value = 'POST';
+            }
+            
+            console.log('Form action set to:', form.action);
+            console.log('Form method:', form.method);
+        } else {
+            console.error('quizForm not found!');
+        }
+        
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    };
+    
+    // Open Edit Quiz Modal
+    window.openEditQuizModal = function(quizId, title, desc, dur, score) {
+        const courseId = document.querySelector('meta[name="course-id"]')?.content;
         const modal = document.getElementById('quizModal') || document.querySelector('[x-show="showQuizModal"]');
+        const form = document.getElementById('quizForm');
+        
+        if (form) {
+            form.action = `/instructor/courses/${courseId}/quiz/${quizId}`;
+            document.getElementById('quizTitle').value = title;
+            document.getElementById('quizDesc').value = desc;
+            document.getElementById('quizDuration').value = dur;
+            document.getElementById('quizScore').value = score;
+            
+            // Set to PUT for edit mode
+            let methodInput = form.querySelector('input[name="_method"]');
+            if (methodInput) {
+                methodInput.value = 'PUT';
+            }
+            console.log('Quiz edit form action set to:', form.action);
+        }
+        
         if (modal) {
             modal.style.display = 'flex';
         }
@@ -104,6 +189,67 @@ document.addEventListener('DOMContentLoaded', function() {
         if (modal) {
             modal.style.display = 'none';
         }
+    };
+    
+    // Submit Quiz Form
+    window.submitQuizForm = function() {
+        const form = document.getElementById('quizForm');
+        if (!form) {
+            console.error('quizForm not found!');
+            return;
+        }
+        
+        console.log('submitQuizForm called');
+        console.log('Form action:', form.action);
+        
+        if (!form.action) {
+            alert('Form action not set. Please close and reopen the modal.');
+            return;
+        }
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const formData = new FormData(form);
+        
+        console.log('Sending POST to:', form.action);
+        
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: formData,
+            redirect: 'follow'
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Error response:', text);
+                    try {
+                        const err = JSON.parse(text);
+                        throw err;
+                    } catch (e) {
+                        throw new Error('Server error: ' + response.status);
+                    }
+                });
+            }
+            console.log('Success! Reloading...');
+            closeQuizModal();
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            let errorMsg = 'Terjadi kesalahan. Silakan coba lagi.';
+            
+            if (error.errors) {
+                const firstError = Object.values(error.errors)[0];
+                errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+            
+            alert(errorMsg);
+        });
     };
     
     // Toggle Module Expand

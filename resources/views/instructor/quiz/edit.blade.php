@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{{ asset('css/instructor.css') }}">
 
 {{-- CDN TinyMCE --}}
-<script src="https://cdn.tiny.cloud/1/q691pe10pjlsx83ru9f2peuwxlth53vcdkvt4zgc0kcmlprq/tinymce/7/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+<script src="https://cdn.tiny.cloud/1/q691pe10pjlsx83ru9f2peuwxlth53vcdkvt4zgc0kcmlprq/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 
 <script src="{{ asset('js/instructor-quiz-editor.js') }}"></script>
 
@@ -249,7 +249,6 @@
                                     <select name="question_type" x-model="questionType" @change="changeType($event.target.value)" 
                                             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
                                         <option value="multiple_choice">Pilihan Ganda </option>
-                                        <option value="multiple_select">Multiple Choice</option>
                                         <option value="true_false">Benar / Salah</option>
                                         <option value="essay">Essay</option>
                                     </select>
