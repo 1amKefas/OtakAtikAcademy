@@ -256,30 +256,79 @@
 
                             @elseif($type == 'quiz')
                                 <div class="flex flex-col items-center justify-center py-20 text-center w-full">
-                                    <div class="w-28 h-28 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 animate-bounce-slow">
+                                    <div class="w-28 h-28 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6">
                                         <i class="fas fa-laptop-code text-5xl text-purple-600 dark:text-purple-400"></i>
                                     </div>
                                     <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">Quiz: {{ $currentContent->title }}</h3>
-                                    <p class="text-gray-600 dark:text-gray-400 mb-10 max-w-lg text-lg leading-relaxed">{{ $currentContent->description ?? 'Siap menguji pemahamanmu? Kerjakan kuis ini dengan teliti.' }}</p>
                                     
+                                    {{-- Pesan Status Kelulusan --}}
+                                    @php
+                                        $lastSubmission = $quizHistory ? $quizHistory->first() : null;
+                                        $hasPassed = $lastSubmission && $lastSubmission->is_passed;
+                                    @endphp
+
+                                    @if($hasPassed)
+                                        <div class="mb-6 p-4 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-xl border border-green-200 flex items-center gap-3">
+                                            <i class="fas fa-check-circle text-xl"></i>
+                                            <span class="font-bold">Anda telah lulus kuis ini! Materi selanjutnya telah terbuka.</span>
+                                        </div>
+                                    @elseif($lastSubmission)
+                                        <div class="mb-6 p-4 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-xl border border-red-200 flex items-center gap-3">
+                                            <i class="fas fa-exclamation-circle text-xl"></i>
+                                            <span class="font-bold">Nilai Anda belum mencapai KKM ({{ $currentContent->passing_score }}%). Silakan coba lagi untuk melanjutkan.</span>
+                                        </div>
+                                    @endif
+
                                     <div class="flex flex-wrap justify-center gap-6 mb-10 w-full max-w-2xl">
                                         <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
                                             <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Durasi</p>
-                                            <p class="text-xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-2">
-                                                <i class="far fa-clock text-blue-500"></i> {{ $currentContent->duration_minutes }}m
-                                            </p>
+                                            <p class="text-xl font-bold text-gray-800 dark:text-white">{{ $currentContent->duration_minutes }}m</p>
                                         </div>
                                         <div class="flex-1 min-w-[140px] bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-600">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Passing Score</p>
-                                            <p class="text-xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
-                                                <i class="fas fa-check-circle"></i> {{ $currentContent->passing_score }}%
-                                            </p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">KKM</p>
+                                            <p class="text-xl font-bold text-green-600 dark:text-green-400">{{ $currentContent->passing_score }}%</p>
                                         </div>
                                     </div>
 
-                                    <a href="{{ route('student.quiz.start', [$course->id, $currentContent->id]) }}" class="group relative px-10 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-purple-500/50 transition-all transform hover:-translate-y-1">
-                                        <span class="relative z-10 flex items-center gap-2">Mulai Quiz Sekarang <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i></span>
+                                    <a href="{{ route('student.quiz.start', [$course->id, $currentContent->id]) }}" 
+                                    class="group px-10 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full font-bold text-lg shadow-xl transition-all transform hover:-translate-y-1">
+                                        {{ $lastSubmission ? 'Ambil Ulang Quiz' : 'Mulai Quiz Sekarang' }} <i class="fas fa-arrow-right ml-2"></i>
                                     </a>
+
+                                    {{-- BAGIAN RIWAYAT PENGERJAAN --}}
+                                    @if($quizHistory && $quizHistory->count() > 0)
+                                    <div class="mt-16 w-full max-w-2xl text-left">
+                                        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <i class="fas fa-history"></i> Riwayat Pengerjaan
+                                        </h4>
+                                        <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                                            <table class="w-full text-sm">
+                                                <thead class="bg-gray-50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-400">
+                                                    <tr>
+                                                        <th class="px-4 py-3 font-semibold">Waktu Selesai</th>
+                                                        <th class="px-4 py-3 font-semibold text-center">Nilai</th>
+                                                        <th class="px-4 py-3 font-semibold text-center">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                                    @foreach($quizHistory as $history)
+                                                    <tr>
+                                                        <td class="px-4 py-3">{{ $history->submitted_at->format('d M Y, H:i') }}</td>
+                                                        <td class="px-4 py-3 text-center font-bold {{ $history->is_passed ? 'text-green-600' : 'text-red-600' }}">
+                                                            {{ $history->score }}%
+                                                        </td>
+                                                        <td class="px-4 py-3 text-center">
+                                                            <span class="px-2 py-1 rounded text-[10px] font-bold {{ $history->is_passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                                                {{ $history->is_passed ? 'LULUS' : 'GAGAL' }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>

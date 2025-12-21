@@ -582,7 +582,6 @@ class QuizController extends Controller
             ->where('id', $submissionId)
             ->firstOrFail();
 
-        // Validasi pemilik submission
         if ($submission->user_id !== $user->id) {
             abort(403, 'Unauthorized submission.');
         }
@@ -595,38 +594,23 @@ class QuizController extends Controller
         $submission->answers = $answers;
         $submission->submitted_at = now();
         $submission->status = 'submitted'; 
-        $submission->save();
 
-        // --- Logic Grading (Hitung Nilai) ---
-        $score = 0;
-        $totalPoints = $quiz->questions->sum('points'); 
+        // --- Logic Grading ---
         $earnedPoints = 0;
         $correctCount = 0;
+        $totalPoints = $quiz->questions->sum('points');
 
         foreach ($quiz->questions as $question) {
             $userAns = $answers[$question->id] ?? null;
             if ($userAns === null) continue;
 
             $isCorrect = false;
-            
-            if ($question->question_type === 'essay') {
-                continue; // Essay dinilai manual
-            }
-
             if ($question->question_type == 'multiple_choice' || $question->question_type == 'true_false') {
-                if ((string)$userAns === (string)$question->correct_answer) {
-                    $isCorrect = true;
-                }
+                if ((string)$userAns === (string)$question->correct_answer) $isCorrect = true;
             } elseif ($question->question_type == 'multiple_select') {
                 $keyArr = json_decode($question->correct_answer, true) ?? [];
                 $ansArr = is_array($userAns) ? $userAns : [];
-                
-                $keyArr = array_map('strval', $keyArr);
-                $ansArr = array_map('strval', $ansArr);
-                
-                sort($keyArr); 
-                sort($ansArr);
-                
+                sort($keyArr); sort($ansArr);
                 if ($keyArr == $ansArr) $isCorrect = true;
             }
             
@@ -636,18 +620,18 @@ class QuizController extends Controller
             }
         }
         
-        if ($totalPoints > 0) {
-            $score = round(($earnedPoints / $totalPoints) * 100);
-        }
+        $score = ($totalPoints > 0) ? round(($earnedPoints / $totalPoints) * 100) : 0;
+        
+        // [LOGIK BARU] Cek Kelulusan (KKM)
+        $isPassed = ($score >= $quiz->passing_score);
         
         $submission->score = $score;
         $submission->correct_answers_count = $correctCount;
+        $submission->is_passed = $isPassed; // Pastikan kolom ini ada di DB
         $submission->save();
 
-        // [UPDATE] Update Progress Course HANYA jika BUKAN instruktur
-        // Biar statistik kelas gak rusak karena instruktur iseng ngerjain quiz
-        $course = Course::find($courseId);
-        if ($user->id !== $course->instructor_id) {
+        // [UPDATE] Update Progress Course HANYA jika LULUS dan BUKAN instruktur
+        if ($user->id !== $quiz->course->instructor_id && $isPassed) {
             \App\Models\CourseProgress::updateOrCreate(
                 [
                     'user_id' => $user->id,
@@ -661,10 +645,33 @@ class QuizController extends Controller
                     'completed_at' => now(),
                 ]
             );
+
+            // HITUNG ULANG PROGRESS GLOBAL (Agar progress di header langsung update)
+            $registration = \App\Models\CourseRegistration::where('user_id', $user->id)
+                ->where('course_id', $courseId)
+                ->first();
+            
+            if ($registration) {
+                $totalMaterials = \App\Models\CourseMaterial::where('course_id', $courseId)->where('is_published', true)->count();
+                $totalQuizzes = \App\Models\Quiz::where('course_id', $courseId)->where('is_published', true)->count();
+                $totalItems = $totalMaterials + $totalQuizzes;
+
+                $completedItems = \App\Models\CourseProgress::where('user_id', $user->id)
+                    ->where('course_id', $courseId)
+                    ->where('is_completed' , true)
+                    ->count();
+
+                $newProgress = ($totalItems > 0) ? min(100, round(($completedItems / $totalItems) * 100)) : 0;
+                $registration->update(['progress' => $newProgress]);
+                
+                if ($newProgress == 100 && !$registration->completed_at) {
+                    $registration->update(['completed_at' => now()]);
+                }
+            }
         }
 
         return redirect()->route('student.quiz.result', [$courseId, $quizId, $submissionId])
-            ->with('success', 'Jawaban berhasil dikirim!');
+            ->with($isPassed ? 'success' : 'error', $isPassed ? 'Selamat, Anda Lulus!' : 'Maaf, nilai Anda belum mencapai KKM.');
     }
     /**
      * View quiz result (Student)

@@ -615,8 +615,22 @@ class StudentController extends Controller
             $currentContent = \App\Models\Quiz::findOrFail($contentId);
         }
 
-        // Kirim data completedMap ke view untuk menampilkan Checklist Hijau
-        return view('student.learning.index', compact('course', 'currentContent', 'type', 'registration', 'completedMap'));
+        $quizHistory = null;
+        $currentContent = null;
+        if ($type == 'material') {
+            $currentContent = \App\Models\CourseMaterial::findOrFail($contentId);
+        } elseif ($type == 'quiz') {
+            $currentContent = \App\Models\Quiz::findOrFail($contentId);
+            
+            // AMBIL RIWAYAT PENGERJAAN
+            $quizHistory = \App\Models\QuizSubmission::where('user_id', Auth::id())
+                ->where('quiz_id', $contentId)
+                ->whereNotNull('submitted_at')
+                ->latest()
+                ->get();
+        }
+
+        return view('student.learning.index', compact('course', 'currentContent', 'type', 'registration', 'completedMap', 'quizHistory'));
     }
     /**
      * Tandai Materi Selesai & Lanjut
