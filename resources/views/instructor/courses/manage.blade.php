@@ -251,7 +251,7 @@
                                     
                                     <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
                                         @if($item->type == 'quiz')
-                                            <button @click="openEditQuizModal({{ $item->id }}, '{{ addslashes($item->title) }}', '{{ addslashes($item->description) }}', {{ $item->duration_minutes }}, {{ $item->passing_score }})" 
+                                            <button onclick="openEditQuizModal({{ $item->id }}, '{{ addslashes($item->title) }}', '{{ addslashes($item->description) }}', {{ $item->duration_minutes }}, {{ $item->passing_score }})" 
                                                     class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-white rounded" title="Edit Pengaturan Quiz">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </button>
@@ -263,7 +263,7 @@
                                                 <button class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded"><i class="fas fa-times"></i></button>
                                             </form>
                                         @else
-                                            <button @click="openEditMaterialModal({{ $item->id }}, '{{ addslashes($item->title) }}', '{{ $item->external_url }}', $el)"
+                                            <button onclick="openEditMaterialModal({{ $item->id }}, '{{ addslashes($item->title) }}', '{{ $item->external_url }}', this)"
                                                 data-content="{{ base64_encode($item->description) }}"
                                                 class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded transition" title="Edit Konten">
                                                 <i class="fas fa-pencil-alt"></i>
@@ -440,9 +440,8 @@
                 <button onclick="closeQuizModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
             
-            <form id="quizForm" method="POST">
+            <form id="quizForm">
                 @csrf
-                <input type="hidden" name="_method" value="POST">
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Judul Quiz</label>
@@ -467,7 +466,7 @@
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <button type="button" onclick="closeQuizModal()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg">Buat Quiz</button>
+                    <button type="button" onclick="submitQuizForm()" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg">Buat Quiz</button>
                 </div>
             </form>
         </div>
