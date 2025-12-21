@@ -138,7 +138,7 @@
                     
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Judul Diskusi</label>
-                        <input type="text" name="title" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Contoh: Bagaimana cara install Laravel di Windows?">
+                        <input type="text" name="subject" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Contoh: Bagaimana cara install Laravel di Windows?">
                     </div>
 
                     <div class="mb-6">

@@ -311,14 +311,14 @@ class StudentController extends Controller
             ->firstOrFail();
 
         $request->validate([
-            'title' => 'required|string|max:255',
+            'subject' => 'required|string|max:255',
             'message' => 'required|string', // Ini isi TinyMCE (HTML)
         ]);
 
         \App\Models\CourseForum::create([
             'course_id' => $courseId,
             'user_id' => Auth::id(),
-            'title' => $request->title,
+            'subject' => $request->subject,
             'message' => $request->message,
         ]);
 
